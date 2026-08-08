@@ -235,6 +235,21 @@ def ChatGPT_request(prompt):
     return "ChatGPT ERROR"
 
 
+def ChatGPT_single_request(prompt):
+  """Single-shot request on the default model (deepseek-v4-flash).
+
+  Upstream alias used by revise_identity's new-day plan regeneration;
+  missing in the port, which crash-looped the service at every in-place
+  day rollover (NameError) and re-anchored the clock from stale state.
+  """
+  temp_sleep()
+  try:
+    return _llm_chat([{"role": "user", "content": prompt}])
+  except Exception as e:
+    print(f"[LLM ERROR] ChatGPT_single_request: {e}", file=sys.stderr)
+    return "ChatGPT ERROR"
+
+
 def ChatGPT_safe_generate_response(prompt,
                                    example_output,
                                    special_instruction,

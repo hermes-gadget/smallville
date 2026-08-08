@@ -48,15 +48,25 @@ class Persona:
     self.scratch = Scratch(scratch_saved)
 
 
-  def save(self, save_folder): 
+  def save(self, save_folder, full=True): 
     """
     Save persona's current state (i.e., memory). 
 
     INPUT: 
       save_folder: The folder where we wil be saving our persona's state. 
+      full: When False, only scratch.json is written (cheap). Full memory
+            (spatial + associative incl. embeddings.json) is written only
+            when full=True -- the caller throttles this so a 25-resident
+            town doesn't rewrite ~7MB of embeddings JSON every step.
     OUTPUT: 
       None
     """
+    f_scratch = f"{save_folder}/scratch.json"
+    self.scratch.save(f_scratch)
+
+    if not full:
+      return
+
     # Spatial memory contains a tree in a json format. 
     # e.g., {"double studio": 
     #         {"double studio": 
@@ -71,40 +81,15 @@ class Persona:
     f_a_mem = f"{save_folder}/associative_memory"
     self.a_mem.save(f_a_mem)
 
-    # Scratch contains non-permanent data associated with the persona. When 
-    # it is saved, it takes a json form. When we load it, we move the values
-    # to Python variables. 
-    f_scratch = f"{save_folder}/scratch.json"
-    self.scratch.save(f_scratch)
-
 
   def perceive(self, maze):
     """
-    This function takes the current maze, and returns events that are 
-    happening around the persona. Importantly, perceive is guided by 
-    two key hyper-parameter for the  persona: 1) att_bandwidth, and 
-    2) retention. 
-
-    First, <att_bandwidth> determines the number of nearby events that the 
-    persona can perceive. Say there are 10 events that are within the vision
-    radius for the persona -- perceiving all 10 might be too much. So, the 
-    persona perceives the closest att_bandwidth number of events in case there
-    are too many events. 
-
-    Second, the persona does not want to perceive and think about the same 
-    event at each time step. That's where <retention> comes in -- there is 
-    temporal order to what the persona remembers. So if the persona's memory
-    contains the current surrounding events that happened within the most 
-    recent retention, there is no need to perceive that again. xx
-
-    INPUT: 
-      maze: Current <Maze> instance of the world. 
-    OUTPUT: 
-      a list of <ConceptNode> that are perceived and new. 
-        See associative_memory.py -- but to get you a sense of what it 
-        receives as its input: "s, p, o, desc, persona.scratch.curr_time"
+    Perceive events around the persona (collect + commit). Kept for
+    compatibility with the upstream public API; the step loop uses the
+    split _move_perceive/_move_decide so LLM work stays parallel.
     """
-    return perceive(self, maze)
+    pending = perceive_collect(self, maze)
+    return perceive_commit(self, pending)
 
 
   def retrieve(self, perceived):
@@ -223,7 +208,12 @@ class Persona:
     return self._move_decide(maze, personas, new_day, perceived)
 
   def _move_perceive(self, maze, curr_tile, curr_time):
-    """Phase 1 of move(): tile bookkeeping + perception (may chat)."""
+    """Phase 1 of move(): tile bookkeeping + perception COLLECTION.
+
+    No LLM calls here -- poignancy scoring + memory commits are deferred
+    to _move_decide (via perceive_commit) so they run concurrently in the
+    parallel phase instead of serializing the whole town on chat-heavy
+    steps. Returns (new_day, pending_percepts)."""
     self.scratch.curr_tile = curr_tile
     new_day = False
     if not self.scratch.curr_time:
@@ -232,13 +222,14 @@ class Persona:
           != curr_time.strftime('%A %B %d')):
       new_day = "New day"
     self.scratch.curr_time = curr_time
-    perceived = self.perceive(maze)
-    return new_day, perceived
+    pending = perceive_collect(self, maze)
+    return new_day, pending
 
-  def _move_decide(self, maze, personas, new_day, perceived):
-    """Phase 2 of move(): retrieve + plan + reflect + execute. All work is
-    persona-private (own memory, LLM, embeddings) -- safe to run
-    concurrently for all personas in a step."""
+  def _move_decide(self, maze, personas, new_day, percept_batch):
+    """Phase 2 of move(): perceive commit (poignancy + memory) + retrieve +
+    plan + reflect + execute. All work is persona-private (own memory, LLM,
+    embeddings) -- safe to run concurrently for all personas in a step."""
+    perceived = perceive_commit(self, percept_batch)
     retrieved = self.retrieve(perceived)
     plan = self.plan(maze, personas, new_day, retrieved)
     self.reflect()

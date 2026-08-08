@@ -90,5 +90,6 @@ token_usage_db = f"{fs_temp_storage}/token_usage.db"
 
 collision_block_id = "32125"
 
-# Verbose
-debug = True
+# Verbose (False: prompt dumps are off -- the journal was flooding at
+# hundreds of lines/second from print_run_prompts + GNS FUNCTION markers)
+debug = False

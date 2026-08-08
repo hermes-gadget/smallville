@@ -70,6 +70,10 @@
 		var map_pixel_height = 0;
 		var cursors = null;
 		var stage_resize_observer = null;
+		// Camera follow: when a resident is selected the camera tracks them
+		// as they walk, unless the user has panned/ dragged recently.
+		var follow_lerp = 0.09;
+		var user_panned_at = 0;
 
 		var game_container = document.getElementById("game-container");
 		var map_stage = document.getElementById("map-stage");
@@ -213,10 +217,16 @@
 				personas[name] = sprite;
 				previous_directions[name] = "d";
 
-				var ring = scene.add.ellipse(x, y + 12, 27, 11, 0xf2bd62, .13)
-					.setStrokeStyle(1.5, 0xf2bd62, .95)
-					.setDepth(.9)
-					.setVisible(false);
+				// Selection ring, drawn with Graphics (fillEllipse/stroke).
+				// A Shape-object ellipse never rendered in some WebGL
+				// environments, while Graphics (used by the speech bubbles)
+				// renders everywhere. Depth 3 keeps it above map + foreground
+				// tiles so roofs can't hide it.
+				var ring = scene.add.graphics().setDepth(3).setVisible(false);
+				ring.fillStyle(0xf2bd62, .3);
+				ring.fillEllipse(0, 0, 36, 16);
+				ring.lineStyle(2.5, 0xf2bd62, 1);
+				ring.strokeEllipse(0, 0, 36, 16);
 				persona_rings[name] = ring;
 				persona_labels[name] = createSpeechBubble(scene, x, y - 21);
 				persona_animations[name] = createPersonaAnimations(scene, name, texture_key);
@@ -332,6 +342,7 @@
 					game_container.classList.add("is-dragging");
 				}
 				if (moved) {
+					user_panned_at = Date.now();
 					setCameraScroll(drag.scroll_x - dx, drag.scroll_y - dy);
 				}
 			});
@@ -392,6 +403,7 @@
 
 		function update(time, delta) {
 			moveCameraWithKeyboard(delta);
+			followSelectedPersona();
 
 			if (phase === "update") {
 				pollForMovement();
@@ -399,6 +411,26 @@
 			}
 
 			executeMovementStep();
+		}
+
+		function followSelectedPersona() {
+			// Track the selected resident: the camera glides toward them as
+			// they walk. The sprite is kept slightly ABOVE the vertical
+			// centre so the Town Conversations panel (which docks over the
+			// map's lower-centre) never hides the selection ring. User
+			// drags/ arrow-panning take priority for a while so the follow
+			// never fights the controls.
+			if (!selected_persona || !main_camera || !personas[selected_persona]) return;
+			if (Date.now() - user_panned_at < 2500) return;
+			var sprite = personas[selected_persona];
+			var target_x = Phaser.Math.Clamp(
+				sprite.x - main_camera.width / 2,
+				0, Math.max(0, map_pixel_width - main_camera.width));
+			var target_y = Phaser.Math.Clamp(
+				sprite.y - main_camera.height * 0.40,
+				0, Math.max(0, map_pixel_height - main_camera.height));
+			main_camera.scrollX += (target_x - main_camera.scrollX) * follow_lerp;
+			main_camera.scrollY += (target_y - main_camera.scrollY) * follow_lerp;
 		}
 
 		function moveCameraWithKeyboard(delta) {
@@ -410,7 +442,10 @@
 			if (cursors.right.isDown) dx += distance;
 			if (cursors.up.isDown) dy -= distance;
 			if (cursors.down.isDown) dy += distance;
-			if (dx || dy) setCameraScroll(main_camera.scrollX + dx, main_camera.scrollY + dy);
+			if (dx || dy) {
+				user_panned_at = Date.now();
+				setCameraScroll(main_camera.scrollX + dx, main_camera.scrollY + dy);
+			}
 		}
 
 		function pollForMovement() {
@@ -535,7 +570,7 @@
 		function positionPersonaDecorations(name) {
 			var sprite = personas[name];
 			if (!sprite) return;
-			persona_rings[name].setPosition(sprite.x, sprite.y + 12);
+			persona_rings[name].setPosition(sprite.x, sprite.y + 13);
 			persona_labels[name].setPosition(sprite.x, sprite.y - 21);
 		}
 
@@ -816,11 +851,17 @@
 			Object.keys(persona_rings).forEach(function(persona_name) {
 				persona_rings[persona_name].setVisible(persona_name === name).setAlpha(1);
 			});
+			// Make sure the ring sits under the sprite's CURRENT position
+			// (movement frames may not have run since the last step).
+			if (personas[name]) positionPersonaDecorations(name);
 
 			setText("focused-resident", name);
 			document.getElementById("focus-chip").classList.add("is-visible");
 			if (center_map && personas[name] && main_camera) {
-				main_camera.pan(personas[name].x, personas[name].y, 430, "Sine.easeInOut", true);
+				// Pan with the same upward offset as the follow camera so
+				// the sprite+ring land above the conversations panel.
+				main_camera.pan(personas[name].x,
+					personas[name].y - main_camera.height * 0.10, 430, "Sine.easeInOut", true);
 			}
 			if (window.matchMedia("(max-width: 1000px)").matches) {
 				document.body.classList.remove("sidebar-open");

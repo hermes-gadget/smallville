@@ -347,14 +347,9 @@ def run_gpt_prompt_task_decomp(persona,
 
     curr_time_range = ""
 
-    print ("DEBUG")
-    print (persona.scratch.f_daily_schedule_hourly_org)
-    print (all_indices)
-
     summ_str = f'Today is {persona.scratch.curr_time.strftime("%B %d, %Y")}. '
     summ_str += f'From '
     for index in all_indices: 
-      print ("index", index)
       if index < len(persona.scratch.f_daily_schedule_hourly_org): 
         start_min = 0
         for i in range(index): 
@@ -476,8 +471,6 @@ def run_gpt_prompt_task_decomp(persona,
   prompt = generate_prompt(prompt_input, prompt_template)
   fail_safe = get_fail_safe()
 
-  print ("?????")
-  print (prompt)
   output = safe_generate_response(prompt, gpt_param, 5, get_fail_safe(),
                                    __func_validate, __func_clean_up)
 
@@ -490,12 +483,6 @@ def run_gpt_prompt_task_decomp(persona,
   fin_output[-1][1] += (duration - ftime_sum)
   IndexError: list index out of range
   """
-
-  print ("IMPORTANT VVV DEBUG")
-
-  # print (prompt_input)
-  # print (prompt)
-  print (output)
 
   # Normalize degenerate/fallback outputs into (task, duration) pairs.
   # safe_generate_response can return the fail-safe (["asleep"]) or other
@@ -685,8 +672,6 @@ def run_gpt_prompt_action_sector(action_description,
     # output = random.choice(x)
     output = persona.scratch.living_area.split(":")[1]
 
-  print ("DEBUG", random.choice(x), "------", output)
-
   if debug or verbose: 
     print_run_prompts(prompt_template, persona, gpt_param, 
                       prompt_input, prompt, output)
@@ -776,7 +761,6 @@ def run_gpt_prompt_action_arena(action_description,
   fail_safe = get_fail_safe()
   output = safe_generate_response(prompt, gpt_param, 5, fail_safe,
                                    __func_validate, __func_clean_up)
-  print (output)
   # y = f"{act_world}:{act_sector}"
   # x = [i.strip() for i in persona.s_mem.get_str_accessible_sector_arenas(y).split(",")]
   # if output not in x: 
@@ -1705,7 +1689,7 @@ def run_gpt_prompt_summarize_conversation(persona, conversation, test_input=None
   special_instruction = "The output must continue the sentence above by filling in the <fill in> tag. Don't start with 'this is a conversation about...' Just finish the sentence but do not miss any important details (including who are chatting)." ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up, False)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -1739,8 +1723,6 @@ def run_gpt_prompt_extract_keywords(persona, description, test_input=None, verbo
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    print ("???")
-    print (gpt_response)
     gpt_response = gpt_response.strip().split("Emotive keywords:")
     factual = [i.strip() for i in gpt_response[0].split(",")]
     emotive = [i.strip() for i in gpt_response[1].split(",")]
@@ -2166,7 +2148,6 @@ def run_gpt_prompt_focal_pt(persona, statements, n, test_input=None, verbose=Fal
       return False 
 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 12") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2177,7 +2158,7 @@ def run_gpt_prompt_focal_pt(persona, statements, n, test_input=None, verbose=Fal
   special_instruction = "Output must be a list of str." ########
   fail_safe = get_fail_safe(n) ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up, False)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================

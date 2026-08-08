@@ -123,7 +123,6 @@ def run_reflect(persona):
   # agent's memory. 
   for focal_pt, nodes in retrieved.items(): 
     xx = [i.embedding_key for i in nodes]
-    for xxx in xx: print (xxx)
 
     thoughts = generate_insights_and_evidence(persona, nodes, 5)
     for thought, evidence in thoughts.items(): 
@@ -139,11 +138,28 @@ def run_reflect(persona):
                                 thought_embedding_pair, evidence)
 
 
+import threading
+
+# Reflections are capped per step. On resume/restart every resident whose
+# importance counter hit 0 wants to reflect at once; with ~6-10 LLM calls
+# each that's a 200+ call boot storm (a single step took 233s once).
+# Deferred residents keep their trigger armed and retry next step.
+_reflection_lock = threading.Lock()
+_reflections_this_step = 0
+REFLECTION_BUDGET = 6
+
+
+def reset_reflection_budget():
+  global _reflections_this_step
+  with _reflection_lock:
+    _reflections_this_step = 0
+
+
 def reflection_trigger(persona): 
   """
   Given the current persona, determine whether the persona should run a 
   reflection. 
-  
+
   Our current implementation checks for whether the sum of the new importance
   measure has reached the set (hyper-parameter) threshold.
 
@@ -153,9 +169,6 @@ def reflection_trigger(persona):
     True if we are running a new reflection. 
     False otherwise. 
   """
-  print (persona.scratch.name, "persona.scratch.importance_trigger_curr::", persona.scratch.importance_trigger_curr)
-  print (persona.scratch.importance_trigger_max)
-
   if (persona.scratch.importance_trigger_curr <= 0 and 
       [] != persona.a_mem.seq_event + persona.a_mem.seq_thought): 
     return True 
@@ -187,9 +200,18 @@ def reflect(persona):
   Output: 
     None
   """
-  if reflection_trigger(persona): 
-    run_reflect(persona)
-    reset_reflection_counter(persona)
+  global _reflections_this_step
+  if not reflection_trigger(persona): 
+    return
+  with _reflection_lock:
+    if _reflections_this_step >= REFLECTION_BUDGET:
+      # Budget exhausted this step: stay armed (counter 0) and retry next
+      # step so boot reflection storms spread instead of bursting.
+      persona.scratch.importance_trigger_curr = 0
+      return
+    _reflections_this_step += 1
+  run_reflect(persona)
+  reset_reflection_counter(persona)
 
 
 

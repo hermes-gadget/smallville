@@ -422,8 +422,12 @@ class ReverieServer:
           # x y coordinates where the persona will move towards. e.g., (50, 34)
           # This is where the core brains of the personas are invoked. 
           #
-          # Phase 1 (sequential): perceive. Co-located personas chat during
-          # perception, which must not race, so this stays ordered.
+          # Phase 1 (sequential, LLM-free): perceive COLLECTION. Chat-critical
+          # state is only read here; the poignancy LLM calls and memory
+          # commits are deferred into the parallel decide phase below, so a
+          # chat-heavy step no longer serializes the whole town.
+          import time as _time
+          _t0 = _time.time()
           perceive_state = dict()
           for persona_name, persona in self.personas.items():
             try:
@@ -433,10 +437,12 @@ class ReverieServer:
               # A perception failure must not kill the whole town.
               traceback.print_exc()
               perceive_state[persona_name] = (None, None)
+          _t1 = _time.time()
 
           # Phase 2 (parallel): retrieve / plan / reflect / execute. All
           # persona-private LLM + embedding work with no shared writes, so
           # the whole town decides concurrently -- a ~3-4x step speedup.
+          reset_reflection_budget()
           movements = {"persona": dict(), 
                        "meta": dict()}
           with ThreadPoolExecutor(max_workers=6) as _ex:
@@ -517,16 +523,22 @@ class ReverieServer:
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           atomic_json_dump(movements, curr_move_file)
 
-          # Persist each persona's live state every step so the frontend
-          # state page (Daily Requirement/Schedule, current action fields)
-          # reflects what is happening right now. Upstream only saved at
-          # fin/new-day, leaving the on-disk scratch stale during a run.
+          # Persist each persona's live state. scratch.json is written EVERY
+          # step (the frontend modal reads it live); the full memory dump
+          # (nodes.json + embeddings.json, ~250KB per persona) is throttled
+          # to every 10 steps to keep per-step I/O bounded -- the embeddings
+          # repair script covers a corrupt full save.
+          _full_save = (self.step % 10 == 0)
           for persona_name, persona in self.personas.items():
-            persona.save(f"{sim_folder}/personas/{persona_name}/bootstrap_memory")
+            persona.save(f"{sim_folder}/personas/{persona_name}/bootstrap_memory",
+                         full=_full_save)
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
           self.step += 1
+          print(f"[STEPTIME] step {self.step}: perceive={_t1-_t0:.2f}s "
+                f"decide={_time.time()-_t1:.2f}s "
+                f"total={_time.time()-_t0:.2f}s", flush=True)
           # Keep the frontend's step file fresh every step so the
           # simulator_home page can be (re)loaded at any time.
           curr_step = dict()

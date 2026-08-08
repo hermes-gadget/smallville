@@ -22,23 +22,15 @@ def generate_poig_score(persona, event_type, description):
     return run_gpt_prompt_chat_poignancy(persona, 
                            persona.scratch.act_description)[0]
 
-def perceive(persona, maze): 
+def perceive_collect(persona, maze): 
   """
-  Perceives events around the persona and saves it to the memory, both events 
-  and spaces. 
+  Phase 1 of perceive: spatial memory update + event collection, WITHOUT
+  any LLM calls. The expensive poignancy scoring and memory commits happen
+  in perceive_commit(), which runs inside the parallel decide phase -- so a
+  chat-heavy step no longer serializes the whole town on LLM latency.
 
-  We first perceive the events nearby the persona, as determined by its 
-  <vision_r>. If there are a lot of events happening within that radius, we 
-  take the <att_bandwidth> of the closest events. Finally, we check whether
-  any of them are new, as determined by <retention>. If they are new, then we
-  save those and return the <ConceptNode> instances for those events. 
-
-  INPUT: 
-    persona: An instance of <Persona> that represents the current persona. 
-    maze: An instance of <Maze> that represents the current maze in which the 
-          persona is acting in. 
-  OUTPUT: 
-    ret_events: a list of <ConceptNode> that are perceived and new. 
+  Returns a list of pending percept specs (dicts). Persona-private reads
+  only (own a_mem/s_mem/scratch); safe in any order.
   """
   # PERCEIVE SPACE
   # We get the nearby tiles given our current tile and the persona's vision
@@ -102,10 +94,9 @@ def perceive(persona, maze):
   for dist, event in percept_events_list[:persona.scratch.att_bandwidth]: 
     perceived_events += [event]
 
-  # Storing events. 
-  # <ret_events> is a list of <ConceptNode> instances from the persona's 
-  # associative memory. 
-  ret_events = []
+  # Collect pending percepts (embeddings are cheap local calls; poignancy
+  # LLM scoring and a_mem commits are deferred to perceive_commit).
+  pending = []
   for p_event in perceived_events: 
     if not isinstance(p_event, (tuple, list)) or len(p_event) != 4:
       continue
@@ -120,7 +111,7 @@ def perceive(persona, maze):
     desc = f"{s.split(':')[-1]} is {desc}"
     p_event = (s, p, o)
 
-    # We retrieve the latest persona.scratch.retention events. If there is  
+    # We retrieve the latest persona.scratch.retention events. If there is 
     # something new that is happening (that is, p_event not in latest_events),
     # then we add that event to the a_mem and return it. 
     latest_events = persona.a_mem.get_summarized_latest_events(
@@ -144,16 +135,17 @@ def perceive(persona, maze):
         event_embedding = persona.a_mem.embeddings[desc_embedding_in]
       else: 
         event_embedding = get_embedding(desc_embedding_in)
-      event_embedding_pair = (desc_embedding_in, event_embedding)
-      
-      # Get event poignancy. 
-      event_poignancy = generate_poig_score(persona, 
-                                            "event", 
-                                            desc_embedding_in)
+      spec = {
+        "kind": "event",
+        "s": s, "p": p, "o": o, "desc": desc,
+        "desc_embedding_in": desc_embedding_in,
+        "embedding_pair": (desc_embedding_in, event_embedding),
+        "keywords": keywords,
+        "chat": None,
+      }
 
       # If we observe the persona's self chat, we include that in the memory
-      # of the persona here. 
-      chat_node_ids = []
+      # of the persona here (deferred: poignancy LLM call happens in commit).
       if p_event[0] == f"{persona.name}" and p_event[1] == "chat with": 
         curr_event = persona.scratch.act_event
         if persona.scratch.act_description in persona.a_mem.embeddings: 
@@ -162,23 +154,54 @@ def perceive(persona, maze):
         else: 
           chat_embedding = get_embedding(persona.scratch
                                                 .act_description)
-        chat_embedding_pair = (persona.scratch.act_description, 
-                               chat_embedding)
-        chat_poignancy = generate_poig_score(persona, "chat", 
-                                             persona.scratch.act_description)
-        chat_node = persona.a_mem.add_chat(persona.scratch.curr_time, None,
-                      curr_event[0], curr_event[1], curr_event[2], 
-                      persona.scratch.act_description, keywords, 
-                      chat_poignancy, chat_embedding_pair, 
-                      persona.scratch.chat)
-        chat_node_ids = [chat_node.node_id]
+        spec["chat"] = {
+          "curr_event": curr_event,
+          "chat_embedding_pair": (persona.scratch.act_description,
+                                  chat_embedding),
+          "chat": persona.scratch.chat,
+        }
+      pending.append(spec)
 
-      # Finally, we add the current event to the agent's memory. 
-      ret_events += [persona.a_mem.add_event(persona.scratch.curr_time, None,
-                           s, p, o, desc, keywords, event_poignancy, 
-                           event_embedding_pair, chat_node_ids)]
-      persona.scratch.importance_trigger_curr -= event_poignancy
-      persona.scratch.importance_ele_n += 1
+  return pending
+
+
+def perceive_commit(persona, pending): 
+  """
+  Phase 2 of perceive: poignancy scoring (LLM) + memory commits.
+
+  Safe to run concurrently per persona -- it only touches the persona's own
+  a_mem/scratch. Returns the list of new <ConceptNode> instances (the
+  perceived events), matching the original perceive() return contract.
+  """
+  ret_events = []
+  for spec in pending: 
+    # Get event poignancy. 
+    event_poignancy = generate_poig_score(persona, 
+                                          "event", 
+                                          spec["desc_embedding_in"])
+
+    chat_node_ids = []
+    if spec.get("chat"): 
+      chat_poignancy = generate_poig_score(persona, "chat", 
+                                           spec["chat"]["chat_embedding_pair"][0])
+      chat_node = persona.a_mem.add_chat(persona.scratch.curr_time, None,
+                    spec["chat"]["curr_event"][0],
+                    spec["chat"]["curr_event"][1],
+                    spec["chat"]["curr_event"][2],
+                    spec["chat"]["chat_embedding_pair"][0],
+                    spec["keywords"], chat_poignancy,
+                    spec["chat"]["chat_embedding_pair"],
+                    spec["chat"]["chat"])
+      chat_node_ids = [chat_node.node_id]
+
+    # Finally, we add the current event to the agent's memory. 
+    ret_events += [persona.a_mem.add_event(persona.scratch.curr_time, None,
+                         spec["s"], spec["p"], spec["o"], spec["desc"],
+                         spec["keywords"], event_poignancy,
+                         spec["embedding_pair"], chat_node_ids)]
+
+    persona.scratch.importance_trigger_curr -= event_poignancy
+    persona.scratch.importance_ele_n += 1
 
   return ret_events
 
