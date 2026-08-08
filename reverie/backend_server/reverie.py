@@ -427,6 +427,27 @@ class ReverieServer:
               movements["persona"][persona_name]["chat"] = (persona
                                                             .scratch.chat)
 
+          chat = next((state["chat"]
+                       for state in movements["persona"].values()
+                       if state["chat"]), None)
+          if chat:
+            chat_log_file = f"{sim_folder}/chat_log.json"
+            try:
+              chat_log = []
+              if check_if_file_exists(chat_log_file):
+                with open(chat_log_file) as json_file:
+                  chat_log = json.load(json_file)
+              if not isinstance(chat_log, list):
+                chat_log = []
+              chat_log.append({
+                "ts": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "step": self.step,
+                "chat": chat,
+              })
+              atomic_json_dump(chat_log[-500:], chat_log_file)
+            except Exception:
+              pass
+
           # Include the meta information about the current stage in the 
           # movements dictionary. 
           movements["meta"]["curr_time"] = (self.curr_time 
@@ -698,7 +719,6 @@ if __name__ == '__main__':
 
   rs = ReverieServer(origin, target)
   rs.open_server(run_steps)
-
 
 
 

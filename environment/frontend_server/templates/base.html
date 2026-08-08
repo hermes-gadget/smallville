@@ -155,9 +155,10 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 				}
 				$('#tm-updated').text(d.updated_at || '-');
 				$('#tm-started').text(d.started_at || '-');
-				var models = Object.entries(d.by_model || {})
-					.map(function(kv) { return kv[0] + ': ' + n(kv[1]); })
-					.join(' · ');
+				var model_usage = d.by_model || {};
+				var models = Object.keys(model_usage).map(function(model) {
+					return model + ': ' + n(model_usage[model]);
+				}).join(' · ');
 				$('#tm-models').text(models);
 			}).fail(function() {});
 		}

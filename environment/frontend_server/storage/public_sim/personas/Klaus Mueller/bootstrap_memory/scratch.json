@@ -1,208 +1,51 @@
 {
-  "vision_r": 8,
-  "att_bandwidth": 8,
-  "retention": 8,
-  "curr_time": "February 13, 2023, 08:00:20",
-  "curr_tile": [
-    128,
-    46
-  ],
-  "daily_plan_req": "Klaus Mueller goes to the library at Oak Hill College early in the morning, spends his days writing, and eats at Hobbs Cafe.",
-  "name": "Klaus Mueller",
-  "first_name": "Klaus",
-  "last_name": "Mueller",
-  "age": 20,
-  "innate": "kind, inquisitive, passionate",
-  "learned": "Klaus Mueller is a student at Oak Hill College studying sociology. He is passionate about social justice and loves to explore different perspectives.",
-  "currently": "Klaus Mueller is writing a research paper on the effects of gentrification in low-income communities.",
-  "lifestyle": "Klaus Mueller goes to bed around 11pm, awakes up around 7am, eats dinner around 5pm.",
+  "vision_r": 8, 
+  "att_bandwidth": 8, 
+  "retention": 8, 
+  "curr_time": null, 
+  "curr_tile": null, 
+  "daily_plan_req": "Klaus Mueller goes to the library at Oak Hill College early in the morning, spends his days writing, and eats at Hobbs Cafe.", 
+  "name": "Klaus Mueller", 
+  "first_name": "Klaus", 
+  "last_name": "Mueller", 
+  "age": 20, 
+  "innate": "kind, inquisitive, passionate", 
+  "learned": "Klaus Mueller is a student at Oak Hill College studying sociology. He is passionate about social justice and loves to explore different perspectives.", 
+  "currently": "Klaus Mueller is writing a research paper on the effects of gentrification in low-income communities.", 
+  "lifestyle": "Klaus Mueller goes to bed around 11pm, awakes up around 7am, eats dinner around 5pm.", 
   "living_area": "the Ville:Dorm for Oak Hill College:Klaus Mueller's room",
   "concept_forget": 100,
   "daily_reflection_time": 180,
   "daily_reflection_size": 5,
   "overlap_reflect_th": 4,
-  "kw_strg_event_reflect_th": 10,
-  "kw_strg_thought_reflect_th": 9,
+  "kw_strg_event_reflect_th": 10, 
+  "kw_strg_thought_reflect_th": 9, 
+
   "recency_w": 1,
   "relevance_w": 1,
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 240,
-  "importance_ele_n": 8,
-  "thought_count": 5,
-  "daily_req": [
-    "wake up and complete the morning routine at 7:00 am"
-  ],
-  "f_daily_schedule": [
-    [
-      "sleeping",
-      420
-    ],
-    [
-      "Klaus is waking up and completing his morning routine (brushing teeth, washing face, getting dressed)",
-      60
-    ],
-    [
-      "Klaus is heading to the library at Oak Hill College to begin his research for his paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, beginning to outline his research paper on gentrification and reviewing sources on low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, deeply engrossed in reading and taking notes from a sociology journal on the impacts of urban displacement",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to take detailed notes from the sociology journal and beginning to draft the introduction section of his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, taking a short break from writing to grab a quick snack from his bag, then returning to his notes to continue drafting the introduction of his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to work on the introduction of his research paper and outlining the section on the effects of gentrification in low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to work on his research paper, now focusing on drafting the section about the social and economic effects of gentrification on long-term residents of low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to write the section on the social and economic effects of gentrification, and beginning to outline potential solutions and policy recommendations for his research paper",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to draft the section on potential solutions and policy recommendations for his research paper on gentrification, pausing occasionally to jot down additional notes from his sources",
-      60
-    ],
-    [
-      "Klaus is leaving the library and heading to Hobbs Cafe for his dinner, as is his daily routine",
-      60
-    ],
-    [
-      "Klaus is eating dinner at Hobbs Cafe, reviewing his notes from the day and thinking about the next steps for his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is finishing his dinner at Hobbs Cafe, packing up his notes, and heading back to his dorm to relax and review his research outline for the next day",
-      60
-    ],
-    [
-      "Klaus is back in his dorm, reviewing his research outline and reading a few more passages from his sources to prepare for tomorrow's writing session",
-      60
-    ],
-    [
-      "Klaus is back in his dorm, organizing his notes and drafting a to-do list for tomorrow's writing session, then winding down for the evening",
-      60
-    ],
-    [
-      "Klaus is winding down for the evening, putting away his research notes, and getting ready for bed",
-      60
-    ],
-    [
-      "Klaus is sleeping",
-      60
-    ]
-  ],
-  "f_daily_schedule_hourly_org": [
-    [
-      "sleeping",
-      420
-    ],
-    [
-      "Klaus is waking up and completing his morning routine (brushing teeth, washing face, getting dressed)",
-      60
-    ],
-    [
-      "Klaus is heading to the library at Oak Hill College to begin his research for his paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, beginning to outline his research paper on gentrification and reviewing sources on low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, deeply engrossed in reading and taking notes from a sociology journal on the impacts of urban displacement",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to take detailed notes from the sociology journal and beginning to draft the introduction section of his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, taking a short break from writing to grab a quick snack from his bag, then returning to his notes to continue drafting the introduction of his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to work on the introduction of his research paper and outlining the section on the effects of gentrification in low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to work on his research paper, now focusing on drafting the section about the social and economic effects of gentrification on long-term residents of low-income communities",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to write the section on the social and economic effects of gentrification, and beginning to outline potential solutions and policy recommendations for his research paper",
-      60
-    ],
-    [
-      "Klaus is at the library, continuing to draft the section on potential solutions and policy recommendations for his research paper on gentrification, pausing occasionally to jot down additional notes from his sources",
-      60
-    ],
-    [
-      "Klaus is leaving the library and heading to Hobbs Cafe for his dinner, as is his daily routine",
-      60
-    ],
-    [
-      "Klaus is eating dinner at Hobbs Cafe, reviewing his notes from the day and thinking about the next steps for his research paper on gentrification",
-      60
-    ],
-    [
-      "Klaus is finishing his dinner at Hobbs Cafe, packing up his notes, and heading back to his dorm to relax and review his research outline for the next day",
-      60
-    ],
-    [
-      "Klaus is back in his dorm, reviewing his research outline and reading a few more passages from his sources to prepare for tomorrow's writing session",
-      60
-    ],
-    [
-      "Klaus is back in his dorm, organizing his notes and drafting a to-do list for tomorrow's writing session, then winding down for the evening",
-      60
-    ],
-    [
-      "Klaus is winding down for the evening, putting away his research notes, and getting ready for bed",
-      60
-    ],
-    [
-      "Klaus is sleeping",
-      60
-    ]
-  ],
-  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:kitchen sink",
-  "act_start_time": "February 13, 2023, 08:00:00",
-  "act_duration": 60,
-  "act_description": "Klaus is heading to the library at Oak Hill College to begin his research and writing for the day",
-  "act_pronunciatio": "\ud83d\udcda\u270d\ufe0f",
-  "act_event": [
-    "Klaus Mueller",
-    "Klaus Mueller",
-    "head"
-  ],
-  "act_obj_description": "not mentioned in the given context",
-  "act_obj_pronunciatio": "\ud83e\udd14",
-  "act_obj_event": [
-    "kitchen sink",
-    "kitchen sink",
-    "is"
-  ],
-  "chatting_with": null,
+  "importance_trigger_curr": 250,
+  "importance_ele_n": 0, 
+  "thought_count": 5, 
+
+  "daily_req": [], 
+  "f_daily_schedule": [],
+  "f_daily_schedule_hourly_org": [],
+  "act_address": null, 
+  "act_start_time": null, 
+  "act_duration": null, 
+  "act_description": null, 
+  "act_pronunciatio": null, 
+  "act_event": ["Klaus Mueller", null, null], 
+  "act_obj_description": null, 
+  "act_obj_pronunciatio": null, 
+  "act_obj_event": [null, null, null], 
+  "chatting_with": null, 
   "chat": null,
-  "chatting_with_buffer": {},
+  "chatting_with_buffer": {}, 
   "chatting_end_time": null,
-  "act_path_set": true,
+  "act_path_set": false, 
   "planned_path": []
 }

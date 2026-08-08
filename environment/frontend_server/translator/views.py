@@ -79,6 +79,28 @@ def get_token_usage(request):
   return JsonResponse(payload)
 
 
+def get_chat_log(request):
+  """Return the tail of a simulation's live conversation log."""
+  sim_code = request.GET.get("sim_code") or request.POST.get("sim_code")
+  payload = {"entries": []}
+  if (not sim_code or sim_code in (".", "..")
+      or os.path.basename(sim_code) != sim_code):
+    return JsonResponse(payload)
+
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  chat_log_file = os.path.join(frontend_root, "storage", sim_code,
+                               "chat_log.json")
+  if os.path.exists(chat_log_file):
+    try:
+      with open(chat_log_file) as json_file:
+        entries = json.load(json_file)
+      if isinstance(entries, list):
+        payload["entries"] = entries[-200:]
+    except Exception:
+      pass
+  return JsonResponse(payload)
+
+
 def demo(request, sim_code, step, play_speed="2"): 
   move_file = f"compressed_storage/{sim_code}/master_movement.json"
   meta_file = f"compressed_storage/{sim_code}/meta.json"
@@ -177,26 +199,47 @@ def home(request):
   # backend refreshes it every step, so the page can be reloaded any time
   # instead of showing "please start the back end first".
 
-  persona_names = []
-  persona_names_set = set()
-  for i in find_filenames(f"storage/{sim_code}/personas", ""): 
-    x = i.split("/")[-1].strip()
-    if x[0] != ".": 
-      persona_names += [[x, x.replace(" ", "_")]]
-      persona_names_set.add(x)
+  persona_dir = f"storage/{sim_code}/personas"
+  available_names = []
+  if os.path.isdir(persona_dir):
+    for i in find_filenames(persona_dir, ""):
+      x = i.split("/")[-1].strip()
+      if x and x[0] != ".":
+        available_names.append(x)
 
+  ordered_names = []
+  meta_file = f"storage/{sim_code}/reverie/meta.json"
+  if check_if_file_exists(meta_file):
+    try:
+      with open(meta_file) as json_file:
+        meta_names = json.load(json_file).get("persona_names", [])
+      ordered_names.extend(name for name in meta_names
+                           if isinstance(name, str) and name)
+    except Exception:
+      pass
+  ordered_names.extend(sorted(name for name in available_names
+                              if name not in ordered_names))
+  persona_names = [[name, name.replace(" ", "_")]
+                   for name in ordered_names]
   persona_init_pos = []
   file_count = []
-  for i in find_filenames(f"storage/{sim_code}/environment", ".json"):
-    x = i.split("/")[-1].strip()
-    if x[0] != ".": 
-      file_count += [int(x.split(".")[0])]
-  curr_json = f'storage/{sim_code}/environment/{str(max(file_count))}.json'
-  with open(curr_json) as json_file:  
-    persona_init_pos_dict = json.load(json_file)
-    for key, val in persona_init_pos_dict.items(): 
-      if key in persona_names_set: 
-        persona_init_pos += [[key, val["x"], val["y"]]]
+  environment_dir = f"storage/{sim_code}/environment"
+  if os.path.isdir(environment_dir):
+    for i in find_filenames(environment_dir, ".json"):
+      x = i.split("/")[-1].strip()
+      if x and x[0] != ".":
+        try:
+          file_count.append(int(x.split(".")[0]))
+        except ValueError:
+          pass
+  if file_count:
+    curr_json = f'storage/{sim_code}/environment/{str(max(file_count))}.json'
+    with open(curr_json) as json_file:
+      persona_init_pos_dict = json.load(json_file)
+    for name in ordered_names:
+      val = persona_init_pos_dict.get(name)
+      if isinstance(val, dict) and "x" in val and "y" in val:
+        persona_init_pos.append([name, val["x"], val["y"]])
 
   context = {"sim_code": sim_code,
              "step": step, 
@@ -370,8 +413,6 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
-
 
 
 

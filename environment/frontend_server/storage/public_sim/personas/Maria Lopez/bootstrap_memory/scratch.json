@@ -1,193 +1,51 @@
 {
-  "vision_r": 8,
-  "att_bandwidth": 8,
-  "retention": 8,
-  "curr_time": "February 13, 2023, 08:00:20",
-  "curr_tile": [
-    120,
-    46
-  ],
-  "daily_plan_req": "Maria Lopez spends at least 6 hours a day Twitch streaming or gaming.",
-  "name": "Maria Lopez",
-  "first_name": "Maria",
-  "last_name": "Lopez",
-  "age": 21,
-  "innate": "energetic, enthusiastic, inquisitive",
-  "learned": "Maria Lopez is a student at Oak Hill College studying physics and a part time Twitch game streamer who loves to connect with people and explore new ideas.",
-  "currently": "Maria Lopez is working on her physics degree and streaming games on Twitch to make some extra money. She visits Hobbs Cafe for studying and eating just about everyday.",
-  "lifestyle": "Maria Lopez goes to bed around midnight, awakes up around 10am, eats dinner around 7pm.",
+  "vision_r": 8, 
+  "att_bandwidth": 8, 
+  "retention": 8, 
+  "curr_time": null, 
+  "curr_tile": null, 
+  "daily_plan_req": "Maria Lopez spends at least 6 hours a day Twitch streaming or gaming.", 
+  "name": "Maria Lopez", 
+  "first_name": "Maria", 
+  "last_name": "Lopez", 
+  "age": 21, 
+  "innate": "energetic, enthusiastic, inquisitive", 
+  "learned": "Maria Lopez is a student at Oak Hill College studying physics and a part time Twitch game streamer who loves to connect with people and explore new ideas.", 
+  "currently": "Maria Lopez is working on her physics degree and streaming games on Twitch to make some extra money. She visits Hobbs Cafe for studying and eating just about everyday.", 
+  "lifestyle": "Maria Lopez goes to bed around midnight, awakes up around 10am, eats dinner around 7pm.", 
   "living_area": "the Ville:Dorm for Oak Hill College:Maria Lopez's room",
   "concept_forget": 100,
   "daily_reflection_time": 180,
   "daily_reflection_size": 5,
   "overlap_reflect_th": 4,
-  "kw_strg_event_reflect_th": 10,
-  "kw_strg_thought_reflect_th": 9,
+  "kw_strg_event_reflect_th": 10, 
+  "kw_strg_thought_reflect_th": 9, 
+
   "recency_w": 1,
   "relevance_w": 1,
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 2,
-  "importance_ele_n": 220,
-  "thought_count": 5,
-  "daily_req": [
-    "wake up and complete the morning routine at 10:00 am"
-  ],
-  "f_daily_schedule": [
-    [
-      "sleeping",
-      600
-    ],
-    [
-      "Maria is waking up and starting her morning routine",
-      60
-    ],
-    [
-      "Maria is having a quick breakfast and checking her social media and Twitch notifications before heading to Hobbs Cafe to study",
-      60
-    ],
-    [
-      "Maria is at Hobbs Cafe, studying for her physics class while sipping a latte and occasionally checking her phone for Twitch notifications",
-      60
-    ],
-    [
-      "Maria is continuing to study at Hobbs Cafe, working on physics problem sets while sipping a second latte, and briefly checking her Twitch chat between problems",
-      60
-    ],
-    [
-      "Maria is still at Hobbs Cafe, finishing up her physics problem sets and ordering a light snack to keep her energy up before she heads home to start her Twitch stream",
-      60
-    ],
-    [
-      "Maria is heading home from Hobbs Cafe, grabbing her streaming gear, and setting up her room to start her Twitch stream for the afternoon",
-      60
-    ],
-    [
-      "Maria is starting her Twitch stream, greeting her viewers with her usual energetic enthusiasm and launching into a game of her current favorite indie title",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, playing her indie game and interacting with her chat, keeping up her energetic commentary while she plays",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, now playing a multiplayer game with her viewers and taking a quick break to eat a snack while keeping the chat engaged",
-      60
-    ],
-    [
-      "Maria is eating dinner and taking a short break from streaming, but will return to her Twitch stream shortly after to keep her daily streaming hours up",
-      60
-    ],
-    [
-      "Maria is back on her Twitch stream, playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, now playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, wrapping up the co-op horror game session with her chat and thanking her viewers for joining before she starts to wind down for the night",
-      60
-    ],
-    [
-      "Maria is winding down after her stream, cleaning up her gaming setup and getting ready for bed, then settling in to sleep",
-      60
-    ]
-  ],
-  "f_daily_schedule_hourly_org": [
-    [
-      "sleeping",
-      600
-    ],
-    [
-      "Maria is waking up and starting her morning routine",
-      60
-    ],
-    [
-      "Maria is having a quick breakfast and checking her social media and Twitch notifications before heading to Hobbs Cafe to study",
-      60
-    ],
-    [
-      "Maria is at Hobbs Cafe, studying for her physics class while sipping a latte and occasionally checking her phone for Twitch notifications",
-      60
-    ],
-    [
-      "Maria is continuing to study at Hobbs Cafe, working on physics problem sets while sipping a second latte, and briefly checking her Twitch chat between problems",
-      60
-    ],
-    [
-      "Maria is still at Hobbs Cafe, finishing up her physics problem sets and ordering a light snack to keep her energy up before she heads home to start her Twitch stream",
-      60
-    ],
-    [
-      "Maria is heading home from Hobbs Cafe, grabbing her streaming gear, and setting up her room to start her Twitch stream for the afternoon",
-      60
-    ],
-    [
-      "Maria is starting her Twitch stream, greeting her viewers with her usual energetic enthusiasm and launching into a game of her current favorite indie title",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, playing her indie game and interacting with her chat, keeping up her energetic commentary while she plays",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, now playing a multiplayer game with her viewers and taking a quick break to eat a snack while keeping the chat engaged",
-      60
-    ],
-    [
-      "Maria is eating dinner and taking a short break from streaming, but will return to her Twitch stream shortly after to keep her daily streaming hours up",
-      60
-    ],
-    [
-      "Maria is back on her Twitch stream, playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, now playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
-      60
-    ],
-    [
-      "Maria is continuing her Twitch stream, wrapping up the co-op horror game session with her chat and thanking her viewers for joining before she starts to wind down for the night",
-      60
-    ],
-    [
-      "Maria is winding down after her stream, cleaning up her gaming setup and getting ready for bed, then settling in to sleep",
-      60
-    ]
-  ],
-  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:<random>",
-  "act_start_time": "February 13, 2023, 08:00:00",
-  "act_duration": 600,
-  "act_description": "sleeping",
-  "act_pronunciatio": "\ud83d\ude34",
-  "act_event": [
-    "Maria Lopez",
-    "Maria Lopez",
-    "is"
-  ],
-  "act_obj_description": "being used by Maria Lopez",
-  "act_obj_pronunciatio": "\ud83d\udeb6\u200d\u2640",
-  "act_obj_event": [
-    "<random>",
-    "<random>",
-    "is"
-  ],
-  "chatting_with": null,
+  "importance_trigger_curr": 250,
+  "importance_ele_n": 0, 
+  "thought_count": 5, 
+
+  "daily_req": [], 
+  "f_daily_schedule": [],
+  "f_daily_schedule_hourly_org": [],
+  "act_address": null, 
+  "act_start_time": null, 
+  "act_duration": null, 
+  "act_description": null, 
+  "act_pronunciatio": null, 
+  "act_event": ["Maria Lopez", null, null], 
+  "act_obj_description": null, 
+  "act_obj_pronunciatio": null, 
+  "act_obj_event": [null, null, null], 
+  "chatting_with": null, 
   "chat": null,
-  "chatting_with_buffer": {},
+  "chatting_with_buffer": {}, 
   "chatting_end_time": null,
-  "act_path_set": true,
-  "planned_path": [
-    [
-      118,
-      46
-    ],
-    [
-      118,
-      45
-    ]
-  ]
+  "act_path_set": false, 
+  "planned_path": []
 }

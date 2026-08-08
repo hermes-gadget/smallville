@@ -4,22 +4,25 @@
 		"use strict";
 
 		// -----------------------------------------------------------------------
-		// Simulation state. The POST endpoints and payload shapes below are the
-		// original Reverie step/sim_code handshake and intentionally stay stable.
+		// Simulation state. The update endpoint's step/sim_code payload stays
+		// stable; the autonomous backend now advances the environment itself.
 		// -----------------------------------------------------------------------
 		var step = parseInt(document.getElementById("step").textContent, 10);
 		var sim_code = document.getElementById("sim_code").textContent.trim();
 		var tile_width = 32;
 		var movement_speed = 32;
-		var timer_max = 0;
-		var timer = timer_max;
 		var phase = "update";
-		var curr_maze = "the_ville";
 		var execute_movement = null;
 		var execute_count_max = tile_width / movement_speed;
 		var execute_count = execute_count_max;
 		var movement_target = {};
 		var update_request_in_flight = false;
+		var update_poll_interval_ms = 2000;
+		var next_update_poll_at = 0;
+		var chat_request_in_flight = false;
+		var chat_signature = "";
+		var speaker_colors = {};
+		var speaker_color_count = 0;
 
 		var spawn_tile_loc = {};
 		var persona_order = [];
@@ -30,6 +33,10 @@
 			spawn_tile_loc[name] = [x, y];
 			persona_order.push(name);
 			setText("target_address__" + personaSlug(name), "Tile " + x + ", " + y);
+		});
+		var resident_order = [];
+		document.querySelectorAll(".resident-card").forEach(function(card) {
+			resident_order.push(card.getAttribute("data-persona"));
 		});
 
 		var personas = {};
@@ -48,6 +55,7 @@
 		var map_stage = document.getElementById("map-stage");
 		var character_root = "{% static 'assets/characters/' %}";
 		var character_atlas = "{% static 'assets/characters/atlas.json' %}";
+		var fallback_texture_key = "resident-texture__fallback";
 
 		var config = {
 			type: Phaser.AUTO,
@@ -73,6 +81,7 @@
 
 		var game = new Phaser.Game(config);
 		bindInterfaceControls();
+		startChatPolling();
 
 		function preload() {
 			this.load.image("blocks_1", "{% static 'assets/the_ville/visuals/map_assets/blocks/blocks_1.png' %}");
@@ -93,8 +102,13 @@
 			this.load.image("CuteRPG_Forest_C", "{% static 'assets/the_ville/visuals/map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png' %}");
 			this.load.tilemapTiledJSON("map", "{% static 'assets/the_ville/visuals/the_ville_jan7.json' %}");
 
-			// Every resident uses their own local pixel atlas instead of the generic
-			// remote demo sprite used by the original page.
+			// Keep one known-local atlas as a generic fallback for residents whose
+			// dedicated sprite is unavailable.
+			this.load.atlas(
+				fallback_texture_key,
+				character_root + "Yuriko_Yamamoto.png",
+				character_atlas
+			);
 			persona_order.forEach(function(name) {
 				this.load.atlas(
 					personaTextureKey(name),
@@ -172,7 +186,7 @@
 				var start = spawn_tile_loc[name];
 				var x = tileToWorld(start[0]);
 				var y = tileToWorld(start[1]);
-				var texture_key = personaTextureKey(name);
+				var texture_key = textureForPersona(scene, name);
 				var sprite = scene.add.sprite(x, y, texture_key, "down").setDepth(1);
 				sprite.setInteractive({ useHandCursor: true });
 				sprite.setData("personaName", name);
@@ -359,12 +373,6 @@
 		function update(time, delta) {
 			moveCameraWithKeyboard(delta);
 
-			if (phase === "process") {
-				postCurrentEnvironment();
-				phase = "update";
-				return;
-			}
-
 			if (phase === "update") {
 				pollForMovement();
 				return;
@@ -385,28 +393,10 @@
 			if (dx || dy) setCameraScroll(main_camera.scrollX + dx, main_camera.scrollY + dy);
 		}
 
-		function postCurrentEnvironment() {
-			var data = {
-				"step": step,
-				"sim_code": sim_code,
-				"environment": {}
-			};
-			persona_order.forEach(function(name) {
-				data.environment[name] = {
-					"maze": curr_maze,
-					"x": Math.floor(personas[name].x / tile_width),
-					"y": Math.floor(personas[name].y / tile_width)
-				};
-			});
-
-			var request = new XMLHttpRequest();
-			request.overrideMimeType("application/json");
-			request.open("POST", "{% url 'process_environment' %}", true);
-			request.send(JSON.stringify(data));
-		}
-
 		function pollForMovement() {
-			if (timer <= 0 && !update_request_in_flight) {
+			var now = Date.now();
+			if (now >= next_update_poll_at && !update_request_in_flight) {
+				next_update_poll_at = now + update_poll_interval_ms;
 				update_request_in_flight = true;
 				var request = new XMLHttpRequest();
 				request.overrideMimeType("application/json");
@@ -424,14 +414,12 @@
 						execute_movement = payload;
 						phase = "execute";
 					}
-					timer = timer_max;
 				});
 				request.addEventListener("loadend", function() {
 					update_request_in_flight = false;
 				});
 				request.send(JSON.stringify({ "step": step, "sim_code": sim_code }));
 			}
-			timer -= 1;
 		}
 
 		function executeMovementStep() {
@@ -457,15 +445,24 @@
 				stopPersonaAnimation(name);
 				positionPersonaDecorations(name);
 			});
-			phase = "process";
+			phase = "update";
 			execute_count = execute_count_max;
 			step += 1;
 		}
 
 		function prepareMovementTargets() {
-			persona_order.forEach(function(name) {
+			resident_order.forEach(function(name) {
 				var state = execute_movement.persona[name];
-				if (!state) return;
+				if (!state) {
+					delete movement_target[name];
+					updateResidentCard(name, null);
+					return;
+				}
+				updateResidentCard(name, state);
+				if (!personas[name] || !Array.isArray(state.movement) || state.movement.length < 2) {
+					delete movement_target[name];
+					return;
+				}
 				movement_target[name] = [
 					tileToWorld(state.movement[0]),
 					tileToWorld(state.movement[1])
@@ -474,7 +471,6 @@
 				var initials = personaInitials(name);
 				var pronunciatio = state.pronunciatio || "";
 				persona_labels[name].setText(pronunciatio ? initials + ": " + pronunciatio : "");
-				updateResidentCard(name, state);
 			});
 		}
 
@@ -523,6 +519,14 @@
 		}
 
 		function updateResidentCard(name, state) {
+			var card = document.getElementById("resident-card__" + personaSlug(name));
+			if (card) card.classList.toggle("is-awaiting", !state);
+			if (!state) {
+				setText("current_action__" + personaSlug(name), "Awaiting action");
+				setText("target_address__" + personaSlug(name), "Location pending");
+				setText("chat__" + personaSlug(name), "None at the moment");
+				return;
+			}
 			var description = String(state.description || "");
 			var separator = description.indexOf("@");
 			var action = separator === -1 ? description : description.slice(0, separator);
@@ -538,6 +542,12 @@
 		}
 
 		function bindInterfaceControls() {
+			document.querySelectorAll(".resident-avatar img").forEach(function(image) {
+				image.addEventListener("error", function() {
+					var fallback = image.getAttribute("data-fallback-src");
+					if (fallback && image.getAttribute("src") !== fallback) image.setAttribute("src", fallback);
+				});
+			});
 			document.querySelectorAll(".resident-card").forEach(function(card) {
 				card.querySelector(".resident-focus").addEventListener("click", function() {
 					selectPersona(card.getAttribute("data-persona"), true);
@@ -562,9 +572,156 @@
 			document.getElementById("sidebar-open").addEventListener("click", openSidebar);
 			document.getElementById("sidebar-close").addEventListener("click", closeSidebar);
 			scrim.addEventListener("click", closeSidebar);
+
+			var chat_panel = document.getElementById("chat-panel");
+			var chat_toggle = document.getElementById("chat-toggle");
+			chat_toggle.addEventListener("click", function() {
+				var collapsed = chat_panel.classList.toggle("is-collapsed");
+				chat_toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+				chat_toggle.setAttribute("aria-label", collapsed ? "Expand conversations" : "Collapse conversations");
+				chat_toggle.textContent = collapsed ? "+" : "−";
+			});
 			document.addEventListener("keydown", function(event) {
 				if (event.key === "Escape") closeSidebar();
 			});
+		}
+
+		function startChatPolling() {
+			pollChatLog();
+			window.setInterval(pollChatLog, 2000);
+		}
+
+		function pollChatLog() {
+			if (chat_request_in_flight) return;
+			chat_request_in_flight = true;
+			var request = new XMLHttpRequest();
+			request.overrideMimeType("application/json");
+			request.open("GET", "{% url 'get_chat_log' %}?sim_code=" + encodeURIComponent(sim_code), true);
+			request.timeout = 15000;
+			request.addEventListener("load", function() {
+				if (request.readyState !== 4 || request.status !== 200) return;
+				var payload;
+				try {
+					payload = JSON.parse(request.responseText);
+				} catch (error) {
+					return;
+				}
+				if (payload && Array.isArray(payload.entries)) renderChatEntries(payload.entries);
+			});
+			request.addEventListener("loadend", function() {
+				chat_request_in_flight = false;
+			});
+			request.send();
+		}
+
+		function renderChatEntries(entries) {
+			var signature;
+			try {
+				signature = JSON.stringify(entries);
+			} catch (error) {
+				return;
+			}
+			if (signature === chat_signature) return;
+			chat_signature = signature;
+
+			var feed = document.getElementById("chat-feed");
+			var near_bottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 48;
+			var previous_scroll_top = feed.scrollTop;
+			while (feed.firstChild) feed.removeChild(feed.firstChild);
+
+			if (!entries.length) {
+				var empty = document.createElement("p");
+				empty.className = "chat-empty";
+				empty.textContent = "Conversations between residents will appear here as the town unfolds.";
+				feed.appendChild(empty);
+				setText("chat-count", "Waiting for the first conversation");
+				return;
+			}
+
+			entries.forEach(function(entry) {
+				var lines = normaliseChatLines(entry && entry.chat);
+				if (!lines.length) return;
+				var participants = [];
+				var participant_lookup = {};
+				lines.forEach(function(line) {
+					if (!participant_lookup[line.speaker]) {
+						participant_lookup[line.speaker] = true;
+						participants.push(line.speaker);
+					}
+				});
+
+				var article = document.createElement("article");
+				article.className = "chat-entry";
+				var meta = document.createElement("div");
+				meta.className = "chat-entry__meta";
+				var participant_node = document.createElement("span");
+				participant_node.className = "chat-entry__participants";
+				participant_node.textContent = participants.join(" + ");
+				var time_node = document.createElement("span");
+				time_node.className = "chat-entry__time";
+				time_node.textContent = chatTimestamp(entry);
+				meta.appendChild(participant_node);
+				meta.appendChild(time_node);
+				article.appendChild(meta);
+
+				lines.forEach(function(line) {
+					var row = document.createElement("div");
+					row.className = "chat-line";
+					var speaker = document.createElement("span");
+					speaker.className = "chat-line__speaker";
+					speaker.style.color = speakerColor(line.speaker);
+					speaker.textContent = line.speaker;
+					var utterance = document.createElement("span");
+					utterance.className = "chat-line__utterance";
+					utterance.textContent = line.utterance;
+					row.appendChild(speaker);
+					row.appendChild(utterance);
+					article.appendChild(row);
+				});
+				feed.appendChild(article);
+			});
+
+			setText("chat-count", entries.length + (entries.length === 1 ? " conversation" : " conversations"));
+			feed.scrollTop = near_bottom ? feed.scrollHeight : previous_scroll_top;
+		}
+
+		function normaliseChatLines(chat) {
+			var lines = [];
+			if (Array.isArray(chat)) {
+				chat.forEach(function(line) {
+					var speaker = Array.isArray(line) ? line[0] : line && (line.speaker || line.name);
+					var utterance = Array.isArray(line) ? line[1] : line && (line.utterance || line.text);
+					if (speaker && utterance !== undefined && utterance !== null) {
+						lines.push({ speaker: String(speaker), utterance: String(utterance) });
+					}
+				});
+			} else if (typeof chat === "string" && chat.trim()) {
+				chat.split(/\r?\n/).forEach(function(line) {
+					var separator = line.indexOf(":");
+					lines.push({
+						speaker: separator === -1 ? "Resident" : line.slice(0, separator).trim(),
+						utterance: separator === -1 ? line.trim() : line.slice(separator + 1).trim()
+					});
+				});
+			}
+			return lines;
+		}
+
+		function chatTimestamp(entry) {
+			var timestamp = entry && entry.ts ? String(entry.ts) : "";
+			var time_match = timestamp.match(/\b\d{2}:\d{2}(?::\d{2})?\b/);
+			var time = time_match ? time_match[0] : timestamp;
+			var step_label = entry && entry.step !== undefined ? "step " + entry.step : "";
+			return [time, step_label].filter(Boolean).join(" · ");
+		}
+
+		function speakerColor(name) {
+			if (!Object.prototype.hasOwnProperty.call(speaker_colors, name)) {
+				var hue = Math.round((speaker_color_count * 137.508 + 164) % 360);
+				speaker_colors[name] = "hsl(" + hue + ", 72%, 70%)";
+				speaker_color_count += 1;
+			}
+			return speaker_colors[name];
 		}
 
 		function selectPersona(name, center_map) {
@@ -628,6 +785,11 @@
 
 		function personaTextureKey(name) {
 			return "resident-texture__" + personaSlug(name);
+		}
+
+		function textureForPersona(scene, name) {
+			var texture_key = personaTextureKey(name);
+			return scene.textures.exists(texture_key) ? texture_key : fallback_texture_key;
 		}
 
 		function personaInitials(name) {

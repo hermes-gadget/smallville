@@ -971,8 +971,13 @@ def _long_term_planning_parallel(persona, new_day, personas):
           f.result()  # propagate any exception
     finally:
       ev.set()
-      with _ltp_lock:
-        _ltp_state.pop(day_key, None)
+      # NOTE: do NOT pop the day entry here. The step loop runs the
+      # town's decide phase concurrently -- followers queue behind the
+      # leader's batch and reach plan() only after it finished. If we
+      # popped the state, every queued follower would become a new
+      # leader and re-run the WHOLE town's planning (exponential
+      # explosion of LLM calls). The day-keyed entry is tiny (1-2 per
+      # day) and naturally invalidates on the next day.
   else:
     ev.wait(timeout=900)
 
