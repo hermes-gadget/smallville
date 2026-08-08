@@ -198,9 +198,27 @@ def main():
     with open(os.path.join(temp_storage, "pacing.txt")) as infile:
       assert infile.read() == "120"
 
+    jane_tile = tiles["Jane Moreno"]
+    maze.locations[jane_tile] = {
+      "sector": "The Willows Market and Pharmacy", "arena": "store"}
+    personas["Jane Moreno"].scratch.act_description = "buying medicine"
+    personas["Jane Moreno"].scratch.act_start_time = (
+      current + datetime.timedelta(minutes=1))
+    medicine_time = current + datetime.timedelta(minutes=1)
+    economy_tick(sim_folder, personas, tiles, maze, medicine_time, 102,
+                 temp_storage)
+    maze.locations[jane_tile] = {
+      "sector": "Moreno family's house", "arena": "common room"}
+    personas["Jane Moreno"].scratch.act_description = "resting at home"
+    personas["Jane Moreno"].scratch.act_start_time = medicine_time
+    performance_base = medicine_time + datetime.timedelta(hours=1)
+    recovered = economy_tick(
+      sim_folder, personas, tiles, maze, performance_base, 103, temp_storage)
+    assert recovered["Jane Moreno"]["status"] == "stable"
+
     timings = []
     for offset in range(1, 101):
-      tick_at = current + datetime.timedelta(minutes=offset)
+      tick_at = performance_base + datetime.timedelta(minutes=offset)
       before = time.perf_counter()
       economy_tick(sim_folder, personas, tiles, maze, tick_at, 101 + offset,
                    temp_storage)
@@ -213,9 +231,12 @@ def main():
       current + datetime.timedelta(days=1), 1000, temp_storage)
     with open(os.path.join(economy_folder, "economy_state.json")) as infile:
       state_after_interest = json.load(infile)
+    with open(os.path.join(economy_folder, "economy_feed.json")) as infile:
+      feed_after_interest = json.load(infile)
     assert state_after_interest["bank"]["interest_rate_daily"] == 0.0025
     assert (state_after_interest["bank"]["interest_earned"]
             > state_before_interest["bank"]["interest_earned"])
+    assert len(feed_after_interest) == 300
 
     result = {
       "residents": len(state["residents"]),
@@ -226,7 +247,8 @@ def main():
       "bankruptcy": snapshot["Carlos Gomez"],
       "rich": snapshot["Ryan Park"],
       "ill": snapshot["Jane Moreno"],
-      "feed_entries": len(feed),
+      "recovered": recovered["Jane Moreno"],
+      "feed_entries": len(feed_after_interest),
       "bank": {
         "interest_rate_daily": state_after_interest["bank"]["interest_rate_daily"],
         "interest_earned": state_after_interest["bank"]["interest_earned"],
