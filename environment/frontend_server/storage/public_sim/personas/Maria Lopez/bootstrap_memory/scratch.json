@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 244,
-  "importance_ele_n": 6,
+  "importance_trigger_curr": 240,
+  "importance_ele_n": 8,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 10:00 am"

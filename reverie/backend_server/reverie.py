@@ -333,6 +333,7 @@ class ReverieServer:
           with open(curr_env_file) as json_file:
             new_env = json.load(json_file)
             env_retrieved = True
+
         except: 
           pass
       
@@ -447,6 +448,26 @@ class ReverieServer:
 
           int_counter -= 1
           
+      else:
+        # Autonomous advance: upstream waits for the browser's
+        # process_environment POST to supply the next env file, so the
+        # town freezes with no viewer open. When the env file is missing
+        # and the browser isn't driving (nothing posted it within a
+        # couple of seconds), the backend writes it itself from the last
+        # movement targets and the simulation keeps living.
+        if self.step > 0:
+          _src_mv = f"{sim_folder}/movement/{self.step - 1}.json"
+          if check_if_file_exists(_src_mv):
+            with open(_src_mv) as _jf:
+              _mv_data = json.load(_jf)
+            _env = {}
+            for _pname, _m in _mv_data.get("persona", {}).items():
+              _t = _m.get("movement") or [0, 0]
+              _env[_pname] = {"x": _t[0], "y": _t[1]}
+            with open(curr_env_file, "w") as _jf:
+              json.dump(_env, _jf, indent=2)
+            continue
+
       # Sleep so we don't burn our machines. 
       time.sleep(self.server_sleep)
 

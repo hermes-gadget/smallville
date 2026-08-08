@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 246,
-  "importance_ele_n": 4,
+  "importance_trigger_curr": 244,
+  "importance_ele_n": 5,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 7:00 am",
@@ -212,10 +212,6 @@
   "chatting_end_time": null,
   "act_path_set": true,
   "planned_path": [
-    [
-      71,
-      74
-    ],
     [
       71,
       73
