@@ -1,6 +1,6 @@
 # Smallville — Town Operations Plan
 
-> Live: `smallville.justarobot.uk` (Cloudflare tunnel → local VM `192.168.2.5:8000`)
+> Live: `smallville.justarobot.uk` (Cloudflare tunnel → local VM `192.168.2.5:8000`) ✅ VERIFIED 200
 > Repo: `/home/ben/smallville` → `hermes-gadget/smallville` (branch `main`)
 > Sim backend: `smallville-reverie.service` · Frontend: `smallville-django.service` (user units, boot-enabled)
 
@@ -10,73 +10,52 @@ A coherent, self-running AI town at **maximum 25 residents** that lives at a wat
 real-time pace, with a message feed showing what agents talk about, a polished UI, and a
 hard guard on LLM spend.
 
-## Current State (already done — keep working from here)
+## Status: ALL TASKS DONE ✅ (2026-08-08)
 
-- **Move off VPS complete**: town now runs on the local VM only; VPS scrubbed
-  (units, repo, key, tunnel removed). Cloudflare tunnel re-pointed by Ben.
-- **9-persona town verified live** (base_the_ville_n9): plans generate, steps execute,
-  movement files flow, world time syncs, State pages live, token monitor works.
+### Done — runtime & architecture
+- **Move off VPS complete**: town runs on the local VM only; VPS scrubbed (units, repo,
+  key, tunnel removed). Cloudflare tunnel points at `192.168.2.5:8000` (Ben-installed).
+- **25 residents live**: fork base = `base_the_ville_n25` (all 25, morning start
+  `curr_time = February 13, 2023, 08:00:00`). Town boots with residents up and active.
 - **Parallel planning**: all residents' daily plans + hourly schedules generate
-  concurrently (6 workers) — 9 residents in ~4 min instead of ~20.
+  concurrently (6 workers). Fixed the batch-explosion bug (leader state must persist for
+  the day — popping it made every queued follower re-run the whole town's planning;
+  was burning 2.26M tokens per boot).
 - **Parallel step loop**: perceive stays sequential (chats can't race); retrieve/plan/
   reflect/execute run 6-way concurrent.
-- **Real-time pacing**: `game_sec_per_real_sec = 1.0` in `utils.py` — game clock advances
-  with real elapsed time (knob: 60 = lively-fast, 1/60 = near-frozen).
+- **Real-time pacing**: `game_sec_per_real_sec = 1.0` in `utils.py`. Clock = absolute
+  wall-time mapping anchored on boot `curr_time` (NOT midnight — the 00:0x bug is fixed).
 - **Autonomous advance**: backend writes its own env files when no browser drives the
-  walk — the town no longer freezes with no viewer open.
-- **Fresh morning start**: base meta `curr_time = February 13, 2023, 08:00:00` — residents
-  are up and active from boot instead of sleeping through a midnight start.
-- **Robustness fixes**: hard 90s LLM deadline; fresh session per LLM attempt (kills
-  connection-pool deadlock); task-decomp drift normalization; partial-env gap fill.
-- **Token telemetry**: `temp_storage/token_usage.db` cumulative + live JSON snapshot,
-  displayed in the UI's token monitor.
+  walk — town never freezes without a viewer. Partial env POSTs from the browser are
+  gap-filled (was crashing the sim on missing residents).
+- **Atomic saves**: all hot JSON writes (movement, env, scratch, embeddings, curr_step)
+  go through tmp+rename — a kill mid-save can no longer corrupt persona state (this
+  crash-looped the unit once; `repair_embeddings.py` regenerates a corrupted
+  `embeddings.json` from `nodes.json`).
+- **Robustness**: hard 90s LLM deadline; fresh session per LLM attempt (kills the
+  connection-pool deadlock from trickling gateway streams); task-decomp drift
+  normalization; runtime state untracked from git.
 
-## Pending Tasks (in order)
+### Done — features
+- **Chat message UI (gpt-5.6-sol @ xhigh agent, `sw-chat-ui`)**: backend appends
+  conversations to `storage/<sim>/chat_log.json` (deduped — a conversation persisting in
+  scratch across steps no longer re-logs); `get_chat_log/` endpoint; frontend panel at
+  bottom-left, right of the resident drawer — "TOWN CONVERSATIONS" scrolling feed,
+  color-coded speakers, timestamps, auto-scroll, collapse button, mobile-aware.
+- **UI improvements (same agent)**: `process_environment` POST removed (backend is
+  autonomous — it was the partial-env crash source); sprite fallback for all 25
+  residents; roster from meta order; awaiting-action empty states.
+- **500M token guard**: cron `smallville-token-guard` (every 30 min) — reads
+  `token_usage.db` `calls` table `SUM(total_tokens)`; ≥ 500,000,000 → stops
+  `smallville-reverie` + alerts. Current burn ≈ 5.3M all-time — guard is a safety net.
 
-### 1. Fix + verify the live town (DO FIRST)
-- The sim crash-looped on a **partial env POST from the open browser** (3 of 9 personas)
-  — `KeyError` at `reverie.py:356`. The gap-fill patch is written but NOT yet deployed.
-- Deploy, restart `smallville-reverie`, confirm steady stepping (movement files advancing
-  with no browser open), then screenshot the live site (map, residents, state page,
-  token monitor).
-
-### 2. Expand to 25 residents
-- Switch the fork base to `base_the_ville_n25` (all 25 upstream residents; n9 was built
-  from it). Update its `reverie/meta.json` (`curr_time` 08:00 start), reset `public_sim`,
-  restart the unit.
-- Verify: 25 residents in sidebar, 25 sprites on map, plan phase completes (~25 × 31
-  calls, ~5-8 min), steps advance, chats happen, day rolls coherently (morning routines →
-  work at Hobbs Cafe / Willow Market / library → evening wind-down).
-
-### 3. Message UI (chat feed) — gpt-5.6-sol agent task
-- Panel at **bottom-left, immediately right of the residents tab** (drawer).
-- Shows what agents say to each other: backend appends chats (`persona.scratch.chat`
-  after perceive/converse in `reverie.py` step loop) to `storage/<sim>/chat_log.json`
-  (timestamped); frontend polls and renders a scrolling feed (speaker names, timestamps,
-  avatars/colors, auto-scroll).
-- Agent: **gpt-5.6-sol @ xhigh** via ForgeDeck, local repo only, edit+commit+push,
-  no gradle/tests; I verify serially (Django template checks + browser).
-
-### 4. UI improvements pass (same agent, after chat feed)
-- Stop the UI's `process_environment` POST (backend is autonomous now; partial env posts
-  are the crash source).
-- Resident sprite coverage for all 25; roster order matches meta; empty/loading states;
-  message panel responsive on mobile (320px); keyboard/UX polish.
-- Keep payload contracts (update_environment, sim_code, step).
-
-### 5. LLM spend guard (500M token stop)
-- Cron watchdog (~30 min): read `token_usage.db` cumulative total; if ≥ 500,000,000 →
-  stop `smallville-reverie.service` + notify. Current burn is ~1-2M/day, so this is a
-  hard safety net, not an expected tripwire.
-- 500M ≈ 500M input+output tokens combined (all-time, both LLM + embeddings if counted).
-
-### 6. Verification checklist (each change)
-- [ ] `curl -s -o /dev/null -w "%{http_code}" http://192.168.2.5:8000/` → 200
-- [ ] movement files advance without a browser open (autonomous)
-- [ ] world-time pill advances at ~real-time pace
-- [ ] residents act per their schedules (morning → day → evening coherently)
-- [ ] screenshots captured for each milestone (send to Ben)
-- [ ] `git push origin main` after each merged change
+### Verified live (screenshots on record)
+- 25 residents in drawer, 17/25 awake at 08:00 boot (sleepers have later wake hours)
+- World time pill advances at real-time pace (08:04 at 4 min post-boot)
+- Coherent day: morning routines → Hobbs Cafe / Willow Market / library → real
+  conversations (Ayesha & Klaus: community gardens + Shakespeare; Tom & Jane: mayor
+  election + meatloaf)
+- Chat feed live on public site; token monitor shows live + all-time usage
 
 ## Run commands
 
@@ -88,10 +67,18 @@ journalctl --user -u smallville-reverie -n 50 --no-pager
 # frontend
 systemctl --user restart smallville-django
 
-# token totals
+# token totals (watchdog query)
 python3 - <<'EOF'
 import sqlite3
 c = sqlite3.connect('environment/frontend_server/temp_storage/token_usage.db')
-for row in c.execute("SELECT name FROM sqlite_master WHERE type='table'"): print(row)
+print(c.execute('SELECT COALESCE(SUM(total_tokens),0) FROM calls').fetchone()[0])
 EOF
 ```
+
+## Known trade-offs / future ideas
+- Chat panel occludes part of the map (collapsible; could dock into the drawer on
+  narrow screens).
+- First-boot plan phase ≈ 700 LLM calls (~5-8 min) per new day — the parallel batch
+  makes it a one-time fixed cost per day.
+- With real-time pacing a game day lasts a real day; set `game_sec_per_real_sec = 60`
+  in `utils.py` for a lively fast-forward day (~24 real min).
