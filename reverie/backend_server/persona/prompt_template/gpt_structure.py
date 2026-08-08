@@ -2,191 +2,274 @@
 Author: Joon Sung Park (joonspk@stanford.edu)
 
 File: gpt_structure.py
-Description: Wrapper functions for calling OpenAI APIs.
+Description: Wrapper functions for calling LLM APIs.
+
+Modernized (hermes-gadget fork): all LLM traffic now goes through the
+OpenCode Go gateway (OpenAI-compatible chat completions at
+https://opencode.ai/zen/go/v1) with deepseek-v4-flash as the default model.
+Embeddings are served by the local LM Studio box (192.168.2.4). No legacy
+OpenAI SDK dependency is required -- this module uses `requests` only.
+
+Function signatures are kept identical to the upstream file so the persona
+cognitive modules work unchanged.
 """
 import json
+import os
 import random
-import openai
-import time 
+import sys
+import tempfile
+import threading
+import time
+
+import requests
 
 from utils import *
 
-openai.api_key = openai_api_key
+_SESSION = requests.Session()
+
+# ---------------------------------------------------------------------------
+# Token usage telemetry
+# ---------------------------------------------------------------------------
+# Every successful LLM/embedding call is recorded here and written to
+# token_usage_file (JSON) so the Django frontend can display live usage on
+# the public page. The counter resets on process start (module import).
+_usage_lock = threading.Lock()
+_usage = {
+    "started_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+    "updated_at": "-",
+    "total_tokens": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "calls": 0,
+    "by_model": {},
+    "embedding_calls": 0,
+    "embedding_tokens": 0,
+}
+
+
+def _record_usage(usage, model, embedding=False):
+  """Add one API response's usage to the counter and persist the snapshot."""
+  with _usage_lock:
+    if embedding:
+      _usage["embedding_calls"] += 1
+      _usage["embedding_tokens"] += int(usage.get("prompt_tokens") or 0)
+    else:
+      prompt = int(usage.get("prompt_tokens") or 0)
+      completion = int(usage.get("completion_tokens") or 0)
+      _usage["prompt_tokens"] += prompt
+      _usage["completion_tokens"] += completion
+      _usage["calls"] += 1
+      _usage["by_model"][model] = (
+        _usage["by_model"].get(model, 0) + prompt + completion)
+    _usage["total_tokens"] = (
+      _usage["prompt_tokens"] + _usage["completion_tokens"]
+      + _usage["embedding_tokens"])
+    _usage["updated_at"] = time.strftime("%H:%M:%S")
+    _write_usage_snapshot()
+
+
+def _write_usage_snapshot():
+  """Atomically write the usage snapshot for the Django frontend to read."""
+  try:
+    path = token_usage_file
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=directory, suffix=".tmp")
+    with os.fdopen(fd, "w") as f:
+      json.dump(_usage, f)
+    os.replace(tmp, os.path.abspath(path))
+  except Exception as e:  # telemetry must never break the simulation
+    print(f"[usage telemetry] {e}", file=sys.stderr)
+
+
+# Initialize the on-page monitor with a zeroed snapshot at process start.
+_write_usage_snapshot()
+
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
 
-def ChatGPT_single_request(prompt): 
-  temp_sleep()
 
-  completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": prompt}]
-  )
-  return completion["choices"][0]["message"]["content"]
+def _llm_chat(messages,
+              model=None,
+              max_tokens=None,
+              temperature=1.0,
+              top_p=1.0,
+              frequency_penalty=0.0,
+              presence_penalty=0.0,
+              stop=None,
+              retries=4):
+  """POST a chat-completions request to the OpenCode Go gateway.
+
+  Returns the assistant message content. Raises RuntimeError when the
+  gateway is unreachable, returns an error status, or returns an empty
+  completion (thinking models can burn their whole token budget on
+  reasoning_content -- retries give them another chance).
+  """
+  payload = {
+    "model": model or llm_model,
+    "messages": messages,
+    "temperature": temperature,
+    "max_tokens": max_tokens or llm_max_tokens,
+    "top_p": top_p,
+    "frequency_penalty": frequency_penalty,
+    "presence_penalty": presence_penalty,
+  }
+  if stop:
+    payload["stop"] = stop
+
+  url = openai_base_url.rstrip("/") + "/chat/completions"
+  headers = {
+    "Authorization": f"Bearer {openai_api_key}",
+    "Content-Type": "application/json",
+  }
+
+  for attempt in range(retries):
+    try:
+      resp = _SESSION.post(url, json=payload, headers=headers, timeout=120)
+      if resp.status_code == 200:
+        data = resp.json()
+        _record_usage(data.get("usage") or {}, payload["model"])
+        content = data["choices"][0]["message"].get("content") or ""
+        if content.strip():
+          return content
+        raise RuntimeError("empty completion (reasoning ate the token budget)")
+      if resp.status_code in (429, 500, 502, 503, 504):
+        time.sleep(min(2 ** attempt, 30) + random.random())
+        continue
+      raise RuntimeError(f"LLM API {resp.status_code}: {resp.text[:300]}")
+    except requests.RequestException as e:
+      if attempt == retries - 1:
+        raise RuntimeError(f"LLM request failed: {e}") from e
+      time.sleep(min(2 ** attempt, 30) + random.random())
+  raise RuntimeError("LLM request failed after retries")
 
 
 # ============================================================================
 # #####################[SECTION 1: CHATGPT-3 STRUCTURE] ######################
 # ============================================================================
 
-def GPT4_request(prompt): 
-  """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
-  ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
-  RETURNS: 
-    a str of GPT-3's response. 
-  """
+def GPT4_request(prompt):
+  """Single-shot request (deepseek-v4-flash, thinking disabled)."""
   temp_sleep()
-
-  try: 
-    completion = openai.ChatCompletion.create(
-    model="gpt-4", 
-    messages=[{"role": "user", "content": prompt}]
-    )
-    return completion["choices"][0]["message"]["content"]
-  
-  except: 
-    print ("ChatGPT ERROR")
+  try:
+    return _llm_chat([{"role": "user", "content": prompt}],
+                     model=llm_model)
+  except Exception as e:
+    print(f"[LLM ERROR] GPT4_request: {e}", file=sys.stderr)
     return "ChatGPT ERROR"
 
 
-def ChatGPT_request(prompt): 
-  """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
-  ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
-  RETURNS: 
-    a str of GPT-3's response. 
-  """
-  # temp_sleep()
-  try: 
-    completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": prompt}]
-    )
-    return completion["choices"][0]["message"]["content"]
-  
-  except: 
-    print ("ChatGPT ERROR")
+def ChatGPT_request(prompt):
+  """Single-shot request on the default model (deepseek-v4-flash)."""
+  temp_sleep()
+  try:
+    return _llm_chat([{"role": "user", "content": prompt}])
+  except Exception as e:
+    print(f"[LLM ERROR] ChatGPT_request: {e}", file=sys.stderr)
     return "ChatGPT ERROR"
 
 
-def GPT4_safe_generate_response(prompt, 
+def ChatGPT_safe_generate_response(prompt,
                                    example_output,
                                    special_instruction,
                                    repeat=3,
                                    fail_safe_response="error",
                                    func_validate=None,
                                    func_clean_up=None,
-                                   verbose=False): 
-  prompt = 'GPT-3 Prompt:\n"""\n' + prompt + '\n"""\n'
-  prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
-  prompt += "Example output json:\n"
-  prompt += '{"output": "' + str(example_output) + '"}'
-
-  if verbose: 
-    print ("CHAT GPT PROMPT")
-    print (prompt)
-
-  for i in range(repeat): 
-
-    try: 
-      curr_gpt_response = GPT4_request(prompt).strip()
-      end_index = curr_gpt_response.rfind('}') + 1
-      curr_gpt_response = curr_gpt_response[:end_index]
-      curr_gpt_response = json.loads(curr_gpt_response)["output"]
-      
-      if func_validate(curr_gpt_response, prompt=prompt): 
-        return func_clean_up(curr_gpt_response, prompt=prompt)
-      
-      if verbose: 
-        print ("---- repeat count: \n", i, curr_gpt_response)
-        print (curr_gpt_response)
-        print ("~~~~")
-
-    except: 
-      pass
-
-  return False
-
-
-def ChatGPT_safe_generate_response(prompt, 
-                                   example_output,
-                                   special_instruction,
-                                   repeat=3,
-                                   fail_safe_response="error",
-                                   func_validate=None,
-                                   func_clean_up=None,
-                                   verbose=False): 
+                                   verbose=False):
   # prompt = 'GPT-3 Prompt:\n"""\n' + prompt + '\n"""\n'
   prompt = '"""\n' + prompt + '\n"""\n'
   prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
   prompt += "Example output json:\n"
   prompt += '{"output": "' + str(example_output) + '"}'
 
-  if verbose: 
-    print ("CHAT GPT PROMPT")
-    print (prompt)
+  if verbose:
+    print("CHAT GPT PROMPT")
+    print(prompt)
 
-  for i in range(repeat): 
-
-    try: 
+  for i in range(repeat):
+    try:
       curr_gpt_response = ChatGPT_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
       curr_gpt_response = curr_gpt_response[:end_index]
       curr_gpt_response = json.loads(curr_gpt_response)["output"]
 
-      # print ("---ashdfaf")
-      # print (curr_gpt_response)
-      # print ("000asdfhia")
-      
-      if func_validate(curr_gpt_response, prompt=prompt): 
+      if func_validate(curr_gpt_response, prompt=prompt):
         return func_clean_up(curr_gpt_response, prompt=prompt)
-      
-      if verbose: 
-        print ("---- repeat count: \n", i, curr_gpt_response)
-        print (curr_gpt_response)
-        print ("~~~~")
 
-    except: 
+      if verbose:
+        print("---- repeat count: \n", i, curr_gpt_response)
+        print(curr_gpt_response)
+        print("~~~~")
+
+    except:
       pass
 
   return False
 
 
-def ChatGPT_safe_generate_response_OLD(prompt, 
-                                   repeat=3,
-                                   fail_safe_response="error",
-                                   func_validate=None,
-                                   func_clean_up=None,
-                                   verbose=False): 
-  if verbose: 
-    print ("CHAT GPT PROMPT")
-    print (prompt)
+def GPT4_safe_generate_response(prompt,
+                                example_output,
+                                special_instruction,
+                                repeat=3,
+                                fail_safe_response="error",
+                                func_validate=None,
+                                func_clean_up=None,
+                                verbose=False):
+  prompt = 'GPT-3 Prompt:\n"""\n' + prompt + '\n"""\n'
+  prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
+  prompt += "Example output json:\n"
+  prompt += '{"output": "' + str(example_output) + '"}'
 
-  for i in range(repeat): 
-    try: 
-      curr_gpt_response = ChatGPT_request(prompt).strip()
-      if func_validate(curr_gpt_response, prompt=prompt): 
+  if verbose:
+    print("CHAT GPT PROMPT")
+    print(prompt)
+
+  for i in range(repeat):
+    try:
+      curr_gpt_response = GPT4_request(prompt).strip()
+      end_index = curr_gpt_response.rfind('}') + 1
+      curr_gpt_response = curr_gpt_response[:end_index]
+      curr_gpt_response = json.loads(curr_gpt_response)["output"]
+
+      if func_validate(curr_gpt_response, prompt=prompt):
         return func_clean_up(curr_gpt_response, prompt=prompt)
-      if verbose: 
-        print (f"---- repeat count: {i}")
-        print (curr_gpt_response)
-        print ("~~~~")
 
-    except: 
+      if verbose:
+        print("---- repeat count: \n", i, curr_gpt_response)
+        print(curr_gpt_response)
+        print("~~~~")
+
+    except:
       pass
-  print ("FAIL SAFE TRIGGERED") 
+
+  return False
+
+
+def ChatGPT_safe_generate_response_OLD(prompt,
+                                       repeat=3,
+                                       fail_safe_response="error",
+                                       func_validate=None,
+                                       func_clean_up=None,
+                                       verbose=False):
+  if verbose:
+    print("CHAT GPT PROMPT")
+    print(prompt)
+
+  for i in range(repeat):
+    try:
+      curr_gpt_response = ChatGPT_request(prompt).strip()
+      if func_validate(curr_gpt_response, prompt=prompt):
+        return func_clean_up(curr_gpt_response, prompt=prompt)
+      if verbose:
+        print(f"---- repeat count: {i}")
+        print(curr_gpt_response)
+        print("~~~~")
+
+    except:
+      pass
+  print("FAIL SAFE TRIGGERED")
   return fail_safe_response
 
 
@@ -194,138 +277,139 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 # ###################[SECTION 2: ORIGINAL GPT-3 STRUCTURE] ###################
 # ============================================================================
 
-def GPT_request(prompt, gpt_parameter): 
-  """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
-  ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
-  RETURNS: 
-    a str of GPT-3's response. 
+def GPT_request(prompt, gpt_parameter):
+  """Original Completion-style request, mapped onto chat completions.
+
+  The gpt_parameter dict may carry engine/temperature/max_tokens/top_p/
+  frequency_penalty/presence_penalty/stream/stop keys; `stream` is ignored.
+
+  Legacy engines (text-davinci-003, etc.) don't exist on the OpenCode Go
+  gateway, so they are all mapped onto the configured modern model
+  (deepseek-v4-flash). max_tokens is raised to llm_max_tokens to give the
+  model room for the full requested output.
   """
   temp_sleep()
-  try: 
-    response = openai.Completion.create(
-                model=gpt_parameter["engine"],
-                prompt=prompt,
-                temperature=gpt_parameter["temperature"],
-                max_tokens=gpt_parameter["max_tokens"],
-                top_p=gpt_parameter["top_p"],
-                frequency_penalty=gpt_parameter["frequency_penalty"],
-                presence_penalty=gpt_parameter["presence_penalty"],
-                stream=gpt_parameter["stream"],
-                stop=gpt_parameter["stop"],)
-    return response.choices[0].text
-  except: 
-    print ("TOKEN LIMIT EXCEEDED")
+  try:
+    return _llm_chat(
+      [{"role": "user", "content": prompt}],
+      model=llm_model,
+      max_tokens=max(llm_max_tokens, gpt_parameter.get("max_tokens") or 0),
+      temperature=gpt_parameter.get("temperature", 1.0),
+      top_p=gpt_parameter.get("top_p", 1.0),
+      frequency_penalty=gpt_parameter.get("frequency_penalty", 0.0),
+      presence_penalty=gpt_parameter.get("presence_penalty", 0.0),
+      stop=gpt_parameter.get("stop"),
+    )
+  except Exception as e:
+    print(f"[LLM ERROR] GPT_request: {e}", file=sys.stderr)
     return "TOKEN LIMIT EXCEEDED"
 
 
-def generate_prompt(curr_input, prompt_lib_file): 
+def generate_prompt(curr_input, prompt_lib_file):
   """
-  Takes in the current input (e.g. comment that you want to classifiy) and 
+  Takes in the current input (e.g. comment that you want to classifiy) and
   the path to a prompt file. The prompt file contains the raw str prompt that
-  will be used, which contains the following substr: !<INPUT>! -- this 
-  function replaces this substr with the actual curr_input to produce the 
-  final promopt that will be sent to the GPT3 server. 
+  will be used, which contains the following substr: !<INPUT>! -- this
+  function replaces this substr with the actual curr_input to produce the
+  final promopt that will be sent to the GPT3 server.
   ARGS:
     curr_input: the input we want to feed in (IF THERE ARE MORE THAN ONE
                 INPUT, THIS CAN BE A LIST.)
-    prompt_lib_file: the path to the promopt file. 
-  RETURNS: 
-    a str prompt that will be sent to OpenAI's GPT server.  
+    prompt_lib_file: the path to the promopt file.
+  RETURNS:
+    a str prompt that will be sent to OpenAI's GPT server.
   """
-  if type(curr_input) == type("string"): 
+  if type(curr_input) == type("string"):
     curr_input = [curr_input]
   curr_input = [str(i) for i in curr_input]
 
   f = open(prompt_lib_file, "r")
   prompt = f.read()
   f.close()
-  for count, i in enumerate(curr_input):   
+  for count, i in enumerate(curr_input):
     prompt = prompt.replace(f"!<INPUT {count}>!", i)
-  if "<commentblockmarker>###</commentblockmarker>" in prompt: 
+  if "<commentblockmarker>###</commentblockmarker>" in prompt:
     prompt = prompt.split("<commentblockmarker>###</commentblockmarker>")[1]
   return prompt.strip()
 
 
-def safe_generate_response(prompt, 
+def safe_generate_response(prompt,
                            gpt_parameter,
                            repeat=5,
                            fail_safe_response="error",
                            func_validate=None,
                            func_clean_up=None,
-                           verbose=False): 
-  if verbose: 
-    print (prompt)
+                           verbose=False):
+  if verbose:
+    print(prompt)
 
-  for i in range(repeat): 
+  for i in range(repeat):
     curr_gpt_response = GPT_request(prompt, gpt_parameter)
-    if func_validate(curr_gpt_response, prompt=prompt): 
-      return func_clean_up(curr_gpt_response, prompt=prompt)
-    if verbose: 
-      print ("---- repeat count: ", i, curr_gpt_response)
-      print (curr_gpt_response)
-      print ("~~~~")
+    try:
+      if func_validate(curr_gpt_response, prompt=prompt):
+        return func_clean_up(curr_gpt_response, prompt=prompt)
+    except Exception as e:
+      # Modern models occasionally deviate from the expected output format;
+      # a parse failure here should retry, never kill the simulation.
+      if verbose:
+        print(f"---- parse retry ({i}): {e}")
+    if verbose:
+      print("---- repeat count: ", i, curr_gpt_response)
+      print(curr_gpt_response)
+      print("~~~~")
   return fail_safe_response
 
 
-def get_embedding(text, model="text-embedding-ada-002"):
+def get_embedding(text, model=None):
+  """Embed text via the local LM Studio server (OpenAI-compatible)."""
   text = text.replace("\n", " ")
-  if not text: 
+  if not text:
     text = "this is blank"
-  return openai.Embedding.create(
-          input=[text], model=model)['data'][0]['embedding']
+
+  url = embedding_base_url.rstrip("/") + "/embeddings"
+  payload = {"model": model or embedding_model, "input": [text]}
+
+  for attempt in range(3):
+    try:
+      resp = _SESSION.post(url, json=payload, timeout=60)
+      if resp.status_code == 200:
+        data = resp.json()
+        _record_usage(data.get("usage") or {}, embedding_model, embedding=True)
+        return data["data"][0]["embedding"]
+      raise RuntimeError(f"embedding API {resp.status_code}: {resp.text[:200]}")
+    except (requests.RequestException, RuntimeError) as e:
+      if attempt == 2:
+        raise RuntimeError(f"embedding request failed: {e}") from e
+      time.sleep(2 ** attempt + random.random())
+  raise RuntimeError("embedding request failed")
 
 
 if __name__ == '__main__':
-  gpt_parameter = {"engine": "text-davinci-003", "max_tokens": 50, 
+  gpt_parameter = {"engine": llm_model, "max_tokens": 50,
                    "temperature": 0, "top_p": 1, "stream": False,
-                   "frequency_penalty": 0, "presence_penalty": 0, 
+                   "frequency_penalty": 0, "presence_penalty": 0,
                    "stop": ['"']}
   curr_input = ["driving to a friend's house"]
   prompt_lib_file = "prompt_template/test_prompt_July5.txt"
   prompt = generate_prompt(curr_input, prompt_lib_file)
 
-  def __func_validate(gpt_response): 
+  def __func_validate(gpt_response):
     if len(gpt_response.strip()) <= 1:
       return False
-    if len(gpt_response.strip().split(" ")) > 1: 
+    if len(gpt_response.strip().split(" ")) > 1:
       return False
     return True
+
   def __func_clean_up(gpt_response):
     cleaned_response = gpt_response.strip()
     return cleaned_response
 
-  output = safe_generate_response(prompt, 
-                                 gpt_parameter,
-                                 5,
-                                 "rest",
-                                 __func_validate,
-                                 __func_clean_up,
-                                 True)
+  output = safe_generate_response(prompt,
+                                  gpt_parameter,
+                                  5,
+                                  "rest",
+                                  __func_validate,
+                                  __func_clean_up,
+                                  True)
 
-  print (output)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  print(output)

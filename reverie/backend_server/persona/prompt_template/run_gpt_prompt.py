@@ -357,69 +357,84 @@ def run_gpt_prompt_task_decomp(persona,
     return prompt_input
 
   def __func_clean_up(gpt_response, prompt=""):
-    print ("TOODOOOOOO")
-    print (gpt_response)
-    print ("-==- -==- -==- ")
-
-    # TODO SOMETHING HERE sometimes fails... See screenshot
+    # Tolerant parser: accepts the canonical
+    #   "1. wake up (duration in minutes: 5, minutes after waking up: 0)"
+    # format as well as modern-model drift like
+    #   "wake up (duration: 5 minutes)" / "- wake up - 5 min" / bare numbers.
     temp = [i.strip() for i in gpt_response.split("\n")]
-    _cr = []
     cr = []
-    for count, i in enumerate(temp): 
-      if count != 0: 
-        _cr += [" ".join([j.strip () for j in i.split(" ")][3:])]
-      else: 
-        _cr += [i]
-    for count, i in enumerate(_cr): 
-      k = [j.strip() for j in i.split("(duration in minutes:")]
-      task = k[0]
-      if task[-1] == ".": 
-        task = task[:-1]
-      duration = int(k[1].split(",")[0].strip())
+    for i in temp:
+      if not i:
+        continue
+      line = re.sub(r"^\d+[\.\)]\s*", "", i)          # strip "1." / "1)" prefixes
+      line = line.strip()
+      k = [j.strip() for j in line.split("(duration in minutes:")]
+      if len(k) < 2:
+        # Fall back to looser patterns: any "(duration: N", "(N min",
+        # "N minutes", or a trailing "N" number.
+        m = re.search(r"(?:\(duration\s*:?\s*(\d+)|\((\d+)\s*min|\b(\d+)\s*minutes?)", line)
+        if not m:
+          continue                                    # unparseable line -> skip
+        duration = int(next(g for g in m.groups() if g is not None))
+        task = line
+      else:
+        task = k[0]
+        m2 = re.search(r"\d+", k[1])
+        if not m2:
+          continue
+        duration = int(m2.group())
+      task = task.strip(" .-–—:")
+      if not task or duration <= 0:
+        continue
       cr += [[task, duration]]
 
     total_expected_min = int(prompt.split("(total duration in minutes")[-1]
                                    .split("):")[0].strip())
-    
-    # TODO -- now, you need to make sure that this is the same as the sum of 
-    #         the current action sequence. 
-    curr_min_slot = [["dummy", -1],] # (task_name, task_index)
-    for count, i in enumerate(cr): 
-      i_task = i[0] 
+
+    # TODO -- now, you need to make sure that this is the same as the sum of
+    #         the current action sequence.
+    curr_min_slot = [["dummy", -1],]  # (task_name, task_index)
+    for count, i in enumerate(cr):
+      i_task = i[0]
       i_duration = i[1]
 
       i_duration -= (i_duration % 5)
-      if i_duration > 0: 
-        for j in range(i_duration): 
-          curr_min_slot += [(i_task, count)]       
-    curr_min_slot = curr_min_slot[1:]   
+      if i_duration > 0:
+        for j in range(i_duration):
+          curr_min_slot += [(i_task, count)]
+    curr_min_slot = curr_min_slot[1:]
 
-    if len(curr_min_slot) > total_expected_min: 
-      last_task = curr_min_slot[60]
-      for i in range(1, 6): 
+    if not curr_min_slot:
+      raise ValueError("no parseable tasks in decomposition")
+
+    if len(curr_min_slot) > total_expected_min:
+      last_task = curr_min_slot[-1]
+      for i in range(1, 6):
         curr_min_slot[-1 * i] = last_task
-    elif len(curr_min_slot) < total_expected_min: 
+    elif len(curr_min_slot) < total_expected_min:
       last_task = curr_min_slot[-1]
       for i in range(total_expected_min - len(curr_min_slot)):
         curr_min_slot += [last_task]
 
     cr_ret = [["dummy", -1],]
-    for task, task_index in curr_min_slot: 
-      if task != cr_ret[-1][0]: 
+    for task, task_index in curr_min_slot:
+      if task != cr_ret[-1][0]:
         cr_ret += [[task, 1]]
-      else: 
+      else:
         cr_ret[-1][1] += 1
     cr = cr_ret[1:]
 
     return cr
 
-  def __func_validate(gpt_response, prompt=""): 
-    # TODO -- this sometimes generates error 
-    try: 
-      __func_clean_up(gpt_response)
-    except: 
-      pass
-      # return False
+  def __func_validate(gpt_response, prompt=""):
+    # Real validation: only accept responses that parse cleanly, so the
+    # caller retries instead of crashing on modern-model format drift.
+    try:
+      cr = __func_clean_up(gpt_response, prompt=prompt)
+      if not cr:
+        return None
+    except Exception:
+      return None
     return gpt_response
 
   def get_fail_safe(): 

@@ -9,32 +9,33 @@
 This repository accompanies our research paper titled "[Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442)." It contains our core simulation module for  generative agents—computational agents that simulate believable human behaviors—and their game environment. Below, we document the steps for setting up the simulation environment on your local machine and for replaying the simulation as a demo animation.
 
 ## <img src="https://joonsungpark.s3.amazonaws.com:443/static/assets/characters/profile/Isabella_Rodriguez.png" alt="Generative Isabella">   Setting Up the Environment 
-To set up your environment, you will need to generate a `utils.py` file that contains your OpenAI API key and download the necessary packages.
+> **Modernized fork note (hermes-gadget):** the legacy OpenAI SDK requirement is gone.
+> The simulation now talks to the **OpenCode Go gateway** (OpenAI-compatible,
+> `https://opencode.ai/zen/go/v1`) with `deepseek-v4-flash` as the default model, and
+> embeddings come from the **local LM Studio box** (`192.168.2.4:1234`,
+> `text-embedding-nomic-embed-text-v1.5`). Full setup below.
 
-### Step 1. Generate Utils File
-In the `reverie/backend_server` folder (where `reverie.py` is located), create a new file titled `utils.py` and copy and paste the content below into the file:
-```
-# Copy and paste your OpenAI API Key
-openai_api_key = "<Your OpenAI API>"
-# Put your name
-key_owner = "<Name>"
+### Step 0. API key
+Put your OpenCode Go API key in `~/.opencode-go.key` (one line, no trailing
+newline issues -- the loader strips whitespace). The key file lives outside
+the repository and is **never committed**. Alternatively set the
+`OPENCODE_GO_API_KEY` environment variable.
 
-maze_assets_loc = "../../environment/frontend_server/static_dirs/assets"
-env_matrix = f"{maze_assets_loc}/the_ville/matrix"
-env_visuals = f"{maze_assets_loc}/the_ville/visuals"
+### Step 1. Install dependencies (Python 3.9+)
+We recommend `uv` for the virtualenv:
 
-fs_storage = "../../environment/frontend_server/storage"
-fs_temp_storage = "../../environment/frontend_server/temp_storage"
+    uv venv --python 3.9 .venv
+    uv pip install -r requirements.txt --python .venv/bin/python
 
-collision_block_id = "32125"
+Or with plain pip:
 
-# Verbose 
-debug = True
-```
-Replace `<Your OpenAI API>` with your OpenAI API key, and `<name>` with your name.
- 
-### Step 2. Install requirements.txt
-Install everything listed in the `requirements.txt` file (I strongly recommend first setting up a virtualenv as usual). A note on Python version: we tested our environment on Python 3.9.12. 
+    python3.9 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+
+No `utils.py` to hand-edit -- `reverie/backend_server/utils.py` is checked in
+and reads the key automatically. If you ever need to point the LLM/embedding
+endpoints elsewhere, edit the constants at the top of that file.
 
 ## <img src="https://joonsungpark.s3.amazonaws.com:443/static/assets/characters/profile/Klaus_Mueller.png" alt="Generative Klaus">   Running a Simulation 
 To run a new simulation, you will need to concurrently start two servers: the environment server and the agent simulation server.

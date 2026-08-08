@@ -19,6 +19,28 @@ class MemoryTree:
       self.tree = json.load(open(f_saved))
 
 
+  @staticmethod
+  def _resolve_key(parent, wanted):
+    """Tolerant key lookup: exact, then case-insensitive, then containment.
+
+    Modern LLMs occasionally drift from the exact maze names (stray braces,
+    extra words, case changes), so lookups fall back to the best matching
+    key instead of crashing the simulation.
+    """
+    if not isinstance(parent, dict) or not wanted:
+      return None
+    if wanted in parent:
+      return wanted
+    w = wanted.strip().lower()
+    for k in parent:
+      if k.lower() == w:
+        return k
+    for k in parent:
+      if w and (w in k.lower() or k.lower() in w):
+        return k
+    return None
+
+
   def print_tree(self): 
     def _print_tree(tree, depth):
       dash = " >" * depth
@@ -78,7 +100,13 @@ class MemoryTree:
     curr_world, curr_sector = sector.split(":")
     if not curr_sector: 
       return ""
-    x = ", ".join(list(self.tree[curr_world][curr_sector].keys()))
+    world_key = self._resolve_key(self.tree, curr_world)
+    if not world_key:
+      return ""
+    sector_key = self._resolve_key(self.tree[world_key], curr_sector)
+    if not sector_key:
+      return ""
+    x = ", ".join(list(self.tree[world_key][sector_key].keys()))
     return x
 
 
@@ -96,16 +124,25 @@ class MemoryTree:
     EXAMPLE STR OUTPUT
       "phone, charger, bed, nightstand"
     """
-    curr_world, curr_sector, curr_arena = arena.split(":")
+    x = arena.split(":")
+    curr_world = x[0].strip() if len(x) > 0 else ""
+    curr_sector = x[1].strip() if len(x) > 1 else ""
+    curr_arena = x[2].strip() if len(x) > 2 else ""
 
     if not curr_arena: 
       return ""
 
-    try: 
-      x = ", ".join(list(self.tree[curr_world][curr_sector][curr_arena]))
-    except: 
-      x = ", ".join(list(self.tree[curr_world][curr_sector][curr_arena.lower()]))
-    return x
+    world_key = self._resolve_key(self.tree, curr_world)
+    if not world_key:
+      return ""
+    sector_key = self._resolve_key(self.tree[world_key], curr_sector)
+    if not sector_key:
+      return ""
+    arena_key = self._resolve_key(self.tree[world_key][sector_key], curr_arena)
+    if not arena_key:
+      return ""
+
+    return ", ".join(list(self.tree[world_key][sector_key][arena_key]))
 
 
 if __name__ == '__main__':

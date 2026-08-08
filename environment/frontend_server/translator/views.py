@@ -23,6 +23,27 @@ def landing(request):
   return render(request, template, context)
 
 
+def get_token_usage(request):
+  """Return the backend's live LLM token usage snapshot (JSON).
+
+  The backend writes temp_storage/token_usage.json on every LLM call; the
+  on-page monitor polls this endpoint to display live usage.
+  """
+  usage_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "temp_storage", "token_usage.json")
+  if os.path.exists(usage_file):
+    try:
+      with open(usage_file) as f:
+        return JsonResponse(json.load(f))
+    except Exception:
+      pass
+  return JsonResponse({
+    "started_at": "-", "updated_at": "-", "total_tokens": 0,
+    "prompt_tokens": 0, "completion_tokens": 0, "calls": 0,
+    "by_model": {}, "embedding_calls": 0, "embedding_tokens": 0,
+  })
+
+
 def demo(request, sim_code, step, play_speed="2"): 
   move_file = f"compressed_storage/{sim_code}/master_movement.json"
   meta_file = f"compressed_storage/{sim_code}/meta.json"

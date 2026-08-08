@@ -32,6 +32,36 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 			display: none !important
 		}
 	</style>
+
+	<!-- LLM token usage monitor (hermes-gadget fork) -->
+	<div id="token-monitor" style="position:fixed; top:10px; right:10px; z-index:9999; background:rgba(18,18,28,0.88); color:#e8e8f0; font-family:monospace; font-size:12px; padding:10px 14px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.35); min-width:240px; pointer-events:none;">
+		<div style="font-weight:bold; margin-bottom:6px; letter-spacing:0.5px;">🤖 LLM tokens</div>
+		<div><span id="tm-total">0</span> total &middot; <span id="tm-calls">0</span> calls</div>
+		<div>prompt <span id="tm-prompt">0</span> &middot; completion <span id="tm-completion">0</span></div>
+		<div>embeddings <span id="tm-emb-calls">0</span> calls (<span id="tm-emb-tokens">0</span> tk)</div>
+		<div id="tm-models" style="opacity:0.75;"></div>
+		<div style="opacity:0.6; margin-top:4px;">updated <span id="tm-updated">-</span> &middot; since <span id="tm-started">-</span></div>
+	</div>
+	<script type="text/javascript">
+		function refreshTokenMonitor(){
+			$.getJSON('/get_token_usage/', function(d){
+				var n = function(v){ return (v||0).toLocaleString(); };
+				$('#tm-total').text(n(d.total_tokens));
+				$('#tm-prompt').text(n(d.prompt_tokens));
+				$('#tm-completion').text(n(d.completion_tokens));
+				$('#tm-calls').text(n(d.calls));
+				$('#tm-emb-calls').text(n(d.embedding_calls));
+				$('#tm-emb-tokens').text(n(d.embedding_tokens));
+				$('#tm-updated').text(d.updated_at || '-');
+				$('#tm-started').text(d.started_at || '-');
+				var models = Object.entries(d.by_model || {})
+					.map(function(kv){ return kv[0] + ': ' + n(kv[1]); })
+					.join(' &middot; ');
+				$('#tm-models').html(models);
+			}).fail(function(){});
+		}
+		$(document).ready(function(){ refreshTokenMonitor(); setInterval(refreshTokenMonitor, 2000); });
+	</script>
 </body>
 </html>
 

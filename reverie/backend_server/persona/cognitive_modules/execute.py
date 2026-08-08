@@ -12,6 +12,27 @@ from global_methods import *
 from path_finder import *
 from utils import *
 
+def _resolve_address_tiles(maze, plan):
+  """Fuzzy address->tiles lookup.
+
+  Modern LLMs occasionally hallucinate locations that don't exist in the
+  maze. Instead of crashing (upstream left a deliberate KeyError landmine
+  here), we fall back: exact key, then same world:sector, then containment,
+  then the agent's current tile.
+  """
+  if plan in maze.address_tiles:
+    return maze.address_tiles[plan]
+  prefix = ":".join(plan.split(":")[:2]) + ":"
+  for key, tiles in maze.address_tiles.items():
+    if key.startswith(prefix):
+      return tiles
+  p = plan.lower()
+  for key, tiles in maze.address_tiles.items():
+    if p in key.lower() or key.lower() in p:
+      return tiles
+  return None
+
+
 def execute(persona, maze, personas, plan): 
   """
   Given a plan (action's string address), we execute the plan (actually 
@@ -79,7 +100,9 @@ def execute(persona, maze, personas, plan):
     elif "<random>" in plan: 
       # Executing a random location action.
       plan = ":".join(plan.split(":")[:-1])
-      target_tiles = maze.address_tiles[plan]
+      target_tiles = _resolve_address_tiles(maze, plan)
+      if not target_tiles:
+        target_tiles = [persona.scratch.curr_tile]
       target_tiles = random.sample(list(target_tiles), 1)
 
     else: 
@@ -88,10 +111,11 @@ def execute(persona, maze, personas, plan):
       # Retrieve the target addresses. Again, plan is an action address in its
       # string form. <maze.address_tiles> takes this and returns candidate 
       # coordinates. 
-      if plan not in maze.address_tiles: 
-        maze.address_tiles["Johnson Park:park:park garden"] #ERRORRRRRRR
-      else: 
-        target_tiles = maze.address_tiles[plan]
+      target_tiles = _resolve_address_tiles(maze, plan)
+      if not target_tiles:
+        # Hallucinated location: keep the persona where they are rather
+        # than crashing the simulation.
+        target_tiles = [persona.scratch.curr_tile]
 
     # There are sometimes more than one tile returned from this (e.g., a tabe
     # may stretch many coordinates). So, we sample a few here. And from that 
