@@ -27,6 +27,7 @@ import math
 import os
 import shutil
 import traceback
+import signal
 from concurrent.futures import ThreadPoolExecutor
 
 from global_methods import *
@@ -356,6 +357,23 @@ class ReverieServer:
     # <sim_folder> points to the current simulation folder.
     sim_folder = f"{fs_storage}/{self.sim_code}"
 
+    # Graceful shutdown: a SIGTERM (systemd restart) mid-run used to lose
+    # the world clock + step (save() only ran at run end), rewinding the
+    # town on every restart. Save on signal so restarts resume in place.
+    def _shutdown_save(signum, frame):
+      print("[reverie] signal %s received; saving state" % signum,
+            flush=True)
+      try:
+        self.save()
+      except Exception:
+        traceback.print_exc()
+      os._exit(0)
+    try:
+      signal.signal(signal.SIGTERM, _shutdown_save)
+      signal.signal(signal.SIGINT, _shutdown_save)
+    except Exception:
+      pass
+
     # Forked base sims ship without movement/ (upstream demos fork from the
     # July1 sims, which have it). Create the runtime dirs so the first step
     # doesn't crash on the movement write.
@@ -611,6 +629,27 @@ class ReverieServer:
           for persona_name, persona in self.personas.items():
             persona.save(f"{sim_folder}/personas/{persona_name}/bootstrap_memory",
                          full=_full_save)
+
+          # Persist the world clock + step on every full save so a SIGTERM
+          # restart resumes where the town was instead of re-anchoring the
+          # clock to the last COMPLETED run (pre-existing bug: save() only
+          # ran at run end, so systemd restarts rewound the town to the
+          # original fork date/step 0).
+          if _full_save:
+            try:
+              _meta = {
+                "fork_sim_code": self.fork_sim_code,
+                "start_date": self.start_time.strftime("%B %d, %Y"),
+                "curr_time": self.curr_time.strftime("%B %d, %Y, %H:%M:%S"),
+                "sec_per_step": self.sec_per_step,
+                "maze_name": self.maze.maze_name,
+                "persona_names": list(self.personas.keys()),
+                "step": self.step,
+              }
+              atomic_json_dump(_meta, f"{sim_folder}/reverie/meta.json")
+            except Exception:
+              print("[reverie] meta.json persist failed; continuing",
+                    flush=True)
 
           # [DATA-STORE] BEGIN: light incremental sync after each full save.
           if _full_save and self._data_store is not None:
