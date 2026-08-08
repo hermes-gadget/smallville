@@ -5,6 +5,8 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/home/hermes-agent/smallville/reverie/backend_server
+# Embeddings reach the home AI box through the reverse SSH tunnel.
+Environment=EMBEDDING_BASE_URL=http://127.0.0.1:1234/v1
 # Headless mode: reverie.py <fork_sim> <sim_name> <run_steps>. Resumes the
 # saved public_sim when it exists (no daily-plan regeneration); otherwise
 # forks the base 3-agent town. After the run finishes the service exits and

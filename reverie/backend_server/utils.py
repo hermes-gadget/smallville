@@ -50,9 +50,12 @@ llm_model = "deepseek-v4-flash"
 llm_max_tokens = 64000
 
 # ---------------------------------------------------------------------------
-# Local embedding server (LM Studio on the AI box)
+# Local embedding server (LM Studio on the AI box).
+# Override with EMBEDDING_BASE_URL where the AI box isn't directly reachable
+# (e.g. the VPS uses the reverse SSH tunnel: http://127.0.0.1:1234/v1).
 # ---------------------------------------------------------------------------
-embedding_base_url = "http://192.168.2.4:1234/v1"
+embedding_base_url = os.environ.get(
+    "EMBEDDING_BASE_URL", "http://192.168.2.4:1234/v1")
 embedding_model = "text-embedding-nomic-embed-text-v1.5"
 
 # ---------------------------------------------------------------------------
