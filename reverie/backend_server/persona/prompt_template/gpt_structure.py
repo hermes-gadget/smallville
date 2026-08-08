@@ -16,6 +16,7 @@ cognitive modules work unchanged.
 import json
 import os
 import random
+import sqlite3
 import sys
 import tempfile
 import threading
@@ -48,7 +49,8 @@ _usage = {
 
 
 def _record_usage(usage, model, embedding=False):
-  """Add one API response's usage to the counter and persist the snapshot."""
+  """Add one API response's usage to the counter, persist the snapshot and
+  append the call to the cumulative SQLite store (queryable)."""
   with _usage_lock:
     if embedding:
       _usage["embedding_calls"] += 1
@@ -66,6 +68,41 @@ def _record_usage(usage, model, embedding=False):
       + _usage["embedding_tokens"])
     _usage["updated_at"] = time.strftime("%H:%M:%S")
     _write_usage_snapshot()
+    _log_usage_row(model, usage, embedding)
+
+
+def _log_usage_row(model, usage, embedding):
+  """Append one call to the cumulative SQLite log (never breaks the sim)."""
+  try:
+    path = os.path.abspath(token_usage_db)
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    conn = sqlite3.connect(path, timeout=5)
+    try:
+      conn.execute(
+        "CREATE TABLE IF NOT EXISTS calls ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "ts TEXT NOT NULL,"
+        "model TEXT NOT NULL,"
+        "kind TEXT NOT NULL,"
+        "prompt_tokens INTEGER NOT NULL,"
+        "completion_tokens INTEGER NOT NULL,"
+        "total_tokens INTEGER NOT NULL)")
+      conn.execute(
+        "INSERT INTO calls (ts, model, kind, prompt_tokens, completion_tokens, total_tokens)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (time.strftime("%Y-%m-%d %H:%M:%S"), model,
+         "embedding" if embedding else "llm",
+         int(usage.get("prompt_tokens") or 0),
+         int(usage.get("completion_tokens") or 0),
+         int(usage.get("total_tokens")
+             or (usage.get("prompt_tokens") or 0)
+             + (usage.get("completion_tokens") or 0))))
+      conn.commit()
+    finally:
+      conn.close()
+  except Exception as e:  # telemetry must never break the simulation
+    print(f"[usage telemetry] db: {e}", file=sys.stderr)
 
 
 def _write_usage_snapshot():

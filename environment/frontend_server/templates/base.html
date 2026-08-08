@@ -39,6 +39,7 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 		<div><span id="tm-total">0</span> total &middot; <span id="tm-calls">0</span> calls</div>
 		<div>prompt <span id="tm-prompt">0</span> &middot; completion <span id="tm-completion">0</span></div>
 		<div>embeddings <span id="tm-emb-calls">0</span> calls (<span id="tm-emb-tokens">0</span> tk)</div>
+		<div>all-time <span id="tm-cum">0</span> tk &middot; <span id="tm-cum-calls">0</span> calls</div>
 		<div id="tm-models" style="opacity:0.75;"></div>
 		<div style="opacity:0.6; margin-top:4px;">updated <span id="tm-updated">-</span> &middot; since <span id="tm-started">-</span></div>
 	</div>
@@ -52,6 +53,10 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 				$('#tm-calls').text(n(d.calls));
 				$('#tm-emb-calls').text(n(d.embedding_calls));
 				$('#tm-emb-tokens').text(n(d.embedding_tokens));
+				if (d.cumulative) {
+					$('#tm-cum').text(n(d.cumulative.total_tokens));
+					$('#tm-cum-calls').text(n(d.cumulative.calls));
+				}
 				$('#tm-updated').text(d.updated_at || '-');
 				$('#tm-started').text(d.started_at || '-');
 				var models = Object.entries(d.by_model || {})

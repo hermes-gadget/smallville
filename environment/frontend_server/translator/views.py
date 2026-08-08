@@ -18,30 +18,65 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 from .models import *
 
 def landing(request): 
-  context = {}
-  template = "landing/landing.html"
-  return render(request, template, context)
+  # The public site lands directly on the live map page.
+  return redirect("home")
 
 
 def get_token_usage(request):
   """Return the backend's live LLM token usage snapshot (JSON).
 
   The backend writes temp_storage/token_usage.json on every LLM call; the
-  on-page monitor polls this endpoint to display live usage.
+  on-page monitor polls this endpoint to display live usage. The response
+  also carries cumulative totals read from the SQLite log
+  (temp_storage/token_usage.db) so all-time usage is queryable.
   """
   usage_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             "temp_storage", "token_usage.json")
-  if os.path.exists(usage_file):
-    try:
-      with open(usage_file) as f:
-        return JsonResponse(json.load(f))
-    except Exception:
-      pass
-  return JsonResponse({
+  payload = {
     "started_at": "-", "updated_at": "-", "total_tokens": 0,
     "prompt_tokens": 0, "completion_tokens": 0, "calls": 0,
     "by_model": {}, "embedding_calls": 0, "embedding_tokens": 0,
-  })
+  }
+  if os.path.exists(usage_file):
+    try:
+      with open(usage_file) as f:
+        payload.update(json.load(f))
+    except Exception:
+      pass
+
+  # Cumulative totals from the SQLite call log.
+  payload["cumulative"] = {
+    "total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0,
+    "calls": 0, "embedding_calls": 0, "first_call_at": None,
+    "last_call_at": None,
+  }
+  db_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "temp_storage", "token_usage.db")
+  if os.path.exists(db_file):
+    try:
+      import sqlite3
+      conn = sqlite3.connect(db_file, timeout=5)
+      try:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*), COALESCE(SUM(total_tokens),0),"
+                    " COALESCE(SUM(prompt_tokens),0), COALESCE(SUM(completion_tokens),0),"
+                    " SUM(CASE WHEN kind='embedding' THEN 1 ELSE 0 END),"
+                    " MIN(ts), MAX(ts) FROM calls")
+        row = cur.fetchone()
+        payload["cumulative"] = {
+          "calls": row[0] or 0,
+          "total_tokens": row[1] or 0,
+          "prompt_tokens": row[2] or 0,
+          "completion_tokens": row[3] or 0,
+          "embedding_calls": row[4] or 0,
+          "first_call_at": row[5],
+          "last_call_at": row[6],
+        }
+      finally:
+        conn.close()
+    except Exception:
+      pass
+  return JsonResponse(payload)
 
 
 def demo(request, sim_code, step, play_speed="2"): 
