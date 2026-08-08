@@ -520,7 +520,12 @@
 
 		function updateResidentCard(name, state) {
 			var card = document.getElementById("resident-card__" + personaSlug(name));
-			if (card) card.classList.toggle("is-awaiting", !state);
+			if (card) {
+				card.classList.toggle("is-awaiting", !state);
+				var status = card.querySelector(".resident-status");
+				status.setAttribute("title", state ? "Live" : "Awaiting action");
+				status.setAttribute("aria-label", state ? "Live" : "Awaiting action");
+			}
 			if (!state) {
 				setText("current_action__" + personaSlug(name), "Awaiting action");
 				setText("target_address__" + personaSlug(name), "Location pending");
