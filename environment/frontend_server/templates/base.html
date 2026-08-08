@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Author: Joon Sung Park (joonspk@stanford.edu)
 -->
 
@@ -7,46 +7,142 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-  <title>Reverie</title>
-  <!-- Latest compiled and minified CSS -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="theme-color" content="#07111c">
+	<title>{% block title %}Reverie{% endblock title %}</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-	<!-- Optional theme -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
-
-</head>
- 
-<body class="top-navigation" style="background-color: white">
-  {% block content %}
-	{% endblock content %}
-
-	<!-- Latest compiled and minified JavaScript -->
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
-	<script src="https://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
-
-	{% block js_content %}
-	{% endblock js_content %}
-
-	<script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=Xha1v8a6ENHDAgZ2dJoH85LCl6H1VwpYfgwfbgau8r4&cl=ffffff&w=a"></script>
-	<style type="text/css">
-		#clustrmaps-widget-v2 {
-			display: none !important
+	<style>
+		:root {
+			--tm-ink: #e9f4f3;
+			--tm-muted: #91aaa9;
+			--tm-teal: #62dfbd;
+			--tm-amber: #f2bd62;
+		}
+		#token-monitor {
+			position: fixed;
+			top: 16px;
+			right: 16px;
+			z-index: 9999;
+			width: min(274px, calc(100vw - 32px));
+			padding: 13px 15px 12px;
+			border: 1px solid rgba(129, 220, 199, .2);
+			border-radius: 15px;
+			background:
+				linear-gradient(145deg, rgba(20, 38, 52, .96), rgba(8, 18, 29, .94));
+			box-shadow: 0 18px 44px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .04);
+			color: var(--tm-ink);
+			font: 10.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+			letter-spacing: .01em;
+			pointer-events: none;
+			transition: opacity .18s ease;
+			-webkit-backdrop-filter: blur(18px);
+			backdrop-filter: blur(18px);
+		}
+		.token-monitor__heading {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin-bottom: 8px;
+			color: #fff;
+			font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			font-size: 11px;
+			font-weight: 750;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+		.token-monitor__pulse {
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: var(--tm-teal);
+			box-shadow: 0 0 0 4px rgba(98, 223, 189, .11), 0 0 16px rgba(98, 223, 189, .55);
+		}
+		.token-monitor__row {
+			display: flex;
+			align-items: baseline;
+			justify-content: space-between;
+			gap: 12px;
+			color: var(--tm-muted);
+		}
+		.token-monitor__row strong {
+			color: var(--tm-ink);
+			font-size: 11px;
+			font-weight: 650;
+		}
+		.token-monitor__row--primary {
+			margin-bottom: 3px;
+			color: #b8ccca;
+		}
+		.token-monitor__row--primary strong {
+			color: var(--tm-amber);
+			font-size: 13px;
+		}
+		.token-monitor__models {
+			margin-top: 5px;
+			padding-top: 5px;
+			border-top: 1px solid rgba(255, 255, 255, .07);
+			color: #7f999a;
+			word-break: break-word;
+		}
+		.token-monitor__meta {
+			margin-top: 4px;
+			color: #5f7b7c;
+			font-size: 9px;
+		}
+		@media (max-width: 640px) {
+			#token-monitor {
+				top: max(10px, env(safe-area-inset-top));
+				right: max(10px, env(safe-area-inset-right));
+				width: 196px;
+				padding: 10px 12px;
+				border-radius: 13px;
+			}
+			.token-monitor__heading { margin-bottom: 5px; font-size: 10px; }
+			.token-monitor__secondary,
+			.token-monitor__models,
+			.token-monitor__meta { display: none; }
 		}
 	</style>
+	{% block extra_css %}{% endblock extra_css %}
+</head>
+
+<body class="{% block body_class %}top-navigation{% endblock body_class %}">
+	{% block content %}{% endblock content %}
+
+	<script src="https://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+	{% block js_content %}{% endblock js_content %}
+
+	<script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=Xha1v8a6ENHDAgZ2dJoH85LCl6H1VwpYfgwfbgau8r4&cl=ffffff&w=a"></script>
+	<style>#clustrmaps-widget-v2 { display: none !important; }</style>
 
 	<!-- LLM token usage monitor (hermes-gadget fork) -->
-	<div id="token-monitor" style="position:fixed; top:10px; right:10px; z-index:9999; background:rgba(18,18,28,0.88); color:#e8e8f0; font-family:monospace; font-size:12px; padding:10px 14px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.35); min-width:240px; pointer-events:none;">
-		<div style="font-weight:bold; margin-bottom:6px; letter-spacing:0.5px;">🤖 LLM tokens</div>
-		<div><span id="tm-total">0</span> total &middot; <span id="tm-calls">0</span> calls</div>
-		<div>prompt <span id="tm-prompt">0</span> &middot; completion <span id="tm-completion">0</span></div>
-		<div>embeddings <span id="tm-emb-calls">0</span> calls (<span id="tm-emb-tokens">0</span> tk)</div>
-		<div>all-time <span id="tm-cum">0</span> tk &middot; <span id="tm-cum-calls">0</span> calls</div>
-		<div id="tm-models" style="opacity:0.75;"></div>
-		<div style="opacity:0.6; margin-top:4px;">updated <span id="tm-updated">-</span> &middot; since <span id="tm-started">-</span></div>
+	<div id="token-monitor" role="status" aria-label="Live LLM token usage">
+		<div class="token-monitor__heading"><span class="token-monitor__pulse"></span>LLM tokens</div>
+		<div class="token-monitor__row token-monitor__row--primary">
+			<span><strong id="tm-total">0</strong> total</span>
+			<span><strong id="tm-calls">0</strong> calls</span>
+		</div>
+		<div class="token-monitor__row token-monitor__secondary">
+			<span>prompt <strong id="tm-prompt">0</strong></span>
+			<span>completion <strong id="tm-completion">0</strong></span>
+		</div>
+		<div class="token-monitor__row token-monitor__secondary">
+			<span>embeddings</span>
+			<span><strong id="tm-emb-calls">0</strong> calls · <strong id="tm-emb-tokens">0</strong> tk</span>
+		</div>
+		<div class="token-monitor__row">
+			<span>all-time</span>
+			<span><strong id="tm-cum">0</strong> tk · <strong id="tm-cum-calls">0</strong> calls</span>
+		</div>
+		<div id="tm-models" class="token-monitor__models"></div>
+		<div class="token-monitor__meta">updated <span id="tm-updated">-</span> · since <span id="tm-started">-</span></div>
 	</div>
 	<script type="text/javascript">
-		function refreshTokenMonitor(){
-			$.getJSON('/get_token_usage/', function(d){
-				var n = function(v){ return (v||0).toLocaleString(); };
+		function refreshTokenMonitor() {
+			$.getJSON('/get_token_usage/', function(d) {
+				var n = function(v) { return Number(v || 0).toLocaleString(); };
 				$('#tm-total').text(n(d.total_tokens));
 				$('#tm-prompt').text(n(d.prompt_tokens));
 				$('#tm-completion').text(n(d.completion_tokens));
@@ -60,18 +156,15 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 				$('#tm-updated').text(d.updated_at || '-');
 				$('#tm-started').text(d.started_at || '-');
 				var models = Object.entries(d.by_model || {})
-					.map(function(kv){ return kv[0] + ': ' + n(kv[1]); })
-					.join(' &middot; ');
-				$('#tm-models').html(models);
-			}).fail(function(){});
+					.map(function(kv) { return kv[0] + ': ' + n(kv[1]); })
+					.join(' · ');
+				$('#tm-models').text(models);
+			}).fail(function() {});
 		}
-		$(document).ready(function(){ refreshTokenMonitor(); setInterval(refreshTokenMonitor, 2000); });
+		$(document).ready(function() {
+			refreshTokenMonitor();
+			setInterval(refreshTokenMonitor, 2000);
+		});
 	</script>
 </body>
 </html>
-
-
-
-
-
-
