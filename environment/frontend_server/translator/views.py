@@ -101,6 +101,28 @@ def get_chat_log(request):
   return JsonResponse(payload)
 
 
+def set_pacing(request):
+  """Set the world-clock pacing (game seconds per real second).
+
+  Writes temp_storage/pacing.txt which the reverie step loop re-reads
+  each step, so the change takes effect live without a restart.
+  """
+  if request.method != "POST":
+    return JsonResponse({"ok": False, "error": "POST only"}, status=405)
+  try:
+    data = json.loads(request.body or "{}")
+    pacing = int(data.get("pacing", 0))
+  except (ValueError, TypeError):
+    return JsonResponse({"ok": False, "error": "pacing must be an int"}, status=400)
+  if not 1 <= pacing <= 10000:
+    return JsonResponse({"ok": False, "error": "pacing out of range 1..10000"}, status=400)
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  pacing_file = os.path.join(frontend_root, "temp_storage", "pacing.txt")
+  with open(pacing_file, "w") as outfile:
+    outfile.write(str(pacing))
+  return JsonResponse({"ok": True, "pacing": pacing})
+
+
 def demo(request, sim_code, step, play_speed="2"): 
   move_file = f"compressed_storage/{sim_code}/master_movement.json"
   meta_file = f"compressed_storage/{sim_code}/meta.json"
