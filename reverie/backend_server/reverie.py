@@ -294,6 +294,12 @@ class ReverieServer:
     # <sim_folder> points to the current simulation folder.
     sim_folder = f"{fs_storage}/{self.sim_code}"
 
+    # Forked base sims ship without movement/ (upstream demos fork from the
+    # July1 sims, which have it). Create the runtime dirs so the first step
+    # doesn't crash on the movement write.
+    os.makedirs(f"{sim_folder}/movement", exist_ok=True)
+    os.makedirs(f"{sim_folder}/environment", exist_ok=True)
+
     # When a persona arrives at a game object, we give a unique event
     # to that object. 
     # e.g., ('double studio[...]:bed', 'is', 'unmade', 'unmade')
