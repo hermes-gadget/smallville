@@ -7,6 +7,7 @@ import string
 import random
 import json
 import secrets
+import sqlite3
 from os import listdir
 import os
 from django.conf import settings
@@ -100,6 +101,50 @@ def get_chat_log(request):
         payload["entries"] = entries[-200:]
     except Exception:
       pass
+  return JsonResponse(payload)
+
+
+def get_sim_store_stats(request):
+  """Return cheap, public health statistics for the simulation store."""
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  store_dir = os.path.join(frontend_root, "storage", "public_sim", "sim_store")
+  db_file = os.path.join(store_dir, "sim_store.db")
+  archive_dir = os.path.join(store_dir, "archive")
+  payload = {
+    "db_size_bytes": 0,
+    "wal_size_bytes": 0,
+    "steps": 0,
+    "memories": 0,
+    "archive_count": 0,
+  }
+  try:
+    payload["archive_count"] = sum(
+      filename.endswith((".ndjson.xz", ".ndjson.zst"))
+      for filename in os.listdir(archive_dir)
+    )
+  except OSError:
+    pass
+  if not os.path.exists(db_file):
+    return JsonResponse(payload)
+
+  try:
+    payload["db_size_bytes"] = os.path.getsize(db_file)
+    wal_file = db_file + "-wal"
+    if os.path.exists(wal_file):
+      payload["wal_size_bytes"] = os.path.getsize(wal_file)
+    conn = sqlite3.connect(
+      "file:%s?mode=ro" % db_file, uri=True, timeout=0.05)
+    try:
+      conn.execute("PRAGMA query_only=ON")
+      conn.execute("PRAGMA busy_timeout=50")
+      payload["steps"] = conn.execute(
+        "SELECT COUNT(*) FROM steps").fetchone()[0]
+      payload["memories"] = conn.execute(
+        "SELECT COUNT(*) FROM memories").fetchone()[0]
+    finally:
+      conn.close()
+  except (OSError, sqlite3.Error):
+    pass
   return JsonResponse(payload)
 
 

@@ -12,8 +12,29 @@ sys.path.append('../../')
 
 import json
 import datetime
+import os
+import tempfile
 
 from global_methods import *
+
+
+def _atomic_memory_json_dump(value, path):
+  """Atomically write memory JSON with a unique same-directory temp file."""
+  fd, temporary = tempfile.mkstemp(
+    prefix="." + os.path.basename(path) + ".", suffix=".tmp",
+    dir=os.path.dirname(path), text=True)
+  try:
+    with os.fdopen(fd, "w") as outfile:
+      json.dump(value, outfile)
+      outfile.flush()
+      os.fsync(outfile.fileno())
+    os.replace(temporary, path)
+  except Exception:
+    try:
+      os.unlink(temporary)
+    except OSError:
+      pass
+    raise
 
 
 class ConceptNode: 
@@ -21,7 +42,8 @@ class ConceptNode:
                node_id, node_count, type_count, node_type, depth,
                created, expiration, 
                s, p, o, 
-               description, embedding_key, poignancy, keywords, filling): 
+               description, embedding_key, poignancy, keywords, filling,
+               last_accessed=None):
     self.node_id = node_id
     self.node_count = node_count
     self.type_count = type_count
@@ -30,7 +52,7 @@ class ConceptNode:
 
     self.created = created
     self.expiration = expiration
-    self.last_accessed = self.created
+    self.last_accessed = last_accessed or self.created
 
     self.subject = s
     self.predicate = p
@@ -62,11 +84,21 @@ class AssociativeMemory:
     self.kw_strength_event = dict()
     self.kw_strength_thought = dict()
 
-    self.embeddings = json.load(open(f_saved + "/embeddings.json"))
+    # IDs may be sparse after the data-store evicts archived nodes. Keep
+    # monotonic allocators instead of deriving the next ID from len().
+    self._next_node_count = 1
+    self._next_type_count = {"event": 1, "thought": 1, "chat": 1}
 
-    nodes_load = json.load(open(f_saved + "/nodes.json"))
-    for count in range(len(nodes_load.keys())): 
-      node_id = f"node_{str(count+1)}"
+    with open(f_saved + "/embeddings.json") as embeddings_file:
+      self.embeddings = json.load(embeddings_file)
+
+    with open(f_saved + "/nodes.json") as nodes_file:
+      nodes_load = json.load(nodes_file)
+    ordered_node_ids = sorted(
+      nodes_load,
+      key=lambda node_id: int(nodes_load[node_id].get(
+        "node_count", str(node_id).rsplit("_", 1)[-1])))
+    for node_id in ordered_node_ids:
       node_details = nodes_load[node_id]
 
       node_count = node_details["node_count"]
@@ -76,6 +108,10 @@ class AssociativeMemory:
 
       created = datetime.datetime.strptime(node_details["created"], 
                                            '%Y-%m-%d %H:%M:%S')
+      last_accessed = created
+      if node_details.get("last_accessed"):
+        last_accessed = datetime.datetime.strptime(
+          node_details["last_accessed"], '%Y-%m-%d %H:%M:%S')
       expiration = None
       if node_details["expiration"]: 
         expiration = datetime.datetime.strptime(node_details["expiration"],
@@ -94,26 +130,43 @@ class AssociativeMemory:
       
       if node_type == "event": 
         self.add_event(created, expiration, s, p, o, 
-                   description, keywords, poignancy, embedding_pair, filling)
+                   description, keywords, poignancy, embedding_pair, filling,
+                   node_id=node_id, node_count=node_count,
+                   type_count=type_count, depth=depth,
+                   last_accessed=last_accessed)
       elif node_type == "chat": 
         self.add_chat(created, expiration, s, p, o, 
-                   description, keywords, poignancy, embedding_pair, filling)
+                   description, keywords, poignancy, embedding_pair, filling,
+                   node_id=node_id, node_count=node_count,
+                   type_count=type_count, depth=depth,
+                   last_accessed=last_accessed)
       elif node_type == "thought": 
         self.add_thought(created, expiration, s, p, o, 
-                   description, keywords, poignancy, embedding_pair, filling)
+                   description, keywords, poignancy, embedding_pair, filling,
+                   node_id=node_id, node_count=node_count,
+                   type_count=type_count, depth=depth,
+                   last_accessed=last_accessed)
 
-    kw_strength_load = json.load(open(f_saved + "/kw_strength.json"))
+    with open(f_saved + "/kw_strength.json") as strengths_file:
+      kw_strength_load = json.load(strengths_file)
     if kw_strength_load.get("kw_strength_event"):
       self.kw_strength_event = kw_strength_load["kw_strength_event"]
     if kw_strength_load.get("kw_strength_thought"):
       self.kw_strength_thought = kw_strength_load["kw_strength_thought"]
+    self._next_node_count = max(
+      self._next_node_count, kw_strength_load.get("next_node_count", 1))
+    saved_type_counts = kw_strength_load.get("next_type_count", {})
+    for node_type in self._next_type_count:
+      self._next_type_count[node_type] = max(
+        self._next_type_count[node_type], saved_type_counts.get(node_type, 1))
 
     
   def save(self, out_json): 
     r = dict()
-    for count in range(len(self.id_to_node.keys()), 0, -1): 
-      node_id = f"node_{str(count)}"
-      node = self.id_to_node[node_id]
+    nodes = sorted(self.id_to_node.values(),
+                   key=lambda node: node.node_count, reverse=True)
+    for node in nodes:
+      node_id = node.node_id
 
       r[node_id] = dict()
       r[node_id]["node_count"] = node.node_count
@@ -122,6 +175,8 @@ class AssociativeMemory:
       r[node_id]["depth"] = node.depth
 
       r[node_id]["created"] = node.created.strftime('%Y-%m-%d %H:%M:%S')
+      r[node_id]["last_accessed"] = (node.last_accessed
+                                      .strftime('%Y-%m-%d %H:%M:%S'))
       r[node_id]["expiration"] = None
       if node.expiration: 
         r[node_id]["expiration"] = (node.expiration
@@ -137,26 +192,41 @@ class AssociativeMemory:
       r[node_id]["keywords"] = list(node.keywords)
       r[node_id]["filling"] = node.filling
 
-    with open(out_json+"/nodes.json", "w") as outfile:
-      json.dump(r, outfile)
+    _atomic_memory_json_dump(r, out_json+"/nodes.json")
 
     r = dict()
     r["kw_strength_event"] = self.kw_strength_event
     r["kw_strength_thought"] = self.kw_strength_thought
-    with open(out_json+"/kw_strength.json", "w") as outfile:
-      json.dump(r, outfile)
+    r["next_node_count"] = self._next_node_count
+    r["next_type_count"] = self._next_type_count
+    _atomic_memory_json_dump(r, out_json+"/kw_strength.json")
 
-    atomic_json_dump(self.embeddings, out_json+"/embeddings.json")
+    _atomic_memory_json_dump(self.embeddings, out_json+"/embeddings.json")
+
+  def _allocate_identity(self, node_type, node_id=None, node_count=None,
+                         type_count=None):
+    if node_count is None:
+      node_count = self._next_node_count
+    if node_id is None:
+      node_id = f"node_{str(node_count)}"
+    if type_count is None:
+      type_count = self._next_type_count[node_type]
+    self._next_node_count = max(self._next_node_count, node_count + 1)
+    self._next_type_count[node_type] = max(
+      self._next_type_count[node_type], type_count + 1)
+    return node_id, node_count, type_count
+
 
   def add_event(self, created, expiration, s, p, o, 
                       description, keywords, poignancy, 
-                      embedding_pair, filling):
+                      embedding_pair, filling, node_id=None, node_count=None,
+                      type_count=None, depth=None, last_accessed=None):
     # Setting up the node ID and counts.
-    node_count = len(self.id_to_node.keys()) + 1
-    type_count = len(self.seq_event) + 1
     node_type = "event"
-    node_id = f"node_{str(node_count)}"
-    depth = 0
+    node_id, node_count, type_count = self._allocate_identity(
+      node_type, node_id, node_count, type_count)
+    if depth is None:
+      depth = 0
 
     # Node type specific clean up. 
     if "(" in description: 
@@ -169,7 +239,7 @@ class AssociativeMemory:
                        created, expiration, 
                        s, p, o, 
                        description, embedding_pair[0], 
-                       poignancy, keywords, filling)
+                       poignancy, keywords, filling, last_accessed)
 
     # Creating various dictionary cache for fast access. 
     self.seq_event[0:0] = [node]
@@ -196,24 +266,26 @@ class AssociativeMemory:
 
   def add_thought(self, created, expiration, s, p, o, 
                         description, keywords, poignancy, 
-                        embedding_pair, filling):
+                        embedding_pair, filling, node_id=None, node_count=None,
+                        type_count=None, depth=None, last_accessed=None):
     # Setting up the node ID and counts.
-    node_count = len(self.id_to_node.keys()) + 1
-    type_count = len(self.seq_thought) + 1
     node_type = "thought"
-    node_id = f"node_{str(node_count)}"
-    depth = 1 
-    try: 
-      if filling: 
-        depth += max([self.id_to_node[i].depth for i in filling])
-    except: 
-      pass
+    node_id, node_count, type_count = self._allocate_identity(
+      node_type, node_id, node_count, type_count)
+    if depth is None:
+      depth = 1
+      try:
+        if filling:
+          depth += max([self.id_to_node[i].depth for i in filling])
+      except:
+        pass
 
     # Creating the <ConceptNode> object.
     node = ConceptNode(node_id, node_count, type_count, node_type, depth,
                        created, expiration, 
                        s, p, o, 
-                       description, embedding_pair[0], poignancy, keywords, filling)
+                       description, embedding_pair[0], poignancy, keywords,
+                       filling, last_accessed)
 
     # Creating various dictionary cache for fast access. 
     self.seq_thought[0:0] = [node]
@@ -240,19 +312,21 @@ class AssociativeMemory:
 
   def add_chat(self, created, expiration, s, p, o, 
                      description, keywords, poignancy, 
-                     embedding_pair, filling): 
+                     embedding_pair, filling, node_id=None, node_count=None,
+                     type_count=None, depth=None, last_accessed=None):
     # Setting up the node ID and counts.
-    node_count = len(self.id_to_node.keys()) + 1
-    type_count = len(self.seq_chat) + 1
     node_type = "chat"
-    node_id = f"node_{str(node_count)}"
-    depth = 0
+    node_id, node_count, type_count = self._allocate_identity(
+      node_type, node_id, node_count, type_count)
+    if depth is None:
+      depth = 0
 
     # Creating the <ConceptNode> object.
     node = ConceptNode(node_id, node_count, type_count, node_type, depth,
                        created, expiration, 
                        s, p, o, 
-                       description, embedding_pair[0], poignancy, keywords, filling)
+                       description, embedding_pair[0], poignancy, keywords,
+                       filling, last_accessed)
 
     # Creating various dictionary cache for fast access. 
     self.seq_chat[0:0] = [node]

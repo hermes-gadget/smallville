@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^$', translator_views.home, name='landing'),
     url(r'^get_token_usage/$', translator_views.get_token_usage, name='get_token_usage'),
     url(r'^get_chat_log/$', translator_views.get_chat_log, name='get_chat_log'),
+    url(r'^get_sim_store_stats/$', translator_views.get_sim_store_stats, name='get_sim_store_stats'),
     url(r'^set_pacing/$', translator_views.set_pacing, name='set_pacing'),
     url(r'^persona_state/$', translator_views.persona_state_json, name='persona_state'),
     url(r'^simulator_home$', translator_views.home, name='home'),

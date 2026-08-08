@@ -34,7 +34,7 @@ values are stored as compact JSON text. Timestamps are normalized to sortable
 ISO text.
 
 Embeddings are encoded as little-endian IEEE-754 float32 bytes without NumPy.
-`array`/`struct` and `math` keep the module standard-library-only. The deployed
+`struct` and `math` keep the module standard-library-only. The deployed
 virtualenv has no `zstandard`, so cold files use stdlib `lzma` and the `.xz`
 suffix.
 
