@@ -27,6 +27,8 @@ class Scratch:
     self.curr_time = None
     # Current x,y tile coordinate of the persona. 
     self.curr_tile = None
+    self.curr_sector = ""
+    self.curr_arena = ""
     # Perceived world daily requirement. 
     self.daily_plan_req = None
     
@@ -44,6 +46,18 @@ class Scratch:
     self.currently = None
     self.lifestyle = None
     self.living_area = None
+
+    # Deterministic life/economy state mirrored from economy_state.json.
+    # Defaults keep all existing bootstrap scratch files loadable.
+    self.economy_balance = 0.0
+    self.economy_total_earned = 0.0
+    self.economy_total_spent = 0.0
+    self.economy_debt = 0.0
+    self.economy_status = "stable"
+    self.health_hunger = 75.0
+    self.health_energy = 75.0
+    self.health_social = 75.0
+    self.education_score = 0.0
 
     # REFLECTION VARIABLES
     self.concept_forget = 100
@@ -172,6 +186,8 @@ class Scratch:
       else: 
         self.curr_time = None
       self.curr_tile = scratch_load["curr_tile"]
+      self.curr_sector = scratch_load.get("curr_sector", "")
+      self.curr_arena = scratch_load.get("curr_arena", "")
       self.daily_plan_req = scratch_load["daily_plan_req"]
 
       self.name = scratch_load["name"]
@@ -183,6 +199,15 @@ class Scratch:
       self.currently = scratch_load["currently"]
       self.lifestyle = scratch_load["lifestyle"]
       self.living_area = scratch_load["living_area"]
+      self.economy_balance = scratch_load.get("economy_balance", 0.0)
+      self.economy_total_earned = scratch_load.get("economy_total_earned", 0.0)
+      self.economy_total_spent = scratch_load.get("economy_total_spent", 0.0)
+      self.economy_debt = scratch_load.get("economy_debt", 0.0)
+      self.economy_status = scratch_load.get("economy_status", "stable")
+      self.health_hunger = scratch_load.get("health_hunger", 75.0)
+      self.health_energy = scratch_load.get("health_energy", 75.0)
+      self.health_social = scratch_load.get("health_social", 75.0)
+      self.education_score = scratch_load.get("education_score", 0.0)
 
       self.concept_forget = scratch_load["concept_forget"]
       self.daily_reflection_time = scratch_load["daily_reflection_time"]
@@ -250,6 +275,8 @@ class Scratch:
 
     scratch["curr_time"] = self.curr_time.strftime("%B %d, %Y, %H:%M:%S")
     scratch["curr_tile"] = self.curr_tile
+    scratch["curr_sector"] = self.curr_sector
+    scratch["curr_arena"] = self.curr_arena
     scratch["daily_plan_req"] = self.daily_plan_req
 
     scratch["name"] = self.name
@@ -261,6 +288,15 @@ class Scratch:
     scratch["currently"] = self.currently
     scratch["lifestyle"] = self.lifestyle
     scratch["living_area"] = self.living_area
+    scratch["economy_balance"] = self.economy_balance
+    scratch["economy_total_earned"] = self.economy_total_earned
+    scratch["economy_total_spent"] = self.economy_total_spent
+    scratch["economy_debt"] = self.economy_debt
+    scratch["economy_status"] = self.economy_status
+    scratch["health_hunger"] = self.health_hunger
+    scratch["health_energy"] = self.health_energy
+    scratch["health_social"] = self.health_social
+    scratch["education_score"] = self.education_score
 
     scratch["concept_forget"] = self.concept_forget
     scratch["daily_reflection_time"] = self.daily_reflection_time
@@ -306,8 +342,7 @@ class Scratch:
     scratch["act_path_set"] = self.act_path_set
     scratch["planned_path"] = self.planned_path
 
-    with open(out_json, "w") as outfile:
-      json.dump(scratch, outfile, indent=2) 
+    atomic_json_dump(scratch, out_json)
 
 
   def get_f_daily_schedule_index(self, advance=0):
@@ -615,8 +650,6 @@ class Scratch:
       minute = curr_min_sum%60
       ret += f"{hour:02}:{minute:02} || {row[0]}\n"
     return ret
-
-
 
 
 
