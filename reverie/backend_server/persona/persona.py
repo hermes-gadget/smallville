@@ -216,18 +216,32 @@ class Persona:
       new_day = "New day"
     self.scratch.curr_time = curr_time
 
-    # Main cognitive sequence begins here. 
+    # Main cognitive sequence begins here. Phase 1 (perceive) stays
+    # sequential in the caller so co-located personas' chats can't race;
+    # phase 2 (retrieve/plan/reflect/execute) is safe to parallelize.
+    new_day, perceived = self._move_perceive(maze, curr_tile, curr_time)
+    return self._move_decide(maze, personas, new_day, perceived)
+
+  def _move_perceive(self, maze, curr_tile, curr_time):
+    """Phase 1 of move(): tile bookkeeping + perception (may chat)."""
+    self.scratch.curr_tile = curr_tile
+    new_day = False
+    if not self.scratch.curr_time:
+      new_day = "First day"
+    elif (self.scratch.curr_time.strftime('%A %B %d')
+          != curr_time.strftime('%A %B %d')):
+      new_day = "New day"
+    self.scratch.curr_time = curr_time
     perceived = self.perceive(maze)
+    return new_day, perceived
+
+  def _move_decide(self, maze, personas, new_day, perceived):
+    """Phase 2 of move(): retrieve + plan + reflect + execute. All work is
+    persona-private (own memory, LLM, embeddings) -- safe to run
+    concurrently for all personas in a step."""
     retrieved = self.retrieve(perceived)
     plan = self.plan(maze, personas, new_day, retrieved)
     self.reflect()
-
-    # <execution> is a triple set that contains the following components: 
-    # <next_tile> is a x,y coordinate. e.g., (58, 9)
-    # <pronunciatio> is an emoji. e.g., "\ud83d\udca4"
-    # <description> is a string description of the movement. e.g., 
-    #   writing her next novel (editing her novel) 
-    #   @ double studio:double studio:common room:sofa
     return self.execute(maze, personas, plan)
 
 

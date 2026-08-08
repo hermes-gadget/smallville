@@ -1,0 +1,220 @@
+{
+  "vision_r": 8,
+  "att_bandwidth": 8,
+  "retention": 8,
+  "curr_time": "February 13, 2023, 00:00:00",
+  "curr_tile": [
+    16,
+    18
+  ],
+  "daily_plan_req": "",
+  "name": "Latoya Williams",
+  "first_name": "Latoya",
+  "last_name": "Williams",
+  "age": 25,
+  "innate": "organized, logical, attentive",
+  "learned": "Latoya Williams is a digital photographer who has a keen eye for details. She is very organized and analytical when it comes to her art.",
+  "currently": "Latoya Williams is creating a series of photography inspired by her travels. She mostly works from the artists' co-living space. Latoya is also curious about who will be running for the local mayor election next month and that is a central topic in her conversations with others.",
+  "lifestyle": "Latoya Williams goes to bed around 10pm, awakes up around 6am, eats dinner around 17:30pm.",
+  "living_area": "the Ville:artist's co-living space:Latoya Williams's room",
+  "concept_forget": 100,
+  "daily_reflection_time": 180,
+  "daily_reflection_size": 5,
+  "overlap_reflect_th": 4,
+  "kw_strg_event_reflect_th": 10,
+  "kw_strg_thought_reflect_th": 9,
+  "recency_w": 1,
+  "relevance_w": 1,
+  "importance_w": 1,
+  "recency_decay": 0.995,
+  "importance_trigger_max": 250,
+  "importance_trigger_curr": 245,
+  "importance_ele_n": 5,
+  "thought_count": 5,
+  "daily_req": [
+    "wake up and complete the morning routine at 6:00 am"
+  ],
+  "f_daily_schedule": [
+    [
+      "sleeping",
+      360
+    ],
+    [
+      "Latoya is waking up and starting her morning routine (washing up, getting dressed, and preparing her camera bag for the day) (asleep)",
+      60
+    ],
+    [
+      "Latoya is finishing her morning routine and reviewing her shot list for the day, then heading out to scout a new location for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is scouting a new location for her travel photography series, taking test shots of the morning light and noting potential compositions for her upcoming work",
+      60
+    ],
+    [
+      "Latoya is continuing to scout the location, now focusing on capturing the mid-morning light and experimenting with different angles and framing for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to scout the location, now packing up her gear and reviewing the test shots she has taken so far, then planning her next move to a nearby spot to capture more varied compositions for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is moving to a nearby spot to capture more varied compositions, focusing on street-level details and candid moments that reflect the local culture for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is taking a lunch break at a local caf\u00e9 near her scouting spot, reviewing her morning test shots on her camera and jotting down notes for the next series of compositions",
+      60
+    ],
+    [
+      "Latoya is returning to the nearby spot after lunch, now focusing on capturing candid street portraits and architectural details that highlight the area's unique character for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to capture candid street portraits and architectural details, now moving to a shaded alleyway to photograph textures and shadows for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to photograph textures and shadows in the shaded alleyway, then begins packing up her gear to head back to the artists' co-living space to review the day's captures and edit a few preliminary selects for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is back at the artists' co-living space, uploading the day's test shots to her laptop and creating a preliminary edit of her favorite captures from the scouting session, while noting which locations she wants to revisit for the final series",
+      60
+    ],
+    [
+      "Latoya is reviewing her preliminary edits from the scouting session, then begins sorting and categorizing the day's best shots into folders for her travel photography series, while making a list of locations to revisit for the final shoot",
+      60
+    ],
+    [
+      "Latoya is preparing and eating dinner at the artists' co-living space, then cleaning up and reviewing her shot list for tomorrow's planned revisit to the top locations from today's scouting session",
+      60
+    ],
+    [
+      "Latoya is reviewing her shot list and preparing her camera gear for tomorrow's planned revisit to the top locations from today's scouting session, while also checking local news updates about the upcoming mayor election",
+      60
+    ],
+    [
+      "Latoya is finishing her review of local election news, then settling into the common area of the artists' co-living space to chat with other residents about the candidates, while occasionally glancing at her camera's memory card to plan which photos to edit first tomorrow",
+      60
+    ],
+    [
+      "Latoya is wrapping up her conversation with the other residents about the mayor election, then heading to her room to review a few final photo edits from today's scouting session before winding down for the night",
+      60
+    ],
+    [
+      "Latoya is winding down for the night, brushing her teeth and getting ready for bed, then turning off the lights to sleep",
+      60
+    ],
+    [
+      "Latoya is sleeping",
+      60
+    ],
+    [
+      "sleeping",
+      0
+    ]
+  ],
+  "f_daily_schedule_hourly_org": [
+    [
+      "sleeping",
+      360
+    ],
+    [
+      "Latoya is waking up and starting her morning routine (washing up, getting dressed, and preparing her camera bag for the day)",
+      60
+    ],
+    [
+      "Latoya is finishing her morning routine and reviewing her shot list for the day, then heading out to scout a new location for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is scouting a new location for her travel photography series, taking test shots of the morning light and noting potential compositions for her upcoming work",
+      60
+    ],
+    [
+      "Latoya is continuing to scout the location, now focusing on capturing the mid-morning light and experimenting with different angles and framing for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to scout the location, now packing up her gear and reviewing the test shots she has taken so far, then planning her next move to a nearby spot to capture more varied compositions for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is moving to a nearby spot to capture more varied compositions, focusing on street-level details and candid moments that reflect the local culture for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is taking a lunch break at a local caf\u00e9 near her scouting spot, reviewing her morning test shots on her camera and jotting down notes for the next series of compositions",
+      60
+    ],
+    [
+      "Latoya is returning to the nearby spot after lunch, now focusing on capturing candid street portraits and architectural details that highlight the area's unique character for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to capture candid street portraits and architectural details, now moving to a shaded alleyway to photograph textures and shadows for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is continuing to photograph textures and shadows in the shaded alleyway, then begins packing up her gear to head back to the artists' co-living space to review the day's captures and edit a few preliminary selects for her travel photography series",
+      60
+    ],
+    [
+      "Latoya is back at the artists' co-living space, uploading the day's test shots to her laptop and creating a preliminary edit of her favorite captures from the scouting session, while noting which locations she wants to revisit for the final series",
+      60
+    ],
+    [
+      "Latoya is reviewing her preliminary edits from the scouting session, then begins sorting and categorizing the day's best shots into folders for her travel photography series, while making a list of locations to revisit for the final shoot",
+      60
+    ],
+    [
+      "Latoya is preparing and eating dinner at the artists' co-living space, then cleaning up and reviewing her shot list for tomorrow's planned revisit to the top locations from today's scouting session",
+      60
+    ],
+    [
+      "Latoya is reviewing her shot list and preparing her camera gear for tomorrow's planned revisit to the top locations from today's scouting session, while also checking local news updates about the upcoming mayor election",
+      60
+    ],
+    [
+      "Latoya is finishing her review of local election news, then settling into the common area of the artists' co-living space to chat with other residents about the candidates, while occasionally glancing at her camera's memory card to plan which photos to edit first tomorrow",
+      60
+    ],
+    [
+      "Latoya is wrapping up her conversation with the other residents about the mayor election, then heading to her room to review a few final photo edits from today's scouting session before winding down for the night",
+      60
+    ],
+    [
+      "Latoya is winding down for the night, brushing her teeth and getting ready for bed, then turning off the lights to sleep",
+      60
+    ],
+    [
+      "Latoya is sleeping",
+      60
+    ]
+  ],
+  "act_address": "the Ville:artist's co-living space:{Latoya Williams's room:bed",
+  "act_start_time": "February 13, 2023, 00:00:00",
+  "act_duration": 360,
+  "act_description": "sleeping",
+  "act_pronunciatio": "\ud83d\ude34",
+  "act_event": [
+    "Latoya Williams",
+    "Latoya Williams",
+    "is"
+  ],
+  "act_obj_description": "being slept on",
+  "act_obj_pronunciatio": "\ud83d\udca4\ud83d\ude34",
+  "act_obj_event": [
+    "bed",
+    "bed",
+    "is"
+  ],
+  "chatting_with": null,
+  "chat": null,
+  "chatting_with_buffer": {},
+  "chatting_end_time": null,
+  "act_path_set": true,
+  "planned_path": []
+}

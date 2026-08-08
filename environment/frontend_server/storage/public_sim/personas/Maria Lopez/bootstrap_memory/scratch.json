@@ -1,0 +1,156 @@
+{
+  "vision_r": 8,
+  "att_bandwidth": 8,
+  "retention": 8,
+  "curr_time": "February 13, 2023, 00:20:40",
+  "curr_tile": [
+    121,
+    45
+  ],
+  "daily_plan_req": "Maria Lopez spends at least 6 hours a day Twitch streaming or gaming.",
+  "name": "Maria Lopez",
+  "first_name": "Maria",
+  "last_name": "Lopez",
+  "age": 21,
+  "innate": "energetic, enthusiastic, inquisitive",
+  "learned": "Maria Lopez is a student at Oak Hill College studying physics and a part time Twitch game streamer who loves to connect with people and explore new ideas.",
+  "currently": "Maria Lopez is working on her physics degree and streaming games on Twitch to make some extra money. She visits Hobbs Cafe for studying and eating just about everyday.",
+  "lifestyle": "Maria Lopez goes to bed around midnight, awakes up around 10am, eats dinner around 7pm.",
+  "living_area": "the Ville:Dorm for Oak Hill College:Maria Lopez's room",
+  "concept_forget": 100,
+  "daily_reflection_time": 180,
+  "daily_reflection_size": 5,
+  "overlap_reflect_th": 4,
+  "kw_strg_event_reflect_th": 10,
+  "kw_strg_thought_reflect_th": 9,
+  "recency_w": 1,
+  "relevance_w": 1,
+  "importance_w": 1,
+  "recency_decay": 0.995,
+  "importance_trigger_max": 250,
+  "importance_trigger_curr": 69,
+  "importance_ele_n": 180,
+  "thought_count": 5,
+  "daily_req": [
+    "wake up and complete the morning routine at 13:00 am"
+  ],
+  "f_daily_schedule": [
+    [
+      "sleeping",
+      780
+    ],
+    [
+      "Maria is waking up and completing her morning routine (showering, getting dressed, and making a quick breakfast) (asleep)",
+      60
+    ],
+    [
+      "Maria is heading to Hobbs Cafe to grab a late lunch and settle in with her physics textbooks for a study session before her afternoon classes",
+      60
+    ],
+    [
+      "Maria is studying physics at Hobbs Cafe, working through problem sets for her afternoon class",
+      60
+    ],
+    [
+      "Maria is heading to her afternoon physics class at Oak Hill College, carrying her notebook and laptop from Hobbs Cafe",
+      60
+    ],
+    [
+      "Maria is attending her afternoon physics class at Oak Hill College, taking notes and participating in the lecture",
+      60
+    ],
+    [
+      "Maria is heading back to her dorm after class, grabbing a quick dinner, and setting up her streaming equipment for her evening Twitch session",
+      60
+    ],
+    [
+      "Maria is starting her evening Twitch stream, greeting her viewers and beginning her gaming session for the night",
+      60
+    ],
+    [
+      "Maria is continuing her evening Twitch stream, playing a co-op horror game with her chat and engaging with viewers between rounds",
+      120
+    ],
+    [
+      "Maria is continuing her evening Twitch stream, finishing up the co-op horror game session and thanking her viewers before wrapping up for the night",
+      60
+    ],
+    [
+      "Maria is wrapping up her stream, saying goodbye to her viewers, and starting her nightly wind-down routine before heading to bed around midnight",
+      60
+    ],
+    [
+      "sleeping",
+      0
+    ]
+  ],
+  "f_daily_schedule_hourly_org": [
+    [
+      "sleeping",
+      780
+    ],
+    [
+      "Maria is waking up and completing her morning routine (showering, getting dressed, and making a quick breakfast)",
+      60
+    ],
+    [
+      "Maria is heading to Hobbs Cafe to grab a late lunch and settle in with her physics textbooks for a study session before her afternoon classes",
+      60
+    ],
+    [
+      "Maria is studying physics at Hobbs Cafe, working through problem sets for her afternoon class",
+      60
+    ],
+    [
+      "Maria is heading to her afternoon physics class at Oak Hill College, carrying her notebook and laptop from Hobbs Cafe",
+      60
+    ],
+    [
+      "Maria is attending her afternoon physics class at Oak Hill College, taking notes and participating in the lecture",
+      60
+    ],
+    [
+      "Maria is heading back to her dorm after class, grabbing a quick dinner, and setting up her streaming equipment for her evening Twitch session",
+      60
+    ],
+    [
+      "Maria is starting her evening Twitch stream, greeting her viewers and beginning her gaming session for the night",
+      60
+    ],
+    [
+      "Maria is continuing her evening Twitch stream, playing a co-op horror game with her chat and engaging with viewers between rounds",
+      120
+    ],
+    [
+      "Maria is continuing her evening Twitch stream, finishing up the co-op horror game session and thanking her viewers before wrapping up for the night",
+      60
+    ],
+    [
+      "Maria is wrapping up her stream, saying goodbye to her viewers, and starting her nightly wind-down routine before heading to bed around midnight",
+      60
+    ]
+  ],
+  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:<random>",
+  "act_start_time": "February 13, 2023, 00:00:00",
+  "act_duration": 780,
+  "act_description": "sleeping",
+  "act_pronunciatio": "\ud83d\ude34",
+  "act_event": [
+    "Maria Lopez",
+    "Maria Lopez",
+    "is"
+  ],
+  "act_obj_description": "asleep",
+  "act_obj_pronunciatio": "\ud83d\ude34",
+  "act_obj_event": [
+    "<random>",
+    "<random>",
+    "is"
+  ],
+  "chatting_with": null,
+  "chat": null,
+  "chatting_with_buffer": {},
+  "chatting_end_time": null,
+  "act_path_set": true,
+  "planned_path": []
+}

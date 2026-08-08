@@ -27,6 +27,7 @@ import math
 import os
 import shutil
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 
 from global_methods import *
 from utils import *
@@ -376,23 +377,34 @@ class ReverieServer:
           # move. The movement for each of the personas comes in the form of
           # x y coordinates where the persona will move towards. e.g., (50, 34)
           # This is where the core brains of the personas are invoked. 
+          #
+          # Phase 1 (sequential): perceive. Co-located personas chat during
+          # perception, which must not race, so this stays ordered.
+          perceive_state = dict()
+          for persona_name, persona in self.personas.items():
+            perceive_state[persona_name] = persona._move_perceive(
+              self.maze, self.personas_tile[persona_name], self.curr_time)
+
+          # Phase 2 (parallel): retrieve / plan / reflect / execute. All
+          # persona-private LLM + embedding work with no shared writes, so
+          # the whole town decides concurrently -- a ~3-4x step speedup.
           movements = {"persona": dict(), 
                        "meta": dict()}
-          for persona_name, persona in self.personas.items(): 
-            # <next_tile> is a x,y coordinate. e.g., (58, 9)
-            # <pronunciatio> is an emoji. e.g., "\ud83d\udca4"
-            # <description> is a string description of the movement. e.g., 
-            #   writing her next novel (editing her novel) 
-            #   @ double studio:double studio:common room:sofa
-            next_tile, pronunciatio, description = persona.move(
-              self.maze, self.personas, self.personas_tile[persona_name], 
-              self.curr_time)
-            movements["persona"][persona_name] = {}
-            movements["persona"][persona_name]["movement"] = next_tile
-            movements["persona"][persona_name]["pronunciatio"] = pronunciatio
-            movements["persona"][persona_name]["description"] = description
-            movements["persona"][persona_name]["chat"] = (persona
-                                                          .scratch.chat)
+          with ThreadPoolExecutor(max_workers=6) as _ex:
+            _futs = {_ex.submit(persona._move_decide,
+                                self.maze, self.personas,
+                                perceive_state[n][0], perceive_state[n][1]): n
+                     for n, persona in self.personas.items()}
+            for _f in _futs: 
+              persona_name = _futs[_f]
+              next_tile, pronunciatio, description = _f.result()
+              persona = self.personas[persona_name]
+              movements["persona"][persona_name] = {}
+              movements["persona"][persona_name]["movement"] = next_tile
+              movements["persona"][persona_name]["pronunciatio"] = pronunciatio
+              movements["persona"][persona_name]["description"] = description
+              movements["persona"][persona_name]["chat"] = (persona
+                                                            .scratch.chat)
 
           # Include the meta information about the current stage in the 
           # movements dictionary. 

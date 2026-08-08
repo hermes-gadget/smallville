@@ -1,0 +1,220 @@
+{
+  "vision_r": 8,
+  "att_bandwidth": 8,
+  "retention": 8,
+  "curr_time": "February 13, 2023, 00:00:00",
+  "curr_tile": [
+    36,
+    65
+  ],
+  "daily_plan_req": "Sam Moore likes to talk a walk around Johnson Park, and sit at Hobbs cafe reading.",
+  "name": "Sam Moore",
+  "first_name": "Sam",
+  "last_name": "Moore",
+  "age": 65,
+  "innate": "wise, resourceful, humorous",
+  "learned": "Sam Moore is a retired navy officer who loves to share stories from his time in the military. He is always full of interesting stories and advice.",
+  "currently": "Sam Moore lives with his wife of 40 years, Jennifer Moore, and spends his free time tending the park and is an avid reader. Sam is planning on running for local mayor in the upcoming election and he is telling is neighbors about it",
+  "lifestyle": "Sam Moore goes to bed around 9pm, awakes up around 5am, eats dinner around 5pm.",
+  "living_area": "the Ville:Moore family's house:main room",
+  "concept_forget": 100,
+  "daily_reflection_time": 180,
+  "daily_reflection_size": 5,
+  "overlap_reflect_th": 4,
+  "kw_strg_event_reflect_th": 10,
+  "kw_strg_thought_reflect_th": 9,
+  "recency_w": 1,
+  "relevance_w": 1,
+  "importance_w": 1,
+  "recency_decay": 0.995,
+  "importance_trigger_max": 250,
+  "importance_trigger_curr": 242,
+  "importance_ele_n": 8,
+  "thought_count": 5,
+  "daily_req": [
+    "wake up and complete the morning routine at 5:00 am"
+  ],
+  "f_daily_schedule": [
+    [
+      "sleeping",
+      300
+    ],
+    [
+      "Sam is waking up and completing his morning routine (asleep)",
+      60
+    ],
+    [
+      "Sam is finishing his morning stretches and heading out the door for his walk around Johnson Park",
+      60
+    ],
+    [
+      "Sam is taking his usual walk around Johnson Park, enjoying the fresh morning air and greeting the early birds",
+      60
+    ],
+    [
+      "Sam is finishing his walk around Johnson Park and heading over to Hobbs Cafe to grab a coffee and settle in with his book for a couple of hours of reading",
+      60
+    ],
+    [
+      "Sam is sitting at Hobbs Cafe, sipping his coffee and deeply absorbed in his book, occasionally glancing up to nod at familiar faces",
+      60
+    ],
+    [
+      "Sam is still at Hobbs Cafe, finishing his second cup of coffee and a few more chapters of his book before he heads home to prepare for the day",
+      60
+    ],
+    [
+      "Sam is leaving Hobbs Cafe after finishing his coffee and book, and is heading home to review his notes for the upcoming mayoral election and prepare a few talking points to share with his neighbors this afternoon",
+      60
+    ],
+    [
+      "Sam is at home, reviewing his notes and rehearsing his talking points for the mayoral election, then preparing a light lunch before heading out to chat with his neighbors",
+      60
+    ],
+    [
+      "Sam is heading out to visit his neighbors, sharing his plans for the mayoral election and listening to their concerns and ideas",
+      60
+    ],
+    [
+      "Sam is at his neighbor's house, discussing his mayoral platform and answering questions about his plans for the community",
+      60
+    ],
+    [
+      "Sam is finishing up his conversation with his neighbor and heading back home to prepare for his evening routine, planning to share more of his election ideas with other neighbors later if they are around",
+      60
+    ],
+    [
+      "Sam is back home, preparing a pot of tea and settling into his armchair to read the local newspaper, while jotting down a few more notes for his mayoral campaign and planning which neighbors he might visit tomorrow",
+      60
+    ],
+    [
+      "Sam is sitting down to eat dinner with his wife, Jennifer, and briefly telling her about his afternoon conversations with the neighbors about his mayoral campaign",
+      60
+    ],
+    [
+      "Sam is finishing dinner with Jennifer, clearing the dishes, and then heading to the living room to watch the evening news and relax before his usual 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is relaxing in the living room, watching the evening news and reflecting on his day's conversations about the mayoral campaign, while enjoying a quiet evening at home with Jennifer before his 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is watching the evening news with Jennifer, then starting to wind down by brushing his teeth and changing into his pajamas, preparing for his usual 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is getting into bed and turning off the lights, settling in for a good night's sleep after a productive day of campaigning and reading",
+      60
+    ],
+    [
+      "Sam is sleeping",
+      120
+    ],
+    [
+      "sleeping",
+      0
+    ]
+  ],
+  "f_daily_schedule_hourly_org": [
+    [
+      "sleeping",
+      300
+    ],
+    [
+      "Sam is waking up and completing his morning routine",
+      60
+    ],
+    [
+      "Sam is finishing his morning stretches and heading out the door for his walk around Johnson Park",
+      60
+    ],
+    [
+      "Sam is taking his usual walk around Johnson Park, enjoying the fresh morning air and greeting the early birds",
+      60
+    ],
+    [
+      "Sam is finishing his walk around Johnson Park and heading over to Hobbs Cafe to grab a coffee and settle in with his book for a couple of hours of reading",
+      60
+    ],
+    [
+      "Sam is sitting at Hobbs Cafe, sipping his coffee and deeply absorbed in his book, occasionally glancing up to nod at familiar faces",
+      60
+    ],
+    [
+      "Sam is still at Hobbs Cafe, finishing his second cup of coffee and a few more chapters of his book before he heads home to prepare for the day",
+      60
+    ],
+    [
+      "Sam is leaving Hobbs Cafe after finishing his coffee and book, and is heading home to review his notes for the upcoming mayoral election and prepare a few talking points to share with his neighbors this afternoon",
+      60
+    ],
+    [
+      "Sam is at home, reviewing his notes and rehearsing his talking points for the mayoral election, then preparing a light lunch before heading out to chat with his neighbors",
+      60
+    ],
+    [
+      "Sam is heading out to visit his neighbors, sharing his plans for the mayoral election and listening to their concerns and ideas",
+      60
+    ],
+    [
+      "Sam is at his neighbor's house, discussing his mayoral platform and answering questions about his plans for the community",
+      60
+    ],
+    [
+      "Sam is finishing up his conversation with his neighbor and heading back home to prepare for his evening routine, planning to share more of his election ideas with other neighbors later if they are around",
+      60
+    ],
+    [
+      "Sam is back home, preparing a pot of tea and settling into his armchair to read the local newspaper, while jotting down a few more notes for his mayoral campaign and planning which neighbors he might visit tomorrow",
+      60
+    ],
+    [
+      "Sam is sitting down to eat dinner with his wife, Jennifer, and briefly telling her about his afternoon conversations with the neighbors about his mayoral campaign",
+      60
+    ],
+    [
+      "Sam is finishing dinner with Jennifer, clearing the dishes, and then heading to the living room to watch the evening news and relax before his usual 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is relaxing in the living room, watching the evening news and reflecting on his day's conversations about the mayoral campaign, while enjoying a quiet evening at home with Jennifer before his 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is watching the evening news with Jennifer, then starting to wind down by brushing his teeth and changing into his pajamas, preparing for his usual 9pm bedtime",
+      60
+    ],
+    [
+      "Sam is getting into bed and turning off the lights, settling in for a good night's sleep after a productive day of campaigning and reading",
+      60
+    ],
+    [
+      "Sam is sleeping",
+      120
+    ]
+  ],
+  "act_address": "the Ville:Moore family's house:{main room:bed",
+  "act_start_time": "February 13, 2023, 00:00:00",
+  "act_duration": 300,
+  "act_description": "sleeping",
+  "act_pronunciatio": "\ud83d\ude34\ud83d\udca4",
+  "act_event": [
+    "Sam Moore",
+    "Sam Moore",
+    "is"
+  ],
+  "act_obj_description": "being slept in",
+  "act_obj_pronunciatio": "\ud83d\ude34\ud83d\udecf\ufe0f",
+  "act_obj_event": [
+    "bed",
+    "bed",
+    "is"
+  ],
+  "chatting_with": null,
+  "chat": null,
+  "chatting_with_buffer": {},
+  "chatting_end_time": null,
+  "act_path_set": true,
+  "planned_path": []
+}
