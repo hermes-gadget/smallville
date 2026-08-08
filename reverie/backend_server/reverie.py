@@ -35,6 +35,13 @@ from maze import *
 from persona.persona import *
 from economy import economy_tick
 
+# [DATA-STORE] BEGIN: optional fail-open persistence dependency.
+try:
+  import sim_store as _sim_store
+except Exception:
+  _sim_store = None
+# [DATA-STORE] END
+
 # Recently-logged conversation signatures (bounded) so a conversation that
 # persists in scratch.chat across many steps is never re-logged, even when
 # several distinct conversations coexist in the same step.
@@ -143,6 +150,12 @@ class ReverieServer:
     # literally translates to the number of moves our personas made in terms
     # of the number of tiles. 
     self.step = reverie_meta['step']
+
+    # [DATA-STORE] BEGIN: bounded background hooks never own loop liveness.
+    self._data_store = _sim_store.BoundedStore() if _sim_store else None
+    if self._data_store is None:
+      print("[DATA-STORE] module unavailable; disabled", flush=True)
+    # [DATA-STORE] END
 
     # SETTING UP PERSONAS IN REVERIE
     # <personas> is a dictionary that takes the persona's full name as its 
@@ -573,6 +586,22 @@ class ReverieServer:
           atomic_json_dump(movements, curr_move_file)
           _prune_movement_history(f"{sim_folder}/movement", self.step)
 
+          # [DATA-STORE] BEGIN: persist the complete step without changing JSON.
+          if self._data_store is not None:
+            try:
+              _store_meta = dict(movements["meta"])
+              _store_meta["personas_tile"] = dict(self.personas_tile)
+              _store_meta["locations"] = {
+                name: self.maze.access_tile(tile)
+                for name, tile in self.personas_tile.items()
+              }
+              self._data_store.store_step(
+                self.step, movements["persona"], _store_meta)
+            except Exception:
+              self._data_store.warn_once(
+                "hook-step", "step hook failed; continuing")
+          # [DATA-STORE] END
+
           # Persist each persona's live state. scratch.json is written EVERY
           # step (the frontend modal reads it live); the full memory dump
           # (nodes.json + embeddings.json, ~250KB per persona) is throttled
@@ -582,6 +611,32 @@ class ReverieServer:
           for persona_name, persona in self.personas.items():
             persona.save(f"{sim_folder}/personas/{persona_name}/bootstrap_memory",
                          full=_full_save)
+
+          # [DATA-STORE] BEGIN: light incremental sync after each full save.
+          if _full_save and self._data_store is not None:
+            try:
+              _memory_snapshots = {
+                persona_name: (dict(persona.a_mem.id_to_node),
+                               dict(persona.a_mem.embeddings))
+                for persona_name, persona in self.personas.items()
+              }
+              self._data_store.store_memories(_memory_snapshots)
+            except Exception:
+              self._data_store.warn_once(
+                "hook-memory", "memory hook failed; continuing")
+          # [DATA-STORE] END
+
+          # [DATA-STORE] BEGIN: seven-day archive, guarded eviction, JSON tail.
+          if (self.step > 0 and self.step % 1440 == 0
+              and self._data_store is not None):
+            try:
+              _archive_cutoff = self.curr_time - datetime.timedelta(days=7)
+              self._data_store.archive_and_evict(
+                _archive_cutoff, self.personas, sim_folder, self.curr_time)
+            except Exception:
+              self._data_store.warn_once(
+                "hook-maintenance", "maintenance hook failed; continuing")
+          # [DATA-STORE] END
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
