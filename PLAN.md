@@ -10,7 +10,43 @@ A coherent, self-running AI town at **maximum 25 residents** that lives at a wat
 real-time pace, with a message feed showing what agents talk about, a polished UI, and a
 hard guard on LLM spend.
 
-## Status: ALL TASKS DONE ✅ + PERF PASS (2026-08-08)
+## Status: ALL TASKS DONE ✅ + PERF PASS + LIFE SIM + DATA STORE (2026-08-08)
+
+### Merged agent wave (2026-08-08, main b6c6a136; fixed 19a5abdb + 448c5b0f)
+- **Landing page** (ui-wave-1): public one-pager at site root — hero, live town
+  stats ticker (tokens/calls/conversations), features, how-it-works. `^$` → landing.
+- **Sim UI polish** (ui-wave-2): resident modal, chat-panel mobile collapse +
+  unread badge, loading/offline states, 320-768px audit, dead-code cleanup.
+- **Life sim** (life-sim): `reverie/backend_server/economy.py` (1047 lines) —
+  balances/tiers, jobs+salaries (per game-minute at workplace), 4 shops with
+  goods/stock/cash, purchases by action keyword, banker **Yuriko Yamamoto**
+  (treasury, 0.25% daily interest, bankruptcy declarations, debt, homeless flag
+  after 3x), rent, hunger/energy/social + illness, education score, bounded
+  economy feed + `economy` field in movement payload; admin command queue
+  (give_money/bankrupt/make_rich/inject_event/broadcast/restock/adjust_price/
+  add_good/transfer/set_pacing) via POST `/admin/command/` (token-gated);
+  public GET `/get_economy/` + `/get_economy_feed/`; step cap → 1,000,000,000;
+  movement pruning (keep newest 500). Smoke: tick avg 5.5ms.
+- **SQLite system-of-record** (data-store): `sim_store.py` — steps + memories
+  (embedding BLOBs) in WAL SQLite at storage/public_sim/sim_store/sim_store.db,
+  lzma cold archives (7-day hot window), poignancy×recency eviction (keep 1000/
+  persona, guards: <48h or poignancy≥6 never evicted), sparse node-ID allocators
+  in associative_memory.py, GET `/get_sim_store_stats/`. Fail-open hooks, 100ms
+  hard cap. Live: 113MB DB, 2.6K steps + 26.7K memories and growing.
+- **Post-merge fixes**: get_economy missing return (merge conflict casualty);
+  **meta.json persistence** — pre-existing bug where save() only ran at run end,
+  so every systemd restart rewound the town to the original fork date/step 0.
+  Now persisted every 10 steps + graceful SIGTERM save. Verified: restart
+  resumed at step 60 (was rewinding to 0 every time).
+
+### Verified live (2026-08-08 late)
+- Town stepping ~1.4s/step, resumes in place across restarts.
+- Economy: 25 residents with balances, salaries streaming to the feed
+  ('Yuriko Yamamoto earned $0.41 in salary as town banker'), banker + treasury
+  active (bank cash 20,000 → 19,762), 4 shops stocked.
+- All endpoints 200: landing, simulator_home, get_economy, get_economy_feed,
+  get_sim_store_stats, get_chat_log; /set_pacing/ + /admin/command/ still 403
+  without the admin token.
 
 ### Perf pass (2026-08-08, commit e094e8b9)
 - **~4x faster steps**: perceive split into `perceive_collect` (sequential, LLM-free)
