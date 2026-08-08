@@ -34,6 +34,20 @@ from utils import *
 from maze import *
 from persona.persona import *
 
+def _current_pacing():
+  """Live-flippable game speed: <fs_temp_storage>/pacing.txt overrides the
+  utils default, so the speed can change WITHOUT restarting the service
+  (just `echo 60 > .../temp_storage/pacing.txt`). Invalid/missing -> default."""
+  try:
+    _p = f"{fs_temp_storage}/pacing.txt"
+    if os.path.exists(_p):
+      _v = float(open(_p).read().strip())
+      if _v > 0:
+        return _v
+  except Exception:
+    pass
+  return game_sec_per_real_sec
+
 ##############################################################################
 #                                  REVERIE                                   #
 ##############################################################################
@@ -492,7 +506,7 @@ class ReverieServer:
           # never skew it.
           self.curr_time = _clock_anchor + datetime.timedelta(
             seconds=max(0.0, (time.time() - _boot_real)
-                              * game_sec_per_real_sec))
+                              * _current_pacing()))
 
           int_counter -= 1
           
