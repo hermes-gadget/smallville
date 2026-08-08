@@ -146,9 +146,7 @@ class AssociativeMemory:
     with open(out_json+"/kw_strength.json", "w") as outfile:
       json.dump(r, outfile)
 
-    with open(out_json+"/embeddings.json", "w") as outfile:
-      json.dump(self.embeddings, outfile)
-
+    atomic_json_dump(self.embeddings, out_json+"/embeddings.json")
 
   def add_event(self, created, expiration, s, p, o, 
                       description, keywords, poignancy, 

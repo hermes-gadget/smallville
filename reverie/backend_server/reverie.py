@@ -434,8 +434,7 @@ class ReverieServer:
           #  "persona": {"Klaus Mueller": {"movement": [38, 12]}}, 
           #  "meta": {curr_time: <datetime>}}
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
-          with open(curr_move_file, "w") as outfile: 
-            outfile.write(json.dumps(movements, indent=2))
+          atomic_json_dump(movements, curr_move_file)
 
           # Persist each persona's live state every step so the frontend
           # state page (Daily Requirement/Schedule, current action fields)
@@ -451,8 +450,7 @@ class ReverieServer:
           # simulator_home page can be (re)loaded at any time.
           curr_step = dict()
           curr_step["step"] = self.step
-          with open(f"{fs_temp_storage}/curr_step.json", "w") as outfile:
-            outfile.write(json.dumps(curr_step, indent=2))
+          atomic_json_dump(curr_step, f"{fs_temp_storage}/curr_step.json")
           # Pace the game clock by REAL elapsed time so the town lives at a
           # watchable speed (game_sec_per_real_sec: 1.0 = real-time).
           self.curr_time += datetime.timedelta(
@@ -477,8 +475,7 @@ class ReverieServer:
             for _pname, _m in _mv_data.get("persona", {}).items():
               _t = _m.get("movement") or [0, 0]
               _env[_pname] = {"x": _t[0], "y": _t[1]}
-            with open(curr_env_file, "w") as _jf:
-              json.dump(_env, _jf, indent=2)
+            atomic_json_dump(_env, curr_env_file)
             continue
 
       # Sleep so we don't burn our machines. 

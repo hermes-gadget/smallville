@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 08:01:01",
+  "curr_time": "February 13, 2023, 08:00:01",
   "curr_tile": [
-    41,
-    26
+    38,
+    25
   ],
   "daily_plan_req": "",
   "name": "Latoya Williams",
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 235,
-  "importance_ele_n": 11,
+  "importance_trigger_curr": 223,
+  "importance_ele_n": 20,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 6:00 am"

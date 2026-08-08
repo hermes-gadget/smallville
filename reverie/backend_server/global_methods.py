@@ -15,6 +15,7 @@ import sys
 import numpy
 import math
 import shutil, errno
+import json
 
 from os import listdir
 
@@ -243,3 +244,12 @@ if __name__ == '__main__':
 
 
 
+
+
+def atomic_json_dump(obj, path):
+  """Write JSON to <path> atomically (tmp file + rename) so a kill
+  mid-write can never truncate the destination (crash-safe saves)."""
+  tmp = f"{path}.tmp"
+  with open(tmp, "w") as outfile:
+    json.dump(obj, outfile)
+  os.replace(tmp, path)
