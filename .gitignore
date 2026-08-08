@@ -1,11 +1,7 @@
 # reverie/backend_server/utils.py is now tracked (no secrets inside: API key
 # is read from ~/.opencode-go.key at runtime)
 frontend_server/settings/local.py
-storage/*
 static_dirs/*
-
-!storage/base_the_ville_isabella_maria_klaus/*
-!storage/base_the_ville_n25/*
 
 bin/
 include/
@@ -15,6 +11,7 @@ pip-selfcheck.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 
 # C extensions
@@ -100,5 +97,7 @@ ENV/
 .spyderproject
 
 # Rope project settings
-.ropeprojectenvironment/frontend_server/storage/modern_ai_test*/
+.ropeproject
+storage/modern_ai_test*
 environment/frontend_server/temp_storage/
+.venv/
