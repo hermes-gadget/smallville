@@ -483,6 +483,140 @@
 	.chat-panel.is-collapsed { width: 214px; height: auto; }
 	.chat-panel.is-collapsed .chat-feed { display: none; }
 
+	/* Town wealth leaderboard (stacked above the chat panel) */
+	.wealth-panel {
+		position: fixed;
+		z-index: 18;
+		left: calc(var(--sidebar-width) + 18px);
+		bottom: calc(min(320px, 36vh) + 34px);
+		display: flex;
+		width: min(300px, calc(100vw - var(--sidebar-width) - 40px));
+		max-height: 300px;
+		flex-direction: column;
+		overflow: hidden;
+		border: 1px solid rgba(242, 189, 98, .22);
+		border-radius: 15px;
+		background: linear-gradient(160deg, rgba(14, 31, 44, .96), rgba(7, 17, 28, .95));
+		box-shadow: 0 18px 46px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .035);
+		-webkit-backdrop-filter: blur(18px);
+		backdrop-filter: blur(18px);
+		transition: opacity .18s ease;
+	}
+	.wealth-panel.is-collapsed { width: 214px; }
+	.wealth-panel.is-collapsed .wealth-list-wrap { display: none; }
+	.wealth-panel__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 10px 12px;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(145, 191, 186, .13);
+		user-select: none;
+	}
+	.wealth-panel.is-collapsed .wealth-panel__header { border-bottom: 0; }
+	.wealth-panel__title { min-width: 0; }
+	.wealth-panel__title strong,
+	.wealth-panel__title small { display: block; }
+	.wealth-panel__title strong {
+		font-size: 13px;
+		letter-spacing: .02em;
+		color: #f2bd62;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.wealth-panel__title small {
+		margin-top: 2px;
+		font-size: 11px;
+		color: rgba(166, 201, 196, .62);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.wealth-panel__toggle {
+		flex: 0 0 auto;
+		width: 26px;
+		height: 26px;
+		border: 1px solid rgba(145, 191, 186, .25);
+		border-radius: 8px;
+		background: rgba(145, 191, 186, .07);
+		color: rgba(205, 232, 227, .85);
+		font-size: 15px;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.wealth-list-wrap { overflow-y: auto; max-height: 250px; }
+	.wealth-list {
+		margin: 0;
+		padding: 6px 8px 8px;
+		list-style: none;
+	}
+	.wealth-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 6px;
+		border-radius: 9px;
+	}
+	.wealth-row:nth-child(odd) { background: rgba(145, 191, 186, .045); }
+	.wealth-rank {
+		flex: 0 0 22px;
+		height: 22px;
+		border-radius: 7px;
+		background: rgba(145, 191, 186, .1);
+		color: rgba(205, 232, 227, .8);
+		font-size: 11px;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.wealth-row:first-child .wealth-rank {
+		background: linear-gradient(135deg, #f2bd62, #d99a3a);
+		color: #14222b;
+	}
+	.wealth-name {
+		flex: 1 1 auto;
+		min-width: 0;
+		font-size: 12.5px;
+		color: rgba(228, 242, 238, .94);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.wealth-name .banker-crown { color: #f2bd62; margin-right: 3px; }
+	.wealth-balance {
+		flex: 0 0 auto;
+		font-size: 12.5px;
+		font-variant-numeric: tabular-nums;
+		color: #f2bd62;
+	}
+	.wealth-status {
+		flex: 0 0 auto;
+		padding: 2px 7px;
+		border-radius: 999px;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: .04em;
+		text-transform: uppercase;
+	}
+	.wealth-status--broke { background: rgba(239, 83, 80, .16); color: #ef5350; }
+	.wealth-status--tight { background: rgba(255, 152, 0, .16); color: #ffa726; }
+	.wealth-status--stable { background: rgba(102, 187, 106, .16); color: #66bb6a; }
+	.wealth-status--comfortable { background: rgba(38, 198, 218, .16); color: #26c6da; }
+	.wealth-status--wealthy { background: rgba(242, 189, 98, .2); color: #f2bd62; }
+	.wealth-status--rich { background: rgba(255, 215, 64, .24); color: #ffd740; }
+	.wealth-empty {
+		margin: 0;
+		padding: 10px 12px 12px;
+		font-size: 12px;
+		color: rgba(166, 201, 196, .62);
+	}
+	@media (max-width: 767px) {
+		.wealth-panel { display: none; }
+	}
+
 	/* Resident profile dialog */
 	.resident-modal {
 		position: fixed;
@@ -1006,6 +1140,21 @@
 		</header>
 		<div class="chat-feed" id="chat-feed" aria-live="polite" aria-relevant="additions text">
 			<p class="chat-empty">Conversations between residents will appear here as the town unfolds.</p>
+		</div>
+	</section>
+
+	<section class="wealth-panel is-collapsed" id="wealth-panel" aria-label="Town wealth leaderboard">
+		<header class="wealth-panel__header" id="wealth-header" role="button" tabindex="0" aria-controls="wealth-list" aria-expanded="false">
+			<div class="wealth-panel__title">
+				<strong>💰 Town wealth</strong>
+				<small id="wealth-subtitle">Top residents by balance</small>
+			</div>
+			<button class="wealth-panel__toggle" id="wealth-toggle" type="button" aria-label="Expand wealth leaderboard" aria-controls="wealth-list" aria-expanded="false">+</button>
+		</header>
+		<div class="wealth-list-wrap" id="wealth-list-wrap" aria-hidden="true">
+			<ol class="wealth-list" id="wealth-list">
+				<li class="wealth-empty" id="wealth-empty">Balances will appear here once the economy warms up.</li>
+			</ol>
 		</div>
 	</section>
 

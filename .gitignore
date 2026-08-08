@@ -107,3 +107,4 @@ storage/local_nine*/
 temp_storage/*.db
 .tokensave/*.db-shm
 .tokensave/*.db-wal
+.tokensave/

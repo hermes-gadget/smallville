@@ -26,6 +26,8 @@
 		var chat_has_rendered = false;
 		var chat_seen_entries = {};
 		var chat_unread_count = 0;
+		var wealth_request_in_flight = false;
+		var wealth_has_rendered = false;
 		var speaker_colors = {};
 		var speaker_color_count = 0;
 
@@ -114,6 +116,7 @@
 		var game = new Phaser.Game(config);
 		bindInterfaceControls();
 		startChatPolling();
+		startWealthPolling();
 
 		function preload() {
 			this.load.image("blocks_1", "{% static 'assets/the_ville/visuals/map_assets/blocks/blocks_1.png' %}");
@@ -851,6 +854,128 @@
 		function startChatPolling() {
 			pollChatLog();
 			window.setInterval(pollChatLog, 2000);
+		}
+
+		var WEALTH_STATUS_ORDER = ["broke", "tight", "stable", "comfortable", "wealthy", "rich"];
+
+		function startWealthPolling() {
+			var panel = document.getElementById("wealth-panel");
+			var header = document.getElementById("wealth-header");
+			var toggle = document.getElementById("wealth-toggle");
+			var listWrap = document.getElementById("wealth-list-wrap");
+			function setCollapsed(collapsed) {
+				panel.classList.toggle("is-collapsed", collapsed);
+				toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+				toggle.setAttribute("aria-label", collapsed ? "Expand wealth leaderboard" : "Collapse wealth leaderboard");
+				toggle.textContent = collapsed ? "+" : "−";
+				header.setAttribute("aria-expanded", collapsed ? "false" : "true");
+				listWrap.setAttribute("aria-hidden", collapsed ? "true" : "false");
+			}
+			function onToggle() {
+				setCollapsed(!panel.classList.contains("is-collapsed"));
+			}
+			toggle.addEventListener("click", function(event) {
+				event.stopPropagation();
+				onToggle();
+			});
+			header.addEventListener("click", onToggle);
+			header.addEventListener("keydown", function(event) {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					onToggle();
+				}
+			});
+			pollWealth();
+			window.setInterval(pollWealth, 5000);
+		}
+
+		function pollWealth() {
+			if (wealth_request_in_flight) return;
+			wealth_request_in_flight = true;
+			var request = new XMLHttpRequest();
+			request.overrideMimeType("application/json");
+			request.open("GET", "{% url 'get_economy' %}?sim_code=" + encodeURIComponent(sim_code), true);
+			request.timeout = 15000;
+			request.addEventListener("load", function() {
+				if (request.readyState !== 4 || request.status !== 200) return;
+				var payload;
+				try {
+					payload = JSON.parse(request.responseText);
+				} catch (error) {
+					return;
+				}
+				if (payload && payload.residents) renderWealth(payload);
+			});
+			request.addEventListener("loadend", function() {
+				wealth_request_in_flight = false;
+			});
+			request.send();
+		}
+
+		function wealthStatusClass(status) {
+			var normalized = String(status || "stable").toLowerCase();
+			return WEALTH_STATUS_ORDER.indexOf(normalized) >= 0
+				? normalized
+				: "stable";
+		}
+
+		function renderWealth(payload) {
+			var list = document.getElementById("wealth-list");
+			var empty = document.getElementById("wealth-empty");
+			var subtitle = document.getElementById("wealth-subtitle");
+			var residents = payload.residents || {};
+			var banker = (payload.bank && payload.bank.banker) || "";
+			var rows = Object.keys(residents)
+				.map(function(name) {
+					var resident = residents[name] || {};
+					return {
+						name: name,
+						balance: Number(resident.balance) || 0,
+						status: resident.status || "stable"
+					};
+				})
+				.sort(function(a, b) { return b.balance - a.balance; })
+				.slice(0, 10);
+			if (!rows.length) return;
+			if (payload.updated_at) {
+				subtitle.textContent = "Updated " + String(payload.updated_at).slice(0, 16).replace("T", " ");
+			}
+			if (empty) empty.remove();
+			list.textContent = "";
+			rows.forEach(function(row, index) {
+				var item = document.createElement("li");
+				item.className = "wealth-row";
+
+				var rank = document.createElement("span");
+				rank.className = "wealth-rank";
+				rank.textContent = String(index + 1);
+
+				var name = document.createElement("span");
+				name.className = "wealth-name";
+				if (banker && row.name === banker) {
+					var crown = document.createElement("span");
+					crown.className = "banker-crown";
+					crown.textContent = "👑";
+					crown.title = "Town banker";
+					name.appendChild(crown);
+				}
+				name.appendChild(document.createTextNode(row.name));
+
+				var balance = document.createElement("span");
+				balance.className = "wealth-balance";
+				balance.textContent = "$" + row.balance.toFixed(2);
+
+				var status = document.createElement("span");
+				status.className = "wealth-status wealth-status--" + wealthStatusClass(row.status);
+				status.textContent = row.status;
+
+				item.appendChild(rank);
+				item.appendChild(name);
+				item.appendChild(balance);
+				item.appendChild(status);
+				list.appendChild(item);
+			});
+			wealth_has_rendered = true;
 		}
 
 		function pollChatLog() {
