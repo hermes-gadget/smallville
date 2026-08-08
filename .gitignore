@@ -99,4 +99,5 @@ ENV/
 .spyderproject
 
 # Rope project settings
-.ropeproject
+.ropeprojectenvironment/frontend_server/storage/modern_ai_test*/
+environment/frontend_server/temp_storage/
