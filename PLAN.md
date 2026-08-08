@@ -23,8 +23,16 @@ hard guard on LLM spend.
   was burning 2.26M tokens per boot).
 - **Parallel step loop**: perceive stays sequential (chats can't race); retrieve/plan/
   reflect/execute run 6-way concurrent.
-- **Real-time pacing**: `game_sec_per_real_sec = 1.0` in `utils.py`. Clock = absolute
-  wall-time mapping anchored on boot `curr_time` (NOT midnight — the 00:0x bug is fixed).
+- **Live-flippable speed**: `game_sec_per_real_sec` in `utils.py` is the default;
+  `environment/frontend_server/temp_storage/pacing.txt` overrides it LIVE (no service
+  restart — the step loop re-reads it every step). `echo 60 > .../pacing.txt` flips
+  instantly. Current: 60× (one game-minute per real second → game day ≈ 24 real min).
+  NOTE: the clock is an absolute wall-time mapping (anchor = boot time), so lowering
+  the ratio makes the clock tick slower but keeps it monotonic-in-real-time; the world
+  time pill reflects the CURRENT ratio.
+- **Resilience**: None-safe poignancy scores (LLM None → mid score 5); per-persona
+  try/except in both perceive and decide phases — one persona's failure can no longer
+  kill the town (falls back to "stay in place").
 - **Autonomous advance**: backend writes its own env files when no browser drives the
   walk — town never freezes without a viewer. Partial env POSTs from the browser are
   gap-filled (was crashing the sim on missing residents).
