@@ -21,8 +21,8 @@
   },
   "Maria Lopez": {
     "maze": "the_ville",
-    "x": 124,
-    "y": 49
+    "x": 121,
+    "y": 46
   },
   "John Lin": {
     "maze": "the_ville",
@@ -42,6 +42,6 @@
   "Sam Moore": {
     "maze": "the_ville",
     "x": 37,
-    "y": 65
+    "y": 63
   }
 }

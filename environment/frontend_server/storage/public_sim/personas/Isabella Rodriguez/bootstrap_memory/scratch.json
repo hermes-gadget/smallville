@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 00:20:40",
+  "curr_time": "February 13, 2023, 09:30:00",
   "curr_tile": [
     72,
     14
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 242,
-  "importance_ele_n": 8,
+  "importance_trigger_curr": 235,
+  "importance_ele_n": 15,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 6:00 am"
@@ -44,19 +44,19 @@
       60
     ],
     [
-      "Isabella is finishing her morning routine, getting dressed, and preparing to open Hobbs Cafe for the day",
+      "Isabella is finishing her morning routine, getting dressed, and preparing to open Hobbs Cafe for the day (asleep)",
       60
     ],
     [
-      "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter and coffee machines for the morning rush",
+      "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter and coffee machines for the morning rush (asleep)",
       60
     ],
     [
-      "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
+      "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
       60
     ],
     [
-      "Isabella is continuing to serve the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
+      "Isabella is continuing to serve the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
       120
     ],
     [
@@ -90,6 +90,22 @@
     [
       "Isabella is getting ready for bed and going to sleep",
       60
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
     ],
     [
       "sleeping",
@@ -155,17 +171,17 @@
     ]
   ],
   "act_address": "the Ville:Isabella Rodriguez's apartment:{main room:bed",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 360,
-  "act_description": "sleeping",
+  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_duration": 60,
+  "act_description": "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
   "act_pronunciatio": "\ud83d\ude34",
   "act_event": [
     "Isabella Rodriguez",
     "Isabella Rodriguez",
     "is"
   ],
-  "act_obj_description": "unused",
-  "act_obj_pronunciatio": "\u26aa",
+  "act_obj_description": "unused and empty",
+  "act_obj_pronunciatio": "\ud83e\uded9",
   "act_obj_event": [
     "bed",
     "bed",

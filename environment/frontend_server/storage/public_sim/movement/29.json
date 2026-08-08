@@ -2,11 +2,11 @@
   "persona": {
     "Latoya Williams": {
       "movement": [
-        16,
-        18
+        40,
+        25
       ],
-      "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:artist's co-living space:{Latoya Williams's room:bed",
+      "pronunciatio": "\ud83d\ude34\ud83d\udca4",
+      "description": "Latoya is reviewing her photography portfolio and planning the day's shooting locations for her travel-inspired series (asleep) @ the Ville:artist's co-living space:kitchen:cooking area",
       "chat": null
     },
     "Isabella Rodriguez": {
@@ -15,7 +15,7 @@
         14
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Isabella Rodriguez's apartment:{main room:bed",
+      "description": "Isabella is finishing her morning routine, getting dressed, and preparing to open Hobbs Cafe for the day (asleep) @ the Ville:Isabella Rodriguez's apartment:{main room:bed",
       "chat": null
     },
     "Carlos Gomez": {
@@ -33,13 +33,13 @@
         45
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Dorm for Oak Hill College:kitchen:refrigerator",
+      "description": "Klaus is waking up and starting his morning routine (asleep) @ the Ville:Dorm for Oak Hill College:kitchen:toaster",
       "chat": null
     },
     "Maria Lopez": {
       "movement": [
-        123,
-        48
+        122,
+        46
       ],
       "pronunciatio": "\ud83d\ude34",
       "description": "sleeping @ the Ville:Dorm for Oak Hill College:kitchen:<random>",
@@ -60,7 +60,7 @@
         66
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Moreno family's house:kitchen:cooking area",
+      "description": "Tom is waking up and completing his morning routine (showering, dressing, and having a quick breakfast) (asleep) @ the Ville:Moreno family's house:kitchen:cooking area",
       "chat": null
     },
     "Tamara Taylor": {
@@ -77,12 +77,12 @@
         37,
         65
       ],
-      "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Moore family's house:{main room:bed",
+      "pronunciatio": "\ud83d\ude34\ud83d\udca4",
+      "description": "Sam is finishing his walk around Johnson Park and heading to Hobbs Cafe for his morning coffee and reading (asleep) @ the Ville:Moore family's house:{main room:bed",
       "chat": null
     }
   },
   "meta": {
-    "curr_time": "February 13, 2023, 00:04:50"
+    "curr_time": "February 13, 2023, 04:50:00"
   }
 }

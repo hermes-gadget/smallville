@@ -323,6 +323,9 @@ class ReverieServer:
       # the content of this for loop. Otherwise, we just wait. 
       curr_env_file = f"{sim_folder}/environment/{self.step}.json"
       if check_if_file_exists(curr_env_file):
+        # Mark the real-time start of this step so the game clock can be
+        # paced from actual elapsed wall time.
+        _step_real_start = time.time()
         # If we have an environment file, it means we have a new perception
         # input to our personas. So we first retrieve it.
         try: 
@@ -409,8 +412,7 @@ class ReverieServer:
           # Include the meta information about the current stage in the 
           # movements dictionary. 
           movements["meta"]["curr_time"] = (self.curr_time 
-                                             .strftime("%B %d, %Y, %H:%M:%S"))
-
+                                            .strftime("%B %d, %Y, %H:%M:%S"))
           # We then write the personas' movements to a file that will be sent 
           # to the frontend server. 
           # Example json output: 
@@ -437,7 +439,11 @@ class ReverieServer:
           curr_step["step"] = self.step
           with open(f"{fs_temp_storage}/curr_step.json", "w") as outfile:
             outfile.write(json.dumps(curr_step, indent=2))
-          self.curr_time += datetime.timedelta(seconds=self.sec_per_step)
+          # Pace the game clock by REAL elapsed time so the town lives at a
+          # watchable speed (game_sec_per_real_sec: 1.0 = real-time).
+          self.curr_time += datetime.timedelta(
+            seconds=max(0.0, (time.time() - _step_real_start)
+                              * game_sec_per_real_sec))
 
           int_counter -= 1
           

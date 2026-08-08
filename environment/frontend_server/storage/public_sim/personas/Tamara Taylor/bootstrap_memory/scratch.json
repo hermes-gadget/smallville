@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 00:20:40",
+  "curr_time": "February 13, 2023, 09:30:00",
   "curr_tile": [
     57,
     66
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 240,
-  "importance_ele_n": 10,
+  "importance_trigger_curr": 220,
+  "importance_ele_n": 30,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 13:00 am"

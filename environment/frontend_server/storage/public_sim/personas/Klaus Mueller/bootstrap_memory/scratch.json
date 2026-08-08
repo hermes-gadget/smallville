@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 00:20:40",
+  "curr_time": "February 13, 2023, 09:30:00",
   "curr_tile": [
     123,
     45
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 104,
-  "importance_ele_n": 145,
+  "importance_trigger_curr": 1,
+  "importance_ele_n": 248,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 7:00 am"
@@ -44,15 +44,15 @@
       60
     ],
     [
-      "Klaus is getting ready to head to the library at Oak Hill College, gathering his research notes and laptop for the day's writing session",
+      "Klaus is getting ready to head to the library at Oak Hill College, gathering his research notes and laptop for the day's writing session (asleep)",
       60
     ],
     [
-      "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification",
+      "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification (asleep)",
       60
     ],
     [
-      "Klaus is at the library, deeply focused on writing the introduction and first section of his research paper, taking notes from sources on the social impacts of gentrification",
+      "Klaus is at the library, deeply focused on writing the introduction and first section of his research paper, taking notes from sources on the social impacts of gentrification (asleep)",
       60
     ],
     [
@@ -106,6 +106,18 @@
     [
       "Klaus is heading home from the library, feeling satisfied with the day's progress on his research paper, and preparing to wind down for bed",
       60
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
     ],
     [
       "sleeping",
@@ -186,22 +198,22 @@
       60
     ]
   ],
-  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:refrigerator",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 420,
-  "act_description": "sleeping",
+  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:cooking area",
+  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_duration": 60,
+  "act_description": "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification (asleep)",
   "act_pronunciatio": "\ud83d\ude34",
   "act_event": [
     "Klaus Mueller",
     "Klaus Mueller",
     "is"
   ],
-  "act_obj_description": "not in use",
-  "act_obj_pronunciatio": "\ud83d\udeab\ud83d\udd27",
+  "act_obj_description": "unused",
+  "act_obj_pronunciatio": "\ud83c\uddfa\ud83c\uddf3",
   "act_obj_event": [
-    "refrigerator",
-    "(not",
-    "in use"
+    "cooking area",
+    "cooking area",
+    "is"
   ],
   "chatting_with": null,
   "chat": null,

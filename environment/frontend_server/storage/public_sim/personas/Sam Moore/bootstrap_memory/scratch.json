@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 00:20:40",
+  "curr_time": "February 13, 2023, 09:30:00",
   "curr_tile": [
     37,
     65
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 234,
-  "importance_ele_n": 16,
+  "importance_trigger_curr": 196,
+  "importance_ele_n": 51,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 5:00 am"
@@ -44,23 +44,23 @@
       60
     ],
     [
-      "Sam is finishing his morning routine and heading out to Johnson Park for his morning walk",
+      "Sam is finishing his morning routine and heading out to Johnson Park for his morning walk (asleep)",
       60
     ],
     [
-      "Sam is finishing his walk around Johnson Park and heading to Hobbs Cafe for his morning coffee and reading",
+      "Sam is finishing his walk around Johnson Park and heading to Hobbs Cafe for his morning coffee and reading (asleep)",
       60
     ],
     [
-      "Sam is sitting at Hobbs Cafe, sipping his second cup of coffee, deeply engrossed in a biography about naval history, occasionally jotting notes for his mayoral campaign speech",
+      "Sam is sitting at Hobbs Cafe, sipping his second cup of coffee, deeply engrossed in a biography about naval history, occasionally jotting notes for his mayoral campaign speech (asleep)",
       60
     ],
     [
-      "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign",
+      "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign (asleep)",
       60
     ],
     [
-      "Sam is back home, helping Jennifer tidy up the kitchen, then stepping out onto the front porch to greet his neighbor, Bill, and enthusiastically share his plans for running for mayor, inviting Bill to hear more over a cup of coffee later",
+      "Sam is back home, helping Jennifer tidy up the kitchen, then stepping out onto the front porch to greet his neighbor, Bill, and enthusiastically share his plans for running for mayor, inviting Bill to hear more over a cup of coffee later (asleep)",
       60
     ],
     [
@@ -110,6 +110,26 @@
     [
       "Sam is asleep in bed, having turned in early, resting peacefully for another day of campaigning and community walks tomorrow",
       120
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
+    ],
+    [
+      "sleeping",
+      0
     ],
     [
       "sleeping",
@@ -195,21 +215,21 @@
     ]
   ],
   "act_address": "the Ville:Moore family's house:{main room:bed",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 300,
-  "act_description": "sleeping",
+  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_duration": 60,
+  "act_description": "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign (asleep)",
   "act_pronunciatio": "\ud83d\ude34",
   "act_event": [
     "Sam Moore",
     "Sam Moore",
     "is"
   ],
-  "act_obj_description": "in use",
-  "act_obj_pronunciatio": "\ud83d\udd04",
+  "act_obj_description": "asleep",
+  "act_obj_pronunciatio": "\ud83d\ude34",
   "act_obj_event": [
     "bed",
     "(be",
-    "in use"
+    "asleep"
   ],
   "chatting_with": null,
   "chat": null,

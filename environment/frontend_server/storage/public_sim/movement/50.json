@@ -2,11 +2,11 @@
   "persona": {
     "Latoya Williams": {
       "movement": [
-        16,
-        18
+        18,
+        19
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:artist's co-living space:{Latoya Williams's room:bed",
+      "description": "Latoya is having a light breakfast while reviewing her shot list and checking the weather forecast for today's outdoor photography session (asleep) @ the Ville:artist's co-living space:kitchen:cooking area",
       "chat": null
     },
     "Isabella Rodriguez": {
@@ -15,7 +15,7 @@
         14
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Isabella Rodriguez's apartment:{main room:bed",
+      "description": "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter and coffee machines for the morning rush (asleep) @ the Ville:Isabella Rodriguez's apartment:{main room:bed",
       "chat": null
     },
     "Carlos Gomez": {
@@ -33,13 +33,13 @@
         45
       ],
       "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Dorm for Oak Hill College:kitchen:refrigerator",
+      "description": "Klaus is getting ready to head to the library at Oak Hill College, gathering his research notes and laptop for the day's writing session (asleep) @ the Ville:Dorm for Oak Hill College:kitchen:cooking area",
       "chat": null
     },
     "Maria Lopez": {
       "movement": [
-        123,
-        46
+        124,
+        45
       ],
       "pronunciatio": "\ud83d\ude34",
       "description": "sleeping @ the Ville:Dorm for Oak Hill College:kitchen:<random>",
@@ -59,8 +59,8 @@
         75,
         66
       ],
-      "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Moreno family's house:kitchen:cooking area",
+      "pronunciatio": "\ud83d\ude34\ud83d\udca4",
+      "description": "Tom is opening The Willow Market and Pharmacy and standing behind the grocery counter to greet the first customers (asleep) @ the Ville:Moreno family's house:kitchen:cooking area",
       "chat": null
     },
     "Tamara Taylor": {
@@ -77,12 +77,12 @@
         37,
         65
       ],
-      "pronunciatio": "\ud83d\ude34",
-      "description": "sleeping @ the Ville:Moore family's house:{main room:bed",
+      "pronunciatio": "\ud83d\ude34\ud83d\udca4",
+      "description": "Sam is sitting at Hobbs Cafe, sipping his second cup of coffee, deeply engrossed in a biography about naval history, occasionally jotting notes for his mayoral campaign speech (asleep) @ the Ville:Moore family's house:{main room:bed",
       "chat": null
     }
   },
   "meta": {
-    "curr_time": "February 13, 2023, 00:08:20"
+    "curr_time": "February 13, 2023, 08:20:00"
   }
 }
