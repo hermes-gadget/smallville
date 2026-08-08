@@ -409,6 +409,13 @@ class ReverieServer:
           with open(curr_move_file, "w") as outfile: 
             outfile.write(json.dumps(movements, indent=2))
 
+          # Persist each persona's live state every step so the frontend
+          # state page (Daily Requirement/Schedule, current action fields)
+          # reflects what is happening right now. Upstream only saved at
+          # fin/new-day, leaving the on-disk scratch stale during a run.
+          for persona_name, persona in self.personas.items():
+            persona.save(f"{sim_folder}/personas/{persona_name}/bootstrap_memory")
+
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
           self.step += 1
