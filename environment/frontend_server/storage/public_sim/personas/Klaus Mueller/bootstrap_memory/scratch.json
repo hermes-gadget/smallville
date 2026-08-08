@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    123,
-    45
+    126,
+    46
   ],
   "daily_plan_req": "Klaus Mueller goes to the library at Oak Hill College early in the morning, spends his days writing, and eats at Hobbs Cafe.",
   "name": "Klaus Mueller",
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 1,
-  "importance_ele_n": 248,
+  "importance_trigger_curr": 245,
+  "importance_ele_n": 5,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 7:00 am"
@@ -40,88 +40,72 @@
       420
     ],
     [
-      "Klaus is waking up and starting his morning routine (asleep)",
+      "Klaus is waking up and completing his morning routine (brushing teeth, washing face, getting dressed)",
       60
     ],
     [
-      "Klaus is getting ready to head to the library at Oak Hill College, gathering his research notes and laptop for the day's writing session (asleep)",
+      "Klaus is heading to the library at Oak Hill College to begin his research for his paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification (asleep)",
+      "Klaus is at the library, beginning to outline his research paper on gentrification and reviewing sources on low-income communities",
       60
     ],
     [
-      "Klaus is at the library, deeply focused on writing the introduction and first section of his research paper, taking notes from sources on the social impacts of gentrification (asleep)",
+      "Klaus is at the library, deeply engrossed in reading and taking notes from a sociology journal on the impacts of urban displacement",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the first section of his research paper, now analyzing case studies on the displacement of residents due to gentrification in low-income communities",
+      "Klaus is at the library, continuing to take detailed notes from the sociology journal and beginning to draft the introduction section of his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, taking a short break to stretch and grab a snack, then returning to his research to begin drafting the section on policy responses to gentrification",
+      "Klaus is at the library, taking a short break from writing to grab a quick snack from his bag, then returning to his notes to continue drafting the introduction of his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, continuing to draft the section on policy responses to gentrification, reviewing notes on local housing initiatives and community advocacy efforts",
+      "Klaus is at the library, continuing to work on the introduction of his research paper and outlining the section on the effects of gentrification in low-income communities",
       60
     ],
     [
-      "Klaus is at the library, continuing to write his research paper, now focusing on the section about community resistance and grassroots organizing against gentrification, while cross-referencing his notes on local case studies",
+      "Klaus is at the library, continuing to work on his research paper, now focusing on drafting the section about the social and economic effects of gentrification on long-term residents of low-income communities",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on community resistance and grassroots organizing, now incorporating quotes from interviews he conducted with local activists to strengthen his analysis",
+      "Klaus is at the library, continuing to write the section on the social and economic effects of gentrification, and beginning to outline potential solutions and policy recommendations for his research paper",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on community resistance and grassroots organizing, now synthesizing his interview quotes with existing literature to form a cohesive argument about the effectiveness of local advocacy in mitigating displacement",
+      "Klaus is at the library, continuing to draft the section on potential solutions and policy recommendations for his research paper on gentrification, pausing occasionally to jot down additional notes from his sources",
       60
     ],
     [
-      "Klaus is leaving the library and heading to Hobbs Cafe for dinner, taking a break from his research paper to eat and recharge",
+      "Klaus is leaving the library and heading to Hobbs Cafe for his dinner, as is his daily routine",
       60
     ],
     [
-      "Klaus is at Hobbs Cafe, having dinner and reviewing his notes for the next section of his research paper on gentrification",
+      "Klaus is eating dinner at Hobbs Cafe, reviewing his notes from the day and thinking about the next steps for his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at Hobbs Cafe, finishing his dinner and reviewing his notes on the effects of gentrification, preparing to head back to the library to continue writing his research paper",
+      "Klaus is finishing his dinner at Hobbs Cafe, packing up his notes, and heading back to his dorm to relax and review his research outline for the next day",
       60
     ],
     [
-      "Klaus is returning to the library to continue writing the next section of his research paper on the effects of gentrification, focusing on the role of local government and zoning policies",
+      "Klaus is back in his dorm, reviewing his research outline and reading a few more passages from his sources to prepare for tomorrow's writing session",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on local government and zoning policies, analyzing how these regulations influence the pace and pattern of gentrification in low-income communities",
+      "Klaus is back in his dorm, organizing his notes and drafting a to-do list for tomorrow's writing session, then winding down for the evening",
       60
     ],
     [
-      "Klaus is at the library, wrapping up his writing on the zoning policies section and beginning to outline his conclusion, before packing up to head home for the night",
+      "Klaus is winding down for the evening, putting away his research notes, and getting ready for bed",
       60
     ],
     [
-      "Klaus is heading home from the library, feeling satisfied with the day's progress on his research paper, and preparing to wind down for bed",
+      "Klaus is sleeping",
       60
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
     ]
   ],
   "f_daily_schedule_hourly_org": [
@@ -130,89 +114,89 @@
       420
     ],
     [
-      "Klaus is waking up and starting his morning routine",
+      "Klaus is waking up and completing his morning routine (brushing teeth, washing face, getting dressed)",
       60
     ],
     [
-      "Klaus is getting ready to head to the library at Oak Hill College, gathering his research notes and laptop for the day's writing session",
+      "Klaus is heading to the library at Oak Hill College to begin his research for his paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification",
+      "Klaus is at the library, beginning to outline his research paper on gentrification and reviewing sources on low-income communities",
       60
     ],
     [
-      "Klaus is at the library, deeply focused on writing the introduction and first section of his research paper, taking notes from sources on the social impacts of gentrification",
+      "Klaus is at the library, deeply engrossed in reading and taking notes from a sociology journal on the impacts of urban displacement",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the first section of his research paper, now analyzing case studies on the displacement of residents due to gentrification in low-income communities",
+      "Klaus is at the library, continuing to take detailed notes from the sociology journal and beginning to draft the introduction section of his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, taking a short break to stretch and grab a snack, then returning to his research to begin drafting the section on policy responses to gentrification",
+      "Klaus is at the library, taking a short break from writing to grab a quick snack from his bag, then returning to his notes to continue drafting the introduction of his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at the library, continuing to draft the section on policy responses to gentrification, reviewing notes on local housing initiatives and community advocacy efforts",
+      "Klaus is at the library, continuing to work on the introduction of his research paper and outlining the section on the effects of gentrification in low-income communities",
       60
     ],
     [
-      "Klaus is at the library, continuing to write his research paper, now focusing on the section about community resistance and grassroots organizing against gentrification, while cross-referencing his notes on local case studies",
+      "Klaus is at the library, continuing to work on his research paper, now focusing on drafting the section about the social and economic effects of gentrification on long-term residents of low-income communities",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on community resistance and grassroots organizing, now incorporating quotes from interviews he conducted with local activists to strengthen his analysis",
+      "Klaus is at the library, continuing to write the section on the social and economic effects of gentrification, and beginning to outline potential solutions and policy recommendations for his research paper",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on community resistance and grassroots organizing, now synthesizing his interview quotes with existing literature to form a cohesive argument about the effectiveness of local advocacy in mitigating displacement",
+      "Klaus is at the library, continuing to draft the section on potential solutions and policy recommendations for his research paper on gentrification, pausing occasionally to jot down additional notes from his sources",
       60
     ],
     [
-      "Klaus is leaving the library and heading to Hobbs Cafe for dinner, taking a break from his research paper to eat and recharge",
+      "Klaus is leaving the library and heading to Hobbs Cafe for his dinner, as is his daily routine",
       60
     ],
     [
-      "Klaus is at Hobbs Cafe, having dinner and reviewing his notes for the next section of his research paper on gentrification",
+      "Klaus is eating dinner at Hobbs Cafe, reviewing his notes from the day and thinking about the next steps for his research paper on gentrification",
       60
     ],
     [
-      "Klaus is at Hobbs Cafe, finishing his dinner and reviewing his notes on the effects of gentrification, preparing to head back to the library to continue writing his research paper",
+      "Klaus is finishing his dinner at Hobbs Cafe, packing up his notes, and heading back to his dorm to relax and review his research outline for the next day",
       60
     ],
     [
-      "Klaus is returning to the library to continue writing the next section of his research paper on the effects of gentrification, focusing on the role of local government and zoning policies",
+      "Klaus is back in his dorm, reviewing his research outline and reading a few more passages from his sources to prepare for tomorrow's writing session",
       60
     ],
     [
-      "Klaus is at the library, continuing to write the section on local government and zoning policies, analyzing how these regulations influence the pace and pattern of gentrification in low-income communities",
+      "Klaus is back in his dorm, organizing his notes and drafting a to-do list for tomorrow's writing session, then winding down for the evening",
       60
     ],
     [
-      "Klaus is at the library, wrapping up his writing on the zoning policies section and beginning to outline his conclusion, before packing up to head home for the night",
+      "Klaus is winding down for the evening, putting away his research notes, and getting ready for bed",
       60
     ],
     [
-      "Klaus is heading home from the library, feeling satisfied with the day's progress on his research paper, and preparing to wind down for bed",
+      "Klaus is sleeping",
       60
     ]
   ],
-  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:cooking area",
-  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_address": "the Ville:Dorm for Oak Hill College:kitchen:kitchen sink",
+  "act_start_time": "February 13, 2023, 08:00:00",
   "act_duration": 60,
-  "act_description": "Klaus is at the library, settling into a quiet study carrel and beginning to outline the introduction of his research paper on gentrification (asleep)",
-  "act_pronunciatio": "\ud83d\ude34",
+  "act_description": "Klaus is heading to the library at Oak Hill College to begin his research and writing for the day",
+  "act_pronunciatio": "\ud83d\udcda\u270d\ufe0f",
   "act_event": [
     "Klaus Mueller",
     "Klaus Mueller",
-    "is"
+    "head"
   ],
-  "act_obj_description": "unused",
-  "act_obj_pronunciatio": "\ud83c\uddfa\ud83c\uddf3",
+  "act_obj_description": "not mentioned in the given context",
+  "act_obj_pronunciatio": "\ud83e\udd14",
   "act_obj_event": [
-    "cooking area",
-    "cooking area",
+    "kitchen sink",
+    "kitchen sink",
     "is"
   ],
   "chatting_with": null,
@@ -220,5 +204,98 @@
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": []
+  "planned_path": [
+    [
+      128,
+      46
+    ],
+    [
+      129,
+      46
+    ],
+    [
+      130,
+      46
+    ],
+    [
+      131,
+      46
+    ],
+    [
+      131,
+      47
+    ],
+    [
+      131,
+      48
+    ],
+    [
+      131,
+      49
+    ],
+    [
+      131,
+      50
+    ],
+    [
+      130,
+      50
+    ],
+    [
+      129,
+      50
+    ],
+    [
+      128,
+      50
+    ],
+    [
+      127,
+      50
+    ],
+    [
+      126,
+      50
+    ],
+    [
+      125,
+      50
+    ],
+    [
+      124,
+      50
+    ],
+    [
+      123,
+      50
+    ],
+    [
+      122,
+      50
+    ],
+    [
+      122,
+      49
+    ],
+    [
+      122,
+      48
+    ],
+    [
+      122,
+      47
+    ],
+    [
+      122,
+      46
+    ],
+    [
+      121,
+      46
+    ],
+    [
+      121,
+      45
+    ]
+  ]
 }

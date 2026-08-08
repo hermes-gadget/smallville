@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
     72,
     14
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 235,
-  "importance_ele_n": 15,
+  "importance_trigger_curr": 244,
+  "importance_ele_n": 6,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 6:00 am"
@@ -40,76 +40,64 @@
       360
     ],
     [
-      "Isabella is waking up and starting her morning routine (asleep)",
+      "Isabella is waking up and starting her morning routine",
       60
     ],
     [
-      "Isabella is finishing her morning routine, getting dressed, and preparing to open Hobbs Cafe for the day (asleep)",
+      "Isabella is finishing her morning routine and preparing to open Hobbs Cafe for the day",
       60
     ],
     [
-      "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter and coffee machines for the morning rush (asleep)",
+      "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter and coffee machines for the morning rush",
       60
     ],
     [
-      "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
+      "Isabella is serving the morning rush at Hobbs Cafe, taking orders and making coffee for customers",
       60
     ],
     [
-      "Isabella is continuing to serve the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
+      "Isabella is continuing to serve the morning rush at Hobbs Cafe, taking orders, making coffee, and greeting customers with her usual friendly demeanor",
+      60
+    ],
+    [
+      "Isabella is continuing to serve the late morning customers at Hobbs Cafe, taking orders, making coffee, and chatting with regulars while also mentally noting the Valentine's Day party supplies she still needs to gather for tomorrow's event",
+      60
+    ],
+    [
+      "Isabella is continuing to serve the lunchtime customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       120
     ],
     [
-      "Isabella is serving the lunch crowd at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
-      240
+      "Isabella is continuing to serve the afternoon customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
+      180
     ],
     [
-      "Isabella is serving the afternoon customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also mentally noting to remind regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
+      "Isabella is continuing to serve the late afternoon customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       60
     ],
     [
-      "Isabella is serving the afternoon customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also reminding regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
+      "Isabella is continuing to serve the early evening customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       60
     ],
     [
-      "Isabella is serving the evening customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also reminding regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
-      120
-    ],
-    [
-      "Isabella is closing Hobbs Cafe for the day, turning off the lights, cleaning the counter and coffee machines, and locking up before heading home",
+      "Isabella is closing up Hobbs Cafe for the day, tidying the counter, turning off the coffee machines, and locking the front door before heading out to gather the remaining Valentine's Day party supplies for tomorrow's event",
       60
     ],
     [
-      "Isabella is heading home after closing Hobbs Cafe, thinking about the final preparations needed for the Valentine's Day party tomorrow and planning to relax for a bit before going to bed around 11pm",
+      "Isabella is gathering the remaining Valentine's Day party supplies, including decorations and party favors, from a local party store and then heading home to prepare for tomorrow's event",
       60
     ],
     [
-      "Isabella is relaxing at home, unwinding from the day and reviewing her checklist for the Valentine's Day party tomorrow, before getting ready for bed around 11pm",
+      "Isabella is at home, organizing the Valentine's Day party supplies she picked up, setting aside decorations and favors, and making a final checklist for tomorrow's event before winding down for the evening",
       60
     ],
     [
-      "Isabella is getting ready for bed and going to sleep",
+      "Isabella is finishing her final checklist for the Valentine's Day party, setting out her clothes for tomorrow, and then getting ready for bed, winding down with a cup of herbal tea before falling asleep around 11pm",
       60
     ],
     [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
+      "Isabella is sleeping",
+      60
     ]
   ],
   "f_daily_schedule_hourly_org": [
@@ -122,7 +110,7 @@
       60
     ],
     [
-      "Isabella is finishing her morning routine, getting dressed, and preparing to open Hobbs Cafe for the day",
+      "Isabella is finishing her morning routine and preparing to open Hobbs Cafe for the day",
       60
     ],
     [
@@ -130,67 +118,92 @@
       60
     ],
     [
-      "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
+      "Isabella is serving the morning rush at Hobbs Cafe, taking orders and making coffee for customers",
       60
     ],
     [
-      "Isabella is continuing to serve the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
+      "Isabella is continuing to serve the morning rush at Hobbs Cafe, taking orders, making coffee, and greeting customers with her usual friendly demeanor",
+      60
+    ],
+    [
+      "Isabella is continuing to serve the late morning customers at Hobbs Cafe, taking orders, making coffee, and chatting with regulars while also mentally noting the Valentine's Day party supplies she still needs to gather for tomorrow's event",
+      60
+    ],
+    [
+      "Isabella is continuing to serve the lunchtime customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       120
     ],
     [
-      "Isabella is serving the lunch crowd at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe",
-      240
+      "Isabella is continuing to serve the afternoon customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
+      180
     ],
     [
-      "Isabella is serving the afternoon customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also mentally noting to remind regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
+      "Isabella is continuing to serve the late afternoon customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       60
     ],
     [
-      "Isabella is serving the afternoon customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also reminding regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
+      "Isabella is continuing to serve the early evening customers at Hobbs Cafe, taking orders, making coffee, and greeting each person warmly while also checking her phone for any replies about the Valentine's Day party and making a mental list of the decorations and supplies she still needs to pick up after her shift",
       60
     ],
     [
-      "Isabella is serving the evening customers at the counter, taking orders, and greeting everyone warmly as they come into Hobbs Cafe, while also reminding regulars about the Valentine's Day party tomorrow from 5pm to 7pm",
-      120
-    ],
-    [
-      "Isabella is closing Hobbs Cafe for the day, turning off the lights, cleaning the counter and coffee machines, and locking up before heading home",
+      "Isabella is closing up Hobbs Cafe for the day, tidying the counter, turning off the coffee machines, and locking the front door before heading out to gather the remaining Valentine's Day party supplies for tomorrow's event",
       60
     ],
     [
-      "Isabella is heading home after closing Hobbs Cafe, thinking about the final preparations needed for the Valentine's Day party tomorrow and planning to relax for a bit before going to bed around 11pm",
+      "Isabella is gathering the remaining Valentine's Day party supplies, including decorations and party favors, from a local party store and then heading home to prepare for tomorrow's event",
       60
     ],
     [
-      "Isabella is relaxing at home, unwinding from the day and reviewing her checklist for the Valentine's Day party tomorrow, before getting ready for bed around 11pm",
+      "Isabella is at home, organizing the Valentine's Day party supplies she picked up, setting aside decorations and favors, and making a final checklist for tomorrow's event before winding down for the evening",
       60
     ],
     [
-      "Isabella is getting ready for bed and going to sleep",
+      "Isabella is finishing her final checklist for the Valentine's Day party, setting out her clothes for tomorrow, and then getting ready for bed, winding down with a cup of herbal tea before falling asleep around 11pm",
+      60
+    ],
+    [
+      "Isabella is sleeping",
       60
     ]
   ],
-  "act_address": "the Ville:Isabella Rodriguez's apartment:{main room:bed",
-  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_address": "the Ville:Isabella Rodriguez's apartment:{main room:refrigerator",
+  "act_start_time": "February 13, 2023, 08:00:00",
   "act_duration": 60,
-  "act_description": "Isabella is serving the morning rush at the counter, taking orders, and greeting customers warmly as they come into Hobbs Cafe (asleep)",
-  "act_pronunciatio": "\ud83d\ude34",
+  "act_description": "Isabella is opening Hobbs Cafe for the day, turning on the lights, and preparing the counter for the morning rush",
+  "act_pronunciatio": "\u2615\ufe0f\ud83d\udd1b",
   "act_event": [
     "Isabella Rodriguez",
     "Isabella Rodriguez",
-    "is"
+    "open"
   ],
-  "act_obj_description": "unused and empty",
-  "act_obj_pronunciatio": "\ud83e\uded9",
+  "act_obj_description": "turned on",
+  "act_obj_pronunciatio": "\ud83d\udd1b",
   "act_obj_event": [
-    "bed",
-    "bed",
-    "is"
+    "refrigerator",
+    "(be",
+    "turned on"
   ],
   "chatting_with": null,
   "chat": null,
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": []
+  "planned_path": [
+    [
+      74,
+      14
+    ],
+    [
+      75,
+      14
+    ],
+    [
+      76,
+      14
+    ],
+    [
+      77,
+      14
+    ]
+  ]
 }

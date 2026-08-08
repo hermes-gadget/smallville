@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    57,
-    66
+    54,
+    74
   ],
   "daily_plan_req": "",
   "name": "Tamara Taylor",
@@ -28,48 +28,88 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 220,
-  "importance_ele_n": 30,
+  "importance_trigger_curr": 246,
+  "importance_ele_n": 4,
   "thought_count": 5,
   "daily_req": [
-    "wake up and complete the morning routine at 13:00 am"
+    "wake up and complete the morning routine at 6:00 am"
   ],
   "f_daily_schedule": [
     [
       "sleeping",
-      780
+      360
     ],
     [
-      "Tamara is waking up and starting her morning routine (asleep)",
+      "Tamara is waking up and starting her morning routine, stretching and planning her writing goals for the day",
       60
     ],
     [
-      "Tamara is working on her new children's book series, brainstorming character ideas and sketching illustrations in her home office",
+      "Tamara is having a quiet breakfast and reviewing her notes for the new children's book series",
       60
     ],
     [
-      "Tamara is continuing to work on her new children's book series, drafting the first chapter of the story and refining her character sketches in her home office",
-      180
-    ],
-    [
-      "Tamara is eating dinner and taking a break from her writing to relax and recharge for the evening",
+      "Tamara is settling into her writing nook, opening her laptop to begin drafting the first chapter of her new children's book series",
       60
     ],
     [
-      "Tamara is relaxing after dinner, reading a few pages from a favorite graphic novel for inspiration for her adult comic book series",
+      "Tamara is continuing to draft the first chapter of her new children's book series, pausing occasionally to sketch character ideas in her notebook (asleep)",
       60
     ],
     [
-      "Tamara is continuing to relax after dinner, now sketching out a few rough panels for her adult comic book series while listening to music in the living room",
+      "Tamara is continuing to draft the first chapter of her new children's book series, now fleshing out the dialogue between the main characters and refining the opening scene",
       60
     ],
     [
-      "Tamara is winding down for the evening, tidying up her sketching supplies and preparing for bed, since she aims to be asleep by 10pm",
+      "Tamara is continuing to draft the first chapter of her new children's book series, now focusing on the emotional core of the scene and adding descriptive details to bring the setting to life",
+      60
+    ],
+    [
+      "Tamara is taking a lunch break, stepping away from her writing to make a simple sandwich and eat it in the sunny kitchen while flipping through a comic book for inspiration",
+      60
+    ],
+    [
+      "Tamara is returning to her writing nook after lunch, reviewing the draft of the first chapter she wrote this morning and making notes on pacing and character voice before starting the second chapter",
+      60
+    ],
+    [
+      "Tamara is starting to draft the second chapter of her new children's book series, focusing on introducing a new supporting character and planning how their personality will contrast with the protagonist",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now developing the dialogue between the new supporting character and the protagonist, and sketching a quick visual reference for the new character in her notebook",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now refining the supporting character's backstory and weaving it into the dialogue with the protagonist, while also jotting down plot notes for the next few chapters in her notebook",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now polishing the scene where the supporting character reveals a key secret to the protagonist, and making a list of questions she wants to explore in the third chapter",
+      60
+    ],
+    [
+      "Tamara is preparing and eating dinner in the kitchen, taking a break from her writing to enjoy a meal and reflect on the day's progress before winding down for the evening",
+      60
+    ],
+    [
+      "Tamara is relaxing in the living room, reading a chapter from a favorite adult comic book series to unwind, and jotting down a few loose ideas for tomorrow's writing session",
+      60
+    ],
+    [
+      "Tamara is settling onto the couch with a cup of herbal tea, continuing to read her adult comic book series and letting her mind wander to potential plot twists for her own comic project, before starting to wind down for bed",
+      60
+    ],
+    [
+      "Tamara is brushing her teeth and washing her face in the bathroom, then heading to her bedroom to get into her pajamas and settle into bed with a book to read for a few minutes before falling asleep around 10pm",
+      60
+    ],
+    [
+      "Tamara is falling asleep in her bed, having turned off the light and settled in for the night after reading for a few minutes",
       60
     ],
     [
       "Tamara is sleeping",
-      120
+      60
     ],
     [
       "sleeping",
@@ -79,53 +119,93 @@
   "f_daily_schedule_hourly_org": [
     [
       "sleeping",
-      780
+      360
     ],
     [
-      "Tamara is waking up and starting her morning routine",
+      "Tamara is waking up and starting her morning routine, stretching and planning her writing goals for the day",
       60
     ],
     [
-      "Tamara is working on her new children's book series, brainstorming character ideas and sketching illustrations in her home office",
+      "Tamara is having a quiet breakfast and reviewing her notes for the new children's book series",
       60
     ],
     [
-      "Tamara is continuing to work on her new children's book series, drafting the first chapter of the story and refining her character sketches in her home office",
-      180
-    ],
-    [
-      "Tamara is eating dinner and taking a break from her writing to relax and recharge for the evening",
+      "Tamara is settling into her writing nook, opening her laptop to begin drafting the first chapter of her new children's book series",
       60
     ],
     [
-      "Tamara is relaxing after dinner, reading a few pages from a favorite graphic novel for inspiration for her adult comic book series",
+      "Tamara is continuing to draft the first chapter of her new children's book series, pausing occasionally to sketch character ideas in her notebook",
       60
     ],
     [
-      "Tamara is continuing to relax after dinner, now sketching out a few rough panels for her adult comic book series while listening to music in the living room",
+      "Tamara is continuing to draft the first chapter of her new children's book series, now fleshing out the dialogue between the main characters and refining the opening scene",
       60
     ],
     [
-      "Tamara is winding down for the evening, tidying up her sketching supplies and preparing for bed, since she aims to be asleep by 10pm",
+      "Tamara is continuing to draft the first chapter of her new children's book series, now focusing on the emotional core of the scene and adding descriptive details to bring the setting to life",
+      60
+    ],
+    [
+      "Tamara is taking a lunch break, stepping away from her writing to make a simple sandwich and eat it in the sunny kitchen while flipping through a comic book for inspiration",
+      60
+    ],
+    [
+      "Tamara is returning to her writing nook after lunch, reviewing the draft of the first chapter she wrote this morning and making notes on pacing and character voice before starting the second chapter",
+      60
+    ],
+    [
+      "Tamara is starting to draft the second chapter of her new children's book series, focusing on introducing a new supporting character and planning how their personality will contrast with the protagonist",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now developing the dialogue between the new supporting character and the protagonist, and sketching a quick visual reference for the new character in her notebook",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now refining the supporting character's backstory and weaving it into the dialogue with the protagonist, while also jotting down plot notes for the next few chapters in her notebook",
+      60
+    ],
+    [
+      "Tamara is continuing to draft the second chapter of her new children's book series, now polishing the scene where the supporting character reveals a key secret to the protagonist, and making a list of questions she wants to explore in the third chapter",
+      60
+    ],
+    [
+      "Tamara is preparing and eating dinner in the kitchen, taking a break from her writing to enjoy a meal and reflect on the day's progress before winding down for the evening",
+      60
+    ],
+    [
+      "Tamara is relaxing in the living room, reading a chapter from a favorite adult comic book series to unwind, and jotting down a few loose ideas for tomorrow's writing session",
+      60
+    ],
+    [
+      "Tamara is settling onto the couch with a cup of herbal tea, continuing to read her adult comic book series and letting her mind wander to potential plot twists for her own comic project, before starting to wind down for bed",
+      60
+    ],
+    [
+      "Tamara is brushing her teeth and washing her face in the bathroom, then heading to her bedroom to get into her pajamas and settle into bed with a book to read for a few minutes before falling asleep around 10pm",
+      60
+    ],
+    [
+      "Tamara is falling asleep in her bed, having turned off the light and settled in for the night after reading for a few minutes",
       60
     ],
     [
       "Tamara is sleeping",
-      120
+      60
     ]
   ],
   "act_address": "the Ville:Tamara Taylor and Carmen Ortiz's house:kitchen:cooking area",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 780,
-  "act_description": "sleeping",
-  "act_pronunciatio": "\ud83d\ude34",
+  "act_start_time": "February 13, 2023, 08:00:00",
+  "act_duration": 60,
+  "act_description": "Tamara is settling into her writing nook, opening her laptop to begin drafting the first chapter of her new children's book series",
+  "act_pronunciatio": "\u270d\ufe0f\ud83d\udcda",
   "act_event": [
     "Tamara Taylor",
     "Tamara Taylor",
-    "is"
+    "settle"
   ],
-  "act_obj_description": "unused and clean",
-  "act_obj_pronunciatio": "\ud83e\uddfc\u2728",
+  "act_obj_description": "unmentioned and irrelevant to the current action, as Tamara Taylor is in her writing nook, not the cooking area",
+  "act_obj_pronunciatio": "\u270d\ufe0f\ud83d\udcdd",
   "act_obj_event": [
     "cooking area",
     "cooking area",
@@ -136,5 +216,62 @@
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": []
+  "planned_path": [
+    [
+      53,
+      73
+    ],
+    [
+      52,
+      73
+    ],
+    [
+      52,
+      72
+    ],
+    [
+      52,
+      71
+    ],
+    [
+      52,
+      70
+    ],
+    [
+      52,
+      69
+    ],
+    [
+      52,
+      68
+    ],
+    [
+      52,
+      67
+    ],
+    [
+      52,
+      66
+    ],
+    [
+      53,
+      66
+    ],
+    [
+      54,
+      66
+    ],
+    [
+      55,
+      66
+    ],
+    [
+      56,
+      66
+    ],
+    [
+      57,
+      66
+    ]
+  ]
 }

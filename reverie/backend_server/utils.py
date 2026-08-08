@@ -61,7 +61,7 @@ game_sec_per_real_sec = 1.0
 # Hard wall-clock deadline for a single LLM call attempt (seconds).
 # Guards against gateway responses that trickle forever (read timeouts
 # reset per chunk). The retry loop gets a fresh attempt afterwards.
-llm_hard_timeout = 300
+llm_hard_timeout = 90
 
 # ---------------------------------------------------------------------------
 # Local embedding server (LM Studio on the AI box).

@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    122,
-    49
+    123,
+    57
   ],
   "daily_plan_req": "Maria Lopez spends at least 6 hours a day Twitch streaming or gaming.",
   "name": "Maria Lopez",
@@ -28,111 +28,139 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 178,
-  "importance_ele_n": 71,
+  "importance_trigger_curr": 244,
+  "importance_ele_n": 6,
   "thought_count": 5,
   "daily_req": [
-    "wake up and complete the morning routine at 13:00 am"
+    "wake up and complete the morning routine at 10:00 am"
   ],
   "f_daily_schedule": [
     [
       "sleeping",
-      780
+      600
     ],
     [
-      "Maria is waking up and completing her morning routine (showering, getting dressed, and making a quick breakfast) (asleep)",
+      "Maria is waking up and starting her morning routine",
       60
     ],
     [
-      "Maria is heading to Hobbs Cafe to grab a late lunch and settle in with her physics textbooks for a study session before her afternoon classes",
+      "Maria is having a quick breakfast and checking her social media and Twitch notifications before heading to Hobbs Cafe to study",
       60
     ],
     [
-      "Maria is studying physics at Hobbs Cafe, working through problem sets for her afternoon class",
+      "Maria is at Hobbs Cafe, studying for her physics class while sipping a latte and occasionally checking her phone for Twitch notifications",
       60
     ],
     [
-      "Maria is heading to her afternoon physics class at Oak Hill College, carrying her notebook and laptop from Hobbs Cafe",
+      "Maria is continuing to study at Hobbs Cafe, working on physics problem sets while sipping a second latte, and briefly checking her Twitch chat between problems",
       60
     ],
     [
-      "Maria is attending her afternoon physics class at Oak Hill College, taking notes and participating in the lecture",
+      "Maria is still at Hobbs Cafe, finishing up her physics problem sets and ordering a light snack to keep her energy up before she heads home to start her Twitch stream",
       60
     ],
     [
-      "Maria is heading back to her dorm after class, grabbing a quick dinner, and setting up her streaming equipment for her evening Twitch session",
+      "Maria is heading home from Hobbs Cafe, grabbing her streaming gear, and setting up her room to start her Twitch stream for the afternoon",
       60
     ],
     [
-      "Maria is starting her evening Twitch stream, greeting her viewers and beginning her gaming session for the night",
+      "Maria is starting her Twitch stream, greeting her viewers with her usual energetic enthusiasm and launching into a game of her current favorite indie title",
       60
     ],
     [
-      "Maria is continuing her evening Twitch stream, playing a co-op horror game with her chat and engaging with viewers between rounds",
-      120
-    ],
-    [
-      "Maria is continuing her evening Twitch stream, finishing up the co-op horror game session and thanking her viewers before wrapping up for the night",
+      "Maria is continuing her Twitch stream, playing her indie game and interacting with her chat, keeping up her energetic commentary while she plays",
       60
     ],
     [
-      "Maria is wrapping up her stream, saying goodbye to her viewers, and starting her nightly wind-down routine before heading to bed around midnight",
+      "Maria is continuing her Twitch stream, now playing a multiplayer game with her viewers and taking a quick break to eat a snack while keeping the chat engaged",
       60
     ],
     [
-      "sleeping",
-      0
+      "Maria is eating dinner and taking a short break from streaming, but will return to her Twitch stream shortly after to keep her daily streaming hours up",
+      60
+    ],
+    [
+      "Maria is back on her Twitch stream, playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
+      60
+    ],
+    [
+      "Maria is continuing her Twitch stream, now playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
+      60
+    ],
+    [
+      "Maria is continuing her Twitch stream, wrapping up the co-op horror game session with her chat and thanking her viewers for joining before she starts to wind down for the night",
+      60
+    ],
+    [
+      "Maria is winding down after her stream, cleaning up her gaming setup and getting ready for bed, then settling in to sleep",
+      60
     ]
   ],
   "f_daily_schedule_hourly_org": [
     [
       "sleeping",
-      780
+      600
     ],
     [
-      "Maria is waking up and completing her morning routine (showering, getting dressed, and making a quick breakfast)",
+      "Maria is waking up and starting her morning routine",
       60
     ],
     [
-      "Maria is heading to Hobbs Cafe to grab a late lunch and settle in with her physics textbooks for a study session before her afternoon classes",
+      "Maria is having a quick breakfast and checking her social media and Twitch notifications before heading to Hobbs Cafe to study",
       60
     ],
     [
-      "Maria is studying physics at Hobbs Cafe, working through problem sets for her afternoon class",
+      "Maria is at Hobbs Cafe, studying for her physics class while sipping a latte and occasionally checking her phone for Twitch notifications",
       60
     ],
     [
-      "Maria is heading to her afternoon physics class at Oak Hill College, carrying her notebook and laptop from Hobbs Cafe",
+      "Maria is continuing to study at Hobbs Cafe, working on physics problem sets while sipping a second latte, and briefly checking her Twitch chat between problems",
       60
     ],
     [
-      "Maria is attending her afternoon physics class at Oak Hill College, taking notes and participating in the lecture",
+      "Maria is still at Hobbs Cafe, finishing up her physics problem sets and ordering a light snack to keep her energy up before she heads home to start her Twitch stream",
       60
     ],
     [
-      "Maria is heading back to her dorm after class, grabbing a quick dinner, and setting up her streaming equipment for her evening Twitch session",
+      "Maria is heading home from Hobbs Cafe, grabbing her streaming gear, and setting up her room to start her Twitch stream for the afternoon",
       60
     ],
     [
-      "Maria is starting her evening Twitch stream, greeting her viewers and beginning her gaming session for the night",
+      "Maria is starting her Twitch stream, greeting her viewers with her usual energetic enthusiasm and launching into a game of her current favorite indie title",
       60
     ],
     [
-      "Maria is continuing her evening Twitch stream, playing a co-op horror game with her chat and engaging with viewers between rounds",
-      120
-    ],
-    [
-      "Maria is continuing her evening Twitch stream, finishing up the co-op horror game session and thanking her viewers before wrapping up for the night",
+      "Maria is continuing her Twitch stream, playing her indie game and interacting with her chat, keeping up her energetic commentary while she plays",
       60
     ],
     [
-      "Maria is wrapping up her stream, saying goodbye to her viewers, and starting her nightly wind-down routine before heading to bed around midnight",
+      "Maria is continuing her Twitch stream, now playing a multiplayer game with her viewers and taking a quick break to eat a snack while keeping the chat engaged",
+      60
+    ],
+    [
+      "Maria is eating dinner and taking a short break from streaming, but will return to her Twitch stream shortly after to keep her daily streaming hours up",
+      60
+    ],
+    [
+      "Maria is back on her Twitch stream, playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
+      60
+    ],
+    [
+      "Maria is continuing her Twitch stream, now playing a co-op horror game with her chat and keeping the energy high while she racks up more streaming hours for the day",
+      60
+    ],
+    [
+      "Maria is continuing her Twitch stream, wrapping up the co-op horror game session with her chat and thanking her viewers for joining before she starts to wind down for the night",
+      60
+    ],
+    [
+      "Maria is winding down after her stream, cleaning up her gaming setup and getting ready for bed, then settling in to sleep",
       60
     ]
   ],
   "act_address": "the Ville:Dorm for Oak Hill College:kitchen:<random>",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 780,
+  "act_start_time": "February 13, 2023, 08:00:00",
+  "act_duration": 600,
   "act_description": "sleeping",
   "act_pronunciatio": "\ud83d\ude34",
   "act_event": [
@@ -140,8 +168,8 @@
     "Maria Lopez",
     "is"
   ],
-  "act_obj_description": "asleep",
-  "act_obj_pronunciatio": "\ud83d\ude34",
+  "act_obj_description": "being used by Maria Lopez",
+  "act_obj_pronunciatio": "\ud83d\udeb6\u200d\u2640",
   "act_obj_event": [
     "<random>",
     "<random>",

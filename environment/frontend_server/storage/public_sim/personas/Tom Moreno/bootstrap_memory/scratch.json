@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    75,
-    66
+    73,
+    74
   ],
   "daily_plan_req": "Tom Moreno opens The Willow Market and Pharmacy at 8am, stands behind the grocery counter, and goes home afterwards to eat dinner with his wife.",
   "name": "Tom Moreno",
@@ -28,11 +28,14 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 210,
-  "importance_ele_n": 38,
+  "importance_trigger_curr": 246,
+  "importance_ele_n": 4,
   "thought_count": 5,
   "daily_req": [
-    "wake up and complete the morning routine at 7:00 am"
+    "wake up and complete the morning routine at 7:00 am",
+    "breakfast with Jane. Given his \"rude and aggressive\" tendencies, he might bark at the newspaper before his first cup of coffee",
+    "",
+    ", then head home to eat dinner with Jane. He'll vent about the day, especially any local politics talk, and maybe read a bit of campaign news before bed"
   ],
   "f_daily_schedule": [
     [
@@ -40,56 +43,72 @@
       420
     ],
     [
-      "Tom is waking up and completing his morning routine (showering, dressing, and having a quick breakfast) (asleep)",
+      "Tom is waking up, grumbling at the alarm clock, and stomping to the bathroom to splash water on his face before heading downstairs to make coffee",
       60
     ],
     [
-      "Tom is opening The Willow Market and Pharmacy and standing behind the grocery counter to greet the first customers (asleep)",
+      "Tom is unlocking the front door of The Willow Market and Pharmacy, flipping the sign to \"OPEN,\" and grumbling to himself about the morning rush while he starts stocking the shelves near the counter",
       60
     ],
     [
-      "Tom is standing behind the grocery counter at The Willow Market and Pharmacy, helping customers with their orders and chatting with them about the upcoming mayoral election (asleep)",
-      480
-    ],
-    [
-      "Tom is closing up The Willow Market and Pharmacy and heading home to eat dinner with his wife, Jane",
+      "Tom is behind the grocery counter, ringing up a customer\u2019s order while grumbling about the price of eggs, then muttering under his breath about the mayor\u2019s latest tax proposal he saw on the morning news (asleep)",
       60
     ],
     [
-      "Tom is eating dinner with his wife, Jane, at home",
+      "Tom is still behind the counter, but now he\u2019s grumbling at a delivery boy who stacked the canned goods wrong, then he turns to bark at a customer who\u2019s taking too long to pick out a brand of cereal, all while muttering about how the mayor\u2019s tax plan would hit small shop owners like him",
       60
     ],
     [
-      "Tom is finishing dinner with his wife, Jane, and clearing the table before relaxing for the evening",
+      "Tom is still at the counter, but now he\u2019s on a short break, leaning against the back wall and sipping lukewarm coffee while grumbling to himself about the mayor\u2019s campaign flyer a customer left behind. He crumples it up and tosses it in the trash, muttering, \u201cSam Moore\u2019s got no idea what it\u2019s like to run a real business.\u201d",
       60
     ],
     [
-      "Tom is relaxing at home after dinner, reading the news about the upcoming mayoral election and expressing his dislike for Sam Moore to his wife, Jane",
+      "Tom is locking the front door of the store for his lunch break, muttering about the mayor\u2019s new \u201csmall business tax\u201d he heard on the radio, and stomping home to eat a quick sandwich with Jane before heading back to the counter for the afternoon rush",
       60
     ],
     [
-      "Tom is relaxing at home, watching TV and continuing to discuss his strong disapproval of Sam Moore's candidacy with Jane before getting ready for bed",
+      "Tom is unlocking the front door of The Willow Market and Pharmacy, flipping the sign back to \"OPEN,\" and grumbling to himself about the mayor\u2019s tax plan as he heads behind the counter to prepare for the afternoon rush",
       60
     ],
     [
-      "Tom is getting ready for bed after a long day, brushing his teeth and changing into his pajamas before settling in for the night",
+      "Tom is back behind the grocery counter, ringing up a customer\u2019s order while grumbling about the mayor\u2019s latest campaign promise to \u201cstreamline\u201d small business taxes. He mutters to himself, \u201cStreamline? More like strangle,\u201d and then snaps at a teenager loitering by the candy rack to either buy something or leave",
       60
     ],
     [
-      "Tom is sleeping",
+      "Tom is still behind the counter, but now he\u2019s on the phone with the local newspaper, angrily complaining about a front-page article that quotes the mayor\u2019s \u201csmall business tax\u201d plan. He slams the phone down, then turns to glare at a customer who\u2019s asking about a refund, barking, \u201cRead the label next time!\u201d before muttering, \u201cSam Moore\u2019s gonna turn this town into a ghost town for shop owners like me.\u201d",
       60
     ],
     [
-      "sleeping",
-      0
+      "Tom is still behind the counter, but now he\u2019s glaring at the clock, counting down the minutes until he can close up. He mutters to himself about the mayor\u2019s \u201csmall business tax\u201d again, then snaps at a customer who asks if they can pay with a check, barking, \u201cCash or card, that\u2019s it!\u201d before turning to the shelf to angrily straighten a row of soup cans. He checks his watch, grumbles, \u201cOne more hour of this, then I can go home and eat a real dinner.\u201d",
+      60
     ],
     [
-      "sleeping",
-      0
+      "Tom is locking up the register, flipping the sign to \"CLOSED,\" and stomping out the back door of The Willow Market and Pharmacy. He mutters one last curse at the mayor\u2019s tax plan, then heads home, where Jane has dinner waiting. He sits down, takes a bite of meatloaf, and immediately starts venting about the customer who tried to pay with a check and the \"streamline\" nonsense he heard on the radio, all while jabbing his fork toward the campaign flyer he\u2019d crumpled earlier",
+      60
     ],
     [
-      "sleeping",
-      0
+      "Tom is finishing his second helping of meatloaf, pushing his plate aside, and grabbing the local newspaper from the counter. He jabs a finger at an article about the mayor's town hall meeting scheduled for Thursday, grumbling to Jane, \"I ought to go and give Sam Moore a piece of my mind.\" He then settles into his armchair, muttering about the tax plan while half-watching the evening news, already planning his next angry call to the newspaper in the morning",
+      60
+    ],
+    [
+      "Tom is settling deeper into his armchair, the newspaper still open on his lap, but his eyes are now glued to the TV as the evening news leads with a segment on the upcoming mayoral election. He snorts at a soundbite from Sam Moore, then mutters to Jane, \"Listen to him, all smiles and promises. He wouldn't last a day behind my counter.\" He reaches for the remote, turns up the volume, and starts scribbling notes on a napkin\u2014talking points he plans to bring up at Thursday's town hall meeting",
+      60
+    ],
+    [
+      "Tom is still in his armchair, the napkin of scribbled talking points now tucked into his shirt pocket. He flips the channel to a local debate replay, jabbing a finger at the screen whenever Sam Moore speaks, and mutters to Jane, \"See? He dodged every question about the tax.\" He then leans forward, grabs his phone, and starts typing out a long, angry email to the mayor's office\u2014pausing only to grumble, \"I'll give him a piece of my mind before Thursday, even if I have to do it in writing",
+      60
+    ],
+    [
+      "Tom is still in his armchair, the email to the mayor's office now sent, and he's switched back to the local news channel. He's reading the newspaper again, circling an ad for a rival candidate's rally, and muttering to Jane, \"Maybe I'll skip the town hall and just go to this guy's rally instead\u2014at least he talks about cutting taxes, not 'streamlining' them.\" He then sets the paper down, yawns, and checks the clock, grumbling, \"Alright, I'm heading to bed soon. Got to be up early to deal with the morning rush and that delivery boy again",
+      60
+    ],
+    [
+      "Tom is in his armchair, the newspaper folded on his lap, but his eyes are half-closed as he watches the late local news. He mutters one last grumble about Sam Moore's \"streamlined\" tax plan, then yawns, sets the paper aside, and pushes himself up with a groan. He shuffles to the kitchen to pour a glass of water, checks the front door is locked, and calls out to Jane, \"I'm heading up\u2014got to be sharp for the morning rush.\" He trudges upstairs, brushes his teeth with a few more muttered complaints, and climbs into bed, pulling the covers up as he sets his alarm for 6:45, already dreading the delivery boy's inevitable mistakes",
+      60
+    ],
+    [
+      "Tom is lying in bed, the lights off, but his mind is still churning. He stares at the ceiling, replaying the evening news soundbites and his own scribbled talking points, then mutters to himself, \"Thursday. I'll be there, Sam Moore. You won't know what hit you.\" He rolls over, punches his pillow, and finally closes his eyes, drifting off to sleep with a half-formed grumble about the morning rush and the delivery boy's inevitable mistakes",
+      60
     ],
     [
       "sleeping",
@@ -102,67 +121,148 @@
       420
     ],
     [
-      "Tom is waking up and completing his morning routine (showering, dressing, and having a quick breakfast)",
+      "Tom is waking up, grumbling at the alarm clock, and stomping to the bathroom to splash water on his face before heading downstairs to make coffee",
       60
     ],
     [
-      "Tom is opening The Willow Market and Pharmacy and standing behind the grocery counter to greet the first customers",
+      "Tom is unlocking the front door of The Willow Market and Pharmacy, flipping the sign to \"OPEN,\" and grumbling to himself about the morning rush while he starts stocking the shelves near the counter",
       60
     ],
     [
-      "Tom is standing behind the grocery counter at The Willow Market and Pharmacy, helping customers with their orders and chatting with them about the upcoming mayoral election",
-      480
-    ],
-    [
-      "Tom is closing up The Willow Market and Pharmacy and heading home to eat dinner with his wife, Jane",
+      "Tom is behind the grocery counter, ringing up a customer\u2019s order while grumbling about the price of eggs, then muttering under his breath about the mayor\u2019s latest tax proposal he saw on the morning news",
       60
     ],
     [
-      "Tom is eating dinner with his wife, Jane, at home",
+      "Tom is still behind the counter, but now he\u2019s grumbling at a delivery boy who stacked the canned goods wrong, then he turns to bark at a customer who\u2019s taking too long to pick out a brand of cereal, all while muttering about how the mayor\u2019s tax plan would hit small shop owners like him",
       60
     ],
     [
-      "Tom is finishing dinner with his wife, Jane, and clearing the table before relaxing for the evening",
+      "Tom is still at the counter, but now he\u2019s on a short break, leaning against the back wall and sipping lukewarm coffee while grumbling to himself about the mayor\u2019s campaign flyer a customer left behind. He crumples it up and tosses it in the trash, muttering, \u201cSam Moore\u2019s got no idea what it\u2019s like to run a real business.\u201d",
       60
     ],
     [
-      "Tom is relaxing at home after dinner, reading the news about the upcoming mayoral election and expressing his dislike for Sam Moore to his wife, Jane",
+      "Tom is locking the front door of the store for his lunch break, muttering about the mayor\u2019s new \u201csmall business tax\u201d he heard on the radio, and stomping home to eat a quick sandwich with Jane before heading back to the counter for the afternoon rush",
       60
     ],
     [
-      "Tom is relaxing at home, watching TV and continuing to discuss his strong disapproval of Sam Moore's candidacy with Jane before getting ready for bed",
+      "Tom is unlocking the front door of The Willow Market and Pharmacy, flipping the sign back to \"OPEN,\" and grumbling to himself about the mayor\u2019s tax plan as he heads behind the counter to prepare for the afternoon rush",
       60
     ],
     [
-      "Tom is getting ready for bed after a long day, brushing his teeth and changing into his pajamas before settling in for the night",
+      "Tom is back behind the grocery counter, ringing up a customer\u2019s order while grumbling about the mayor\u2019s latest campaign promise to \u201cstreamline\u201d small business taxes. He mutters to himself, \u201cStreamline? More like strangle,\u201d and then snaps at a teenager loitering by the candy rack to either buy something or leave",
       60
     ],
     [
-      "Tom is sleeping",
+      "Tom is still behind the counter, but now he\u2019s on the phone with the local newspaper, angrily complaining about a front-page article that quotes the mayor\u2019s \u201csmall business tax\u201d plan. He slams the phone down, then turns to glare at a customer who\u2019s asking about a refund, barking, \u201cRead the label next time!\u201d before muttering, \u201cSam Moore\u2019s gonna turn this town into a ghost town for shop owners like me.\u201d",
+      60
+    ],
+    [
+      "Tom is still behind the counter, but now he\u2019s glaring at the clock, counting down the minutes until he can close up. He mutters to himself about the mayor\u2019s \u201csmall business tax\u201d again, then snaps at a customer who asks if they can pay with a check, barking, \u201cCash or card, that\u2019s it!\u201d before turning to the shelf to angrily straighten a row of soup cans. He checks his watch, grumbles, \u201cOne more hour of this, then I can go home and eat a real dinner.\u201d",
+      60
+    ],
+    [
+      "Tom is locking up the register, flipping the sign to \"CLOSED,\" and stomping out the back door of The Willow Market and Pharmacy. He mutters one last curse at the mayor\u2019s tax plan, then heads home, where Jane has dinner waiting. He sits down, takes a bite of meatloaf, and immediately starts venting about the customer who tried to pay with a check and the \"streamline\" nonsense he heard on the radio, all while jabbing his fork toward the campaign flyer he\u2019d crumpled earlier",
+      60
+    ],
+    [
+      "Tom is finishing his second helping of meatloaf, pushing his plate aside, and grabbing the local newspaper from the counter. He jabs a finger at an article about the mayor's town hall meeting scheduled for Thursday, grumbling to Jane, \"I ought to go and give Sam Moore a piece of my mind.\" He then settles into his armchair, muttering about the tax plan while half-watching the evening news, already planning his next angry call to the newspaper in the morning",
+      60
+    ],
+    [
+      "Tom is settling deeper into his armchair, the newspaper still open on his lap, but his eyes are now glued to the TV as the evening news leads with a segment on the upcoming mayoral election. He snorts at a soundbite from Sam Moore, then mutters to Jane, \"Listen to him, all smiles and promises. He wouldn't last a day behind my counter.\" He reaches for the remote, turns up the volume, and starts scribbling notes on a napkin\u2014talking points he plans to bring up at Thursday's town hall meeting",
+      60
+    ],
+    [
+      "Tom is still in his armchair, the napkin of scribbled talking points now tucked into his shirt pocket. He flips the channel to a local debate replay, jabbing a finger at the screen whenever Sam Moore speaks, and mutters to Jane, \"See? He dodged every question about the tax.\" He then leans forward, grabs his phone, and starts typing out a long, angry email to the mayor's office\u2014pausing only to grumble, \"I'll give him a piece of my mind before Thursday, even if I have to do it in writing",
+      60
+    ],
+    [
+      "Tom is still in his armchair, the email to the mayor's office now sent, and he's switched back to the local news channel. He's reading the newspaper again, circling an ad for a rival candidate's rally, and muttering to Jane, \"Maybe I'll skip the town hall and just go to this guy's rally instead\u2014at least he talks about cutting taxes, not 'streamlining' them.\" He then sets the paper down, yawns, and checks the clock, grumbling, \"Alright, I'm heading to bed soon. Got to be up early to deal with the morning rush and that delivery boy again",
+      60
+    ],
+    [
+      "Tom is in his armchair, the newspaper folded on his lap, but his eyes are half-closed as he watches the late local news. He mutters one last grumble about Sam Moore's \"streamlined\" tax plan, then yawns, sets the paper aside, and pushes himself up with a groan. He shuffles to the kitchen to pour a glass of water, checks the front door is locked, and calls out to Jane, \"I'm heading up\u2014got to be sharp for the morning rush.\" He trudges upstairs, brushes his teeth with a few more muttered complaints, and climbs into bed, pulling the covers up as he sets his alarm for 6:45, already dreading the delivery boy's inevitable mistakes",
+      60
+    ],
+    [
+      "Tom is lying in bed, the lights off, but his mind is still churning. He stares at the ceiling, replaying the evening news soundbites and his own scribbled talking points, then mutters to himself, \"Thursday. I'll be there, Sam Moore. You won't know what hit you.\" He rolls over, punches his pillow, and finally closes his eyes, drifting off to sleep with a half-formed grumble about the morning rush and the delivery boy's inevitable mistakes",
       60
     ]
   ],
   "act_address": "the Ville:Moreno family's house:kitchen:refrigerator",
-  "act_start_time": "February 13, 2023, 09:00:00",
-  "act_duration": 480,
-  "act_description": "Tom is standing behind the grocery counter at The Willow Market and Pharmacy, helping customers with their orders and chatting with them about the upcoming mayoral election (asleep)",
-  "act_pronunciatio": "\ud83d\ude34",
+  "act_start_time": "February 13, 2023, 08:00:00",
+  "act_duration": 60,
+  "act_description": "Tom is unlocking the front door of The Willow Market and Pharmacy, flipping the sign to \"OPEN,\" and grumbling to himself about the morning rush while he starts stocking the shelves near the counter",
+  "act_pronunciatio": "\ud83d\udd13\ud83d\udeaa",
   "act_event": [
     "Tom Moreno",
     "Tom Moreno",
     "is"
   ],
-  "act_obj_description": "closed",
-  "act_obj_pronunciatio": "\ud83d\udd12",
+  "act_obj_description": "not mentioned in the current state",
+  "act_obj_pronunciatio": "\u2754",
   "act_obj_event": [
     "refrigerator",
-    "(be",
-    "closed"
+    "refrigerator",
+    "is"
   ],
   "chatting_with": null,
   "chat": null,
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": []
+  "planned_path": [
+    [
+      71,
+      74
+    ],
+    [
+      71,
+      73
+    ],
+    [
+      70,
+      73
+    ],
+    [
+      70,
+      72
+    ],
+    [
+      70,
+      71
+    ],
+    [
+      70,
+      70
+    ],
+    [
+      70,
+      69
+    ],
+    [
+      71,
+      69
+    ],
+    [
+      72,
+      69
+    ],
+    [
+      73,
+      69
+    ],
+    [
+      73,
+      68
+    ],
+    [
+      74,
+      68
+    ],
+    [
+      75,
+      68
+    ]
+  ]
 }

@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    89,
-    70
+    91,
+    74
   ],
   "daily_plan_req": "John Lin goes to the Willow Market and Pharmacy around 9am to open the pharmacy counter. He stands behind the counter until 5pm and returns home.",
   "name": "John Lin",
@@ -28,85 +28,71 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 241,
-  "importance_ele_n": 9,
+  "importance_trigger_curr": 246,
+  "importance_ele_n": 4,
   "thought_count": 5,
   "daily_req": [
-    "wake up and complete the morning routine at 13:00 am"
+    "wake up and complete the morning routine at 6:00 am"
   ],
   "f_daily_schedule": [
     [
       "sleeping",
-      780
-    ],
-    [
-      "John is waking up and completing his morning routine (asleep)",
-      60
-    ],
-    [
-      "John is standing behind the pharmacy counter at the Willow Market and Pharmacy, helping customers with their prescriptions and asking them about who they think will run in the local mayor election",
-      180
-    ],
-    [
-      "John is closing up the pharmacy counter and preparing to head home for the evening",
-      60
-    ],
-    [
-      "John is eating dinner with his wife, Mei Lin, and son, Eddy Lin, at home",
-      60
-    ],
-    [
-      "John is finishing dinner and cleaning up the kitchen with his family, then settling into the living room to watch the local news and discuss the upcoming mayor election with Mei and Eddy",
-      60
-    ],
-    [
-      "John is continuing to watch the local news with Mei and Eddy, and he is intently listening for any announcements about the upcoming mayor election, while also checking his phone for any updates on the candidates",
-      120
-    ],
-    [
-      "John is getting ready for bed, brushing his teeth and changing into his pajamas, then settling in for the night",
-      60
-    ],
-    [
-      "John is sleeping",
-      60
-    ],
-    [
-      "sleeping",
-      0
-    ]
-  ],
-  "f_daily_schedule_hourly_org": [
-    [
-      "sleeping",
-      780
+      360
     ],
     [
       "John is waking up and completing his morning routine",
       60
     ],
     [
-      "John is standing behind the pharmacy counter at the Willow Market and Pharmacy, helping customers with their prescriptions and asking them about who they think will run in the local mayor election",
-      180
-    ],
-    [
-      "John is closing up the pharmacy counter and preparing to head home for the evening",
+      "John is eating breakfast and reviewing his online class notes for the day",
       60
     ],
     [
-      "John is eating dinner with his wife, Mei Lin, and son, Eddy Lin, at home",
+      "John is preparing to leave for the Willow Market and Pharmacy, packing his bag with his pharmacy keys and a notebook for tracking customer requests",
       60
     ],
     [
-      "John is finishing dinner and cleaning up the kitchen with his family, then settling into the living room to watch the local news and discuss the upcoming mayor election with Mei and Eddy",
+      "John is arriving at the Willow Market and Pharmacy and opening the pharmacy counter for the day",
       60
     ],
     [
-      "John is continuing to watch the local news with Mei and Eddy, and he is intently listening for any announcements about the upcoming mayor election, while also checking his phone for any updates on the candidates",
-      120
+      "John is standing behind the pharmacy counter, assisting customers with their prescriptions and noting any special requests in his notebook",
+      60
     ],
     [
-      "John is getting ready for bed, brushing his teeth and changing into his pajamas, then settling in for the night",
+      "John is continuing to assist customers at the pharmacy counter, filling prescriptions and answering questions about medication interactions",
+      60
+    ],
+    [
+      "John is taking a short lunch break behind the counter, eating a sandwich he packed while reviewing his notes on new medication side effects",
+      60
+    ],
+    [
+      "John is standing behind the pharmacy counter, assisting customers with their prescriptions and answering questions about medication interactions",
+      240
+    ],
+    [
+      "John is closing the pharmacy counter for the day, tidying up his workspace, and preparing to head home",
+      60
+    ],
+    [
+      "John is walking home from the Willow Market and Pharmacy, thinking about the customers he helped today and wondering if any of them mentioned who might be running in the local mayor election",
+      60
+    ],
+    [
+      "John is eating dinner with his wife, Mei Lin, and son, Eddy Lin, at home, and discussing his day while asking them if they have heard any news about the upcoming mayor election",
+      60
+    ],
+    [
+      "John is finishing dinner and clearing the table with his family, then moving to the living room to read the local news on his tablet, still thinking about the mayor election and making a mental note to ask more customers about it tomorrow",
+      60
+    ],
+    [
+      "John is reading the local news on his tablet in the living room, still thinking about the mayor election and making a mental note to ask more customers about it tomorrow",
+      60
+    ],
+    [
+      "John is getting ready for bed, brushing his teeth and setting his alarm for the next morning, then heading to sleep around 10pm",
       60
     ],
     [
@@ -114,27 +100,122 @@
       60
     ]
   ],
-  "act_address": "the Ville:Lin family's house:{Mei and John Lin's bedroom:bed",
-  "act_start_time": "February 13, 2023, 00:00:00",
-  "act_duration": 780,
-  "act_description": "sleeping",
-  "act_pronunciatio": "\ud83d\ude34",
+  "f_daily_schedule_hourly_org": [
+    [
+      "sleeping",
+      360
+    ],
+    [
+      "John is waking up and completing his morning routine",
+      60
+    ],
+    [
+      "John is eating breakfast and reviewing his online class notes for the day",
+      60
+    ],
+    [
+      "John is preparing to leave for the Willow Market and Pharmacy, packing his bag with his pharmacy keys and a notebook for tracking customer requests",
+      60
+    ],
+    [
+      "John is arriving at the Willow Market and Pharmacy and opening the pharmacy counter for the day",
+      60
+    ],
+    [
+      "John is standing behind the pharmacy counter, assisting customers with their prescriptions and noting any special requests in his notebook",
+      60
+    ],
+    [
+      "John is continuing to assist customers at the pharmacy counter, filling prescriptions and answering questions about medication interactions",
+      60
+    ],
+    [
+      "John is taking a short lunch break behind the counter, eating a sandwich he packed while reviewing his notes on new medication side effects",
+      60
+    ],
+    [
+      "John is standing behind the pharmacy counter, assisting customers with their prescriptions and answering questions about medication interactions",
+      240
+    ],
+    [
+      "John is closing the pharmacy counter for the day, tidying up his workspace, and preparing to head home",
+      60
+    ],
+    [
+      "John is walking home from the Willow Market and Pharmacy, thinking about the customers he helped today and wondering if any of them mentioned who might be running in the local mayor election",
+      60
+    ],
+    [
+      "John is eating dinner with his wife, Mei Lin, and son, Eddy Lin, at home, and discussing his day while asking them if they have heard any news about the upcoming mayor election",
+      60
+    ],
+    [
+      "John is finishing dinner and clearing the table with his family, then moving to the living room to read the local news on his tablet, still thinking about the mayor election and making a mental note to ask more customers about it tomorrow",
+      60
+    ],
+    [
+      "John is reading the local news on his tablet in the living room, still thinking about the mayor election and making a mental note to ask more customers about it tomorrow",
+      60
+    ],
+    [
+      "John is getting ready for bed, brushing his teeth and setting his alarm for the next morning, then heading to sleep around 10pm",
+      60
+    ],
+    [
+      "John is sleeping",
+      60
+    ]
+  ],
+  "act_address": "the Ville:Lin family's house:{Mei and John Lin's bedroom:desk",
+  "act_start_time": "February 13, 2023, 08:00:00",
+  "act_duration": 60,
+  "act_description": "John is getting ready to leave for the Willow Market and Pharmacy, packing his bag with his pharmacy notes and a quick snack for the day",
+  "act_pronunciatio": "\ud83c\udf92\ud83c\udfc3",
   "act_event": [
     "John Lin",
     "John Lin",
-    "is"
+    "pack"
   ],
-  "act_obj_description": "not in use",
-  "act_obj_pronunciatio": "\ud83d\udeab",
+  "act_obj_description": "unused, with items placed nearby",
+  "act_obj_pronunciatio": "\ud83d\udce6",
   "act_obj_event": [
-    "bed",
-    "(be",
-    "not in use"
+    "desk",
+    "desk",
+    "is"
   ],
   "chatting_with": null,
   "chat": null,
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": []
+  "planned_path": [
+    [
+      89,
+      74
+    ],
+    [
+      89,
+      73
+    ],
+    [
+      88,
+      73
+    ],
+    [
+      87,
+      73
+    ],
+    [
+      87,
+      72
+    ],
+    [
+      87,
+      71
+    ],
+    [
+      87,
+      70
+    ]
+  ]
 }

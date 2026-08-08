@@ -2,9 +2,9 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 09:30:00",
+  "curr_time": "February 13, 2023, 08:00:00",
   "curr_tile": [
-    37,
+    36,
     65
   ],
   "daily_plan_req": "Sam Moore likes to talk a walk around Johnson Park, and sit at Hobbs cafe reading.",
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 196,
-  "importance_ele_n": 51,
+  "importance_trigger_curr": 242,
+  "importance_ele_n": 8,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 5:00 am"
@@ -40,96 +40,76 @@
       300
     ],
     [
-      "Sam is waking up and starting his morning routine (asleep)",
+      "Sam is waking up and starting his morning routine",
       60
     ],
     [
-      "Sam is finishing his morning routine and heading out to Johnson Park for his morning walk (asleep)",
+      "Sam is finishing his morning stretches and heading to the kitchen to brew a pot of coffee for him and Jennifer",
       60
     ],
     [
-      "Sam is finishing his walk around Johnson Park and heading to Hobbs Cafe for his morning coffee and reading (asleep)",
+      "Sam is sitting at the kitchen table with Jennifer, sipping his coffee and reading the morning newspaper, while jotting down notes for his mayoral campaign speech",
       60
     ],
     [
-      "Sam is sitting at Hobbs Cafe, sipping his second cup of coffee, deeply engrossed in a biography about naval history, occasionally jotting notes for his mayoral campaign speech (asleep)",
+      "Sam is finishing his second cup of coffee, then heading to the bathroom to shower and shave before getting dressed for his morning walk to Johnson Park",
       60
     ],
     [
-      "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign (asleep)",
+      "Sam is taking his usual morning walk around Johnson Park, enjoying the fresh air and greeting fellow neighbors while mentally rehearsing how he'll announce his mayoral candidacy to them (asleep)",
       60
     ],
     [
-      "Sam is back home, helping Jennifer tidy up the kitchen, then stepping out onto the front porch to greet his neighbor, Bill, and enthusiastically share his plans for running for mayor, inviting Bill to hear more over a cup of coffee later (asleep)",
+      "Sam is finishing his walk around Johnson Park and heading over to Hobbs Cafe, where he plans to sit by the window with a cup of black coffee and a book, while casually mentioning his mayoral run to the barista and a few regulars he knows",
       60
     ],
     [
-      "Sam is still on the front porch with Bill, animatedly discussing his vision for the town's parks and local infrastructure, and he suggests they walk over to Hobbs Cafe together so he can share more details over a cup of coffee",
+      "Sam is still at Hobbs Cafe, now on his second cup of coffee, deeply engrossed in a biography of a historical naval commander, but he pauses periodically to chat with neighbors who stop by his table, enthusiastically sharing his plans to run for mayor and asking for their support",
       60
     ],
     [
-      "Sam is wrapping up his conversation with Bill at Hobbs Cafe, paying for both their coffees, and heading back home to have a light lunch with Jennifer before he plans to visit a few more neighbors this afternoon to discuss his mayoral campaign",
+      "Sam is wrapping up his time at Hobbs Cafe, paying his tab, and heading out to walk back home, feeling energized by the conversations he's had about his mayoral campaign and planning to share the good news with Jennifer over lunch",
       60
     ],
     [
-      "Sam is having a light lunch with Jennifer at home, then reviewing his campaign notes before heading out to visit a few more neighbors this afternoon",
+      "Sam is back home, having lunch with Jennifer and excitedly recounting the supportive reactions he received from neighbors at Hobbs Cafe, then outlining his afternoon plan to work on his campaign flyers",
       60
     ],
     [
-      "Sam is visiting his neighbor, Carol, on Maple Street, sharing his mayoral campaign flyers and listening to her concerns about local road maintenance, while making notes in his small pocket notebook",
+      "Sam is at his home office desk, printing out copies of his campaign flyers and carefully reviewing the wording, making small notes in the margins with a pen to refine his message before he starts distributing them to neighbors later in the afternoon",
       60
     ],
     [
-      "Sam is finishing his visit with Carol on Maple Street, thanking her for her input, and walking over to the Jenkins' house two doors down to continue sharing his campaign ideas and listening to their thoughts on community events",
+      "Sam is leaving his home office with a stack of freshly printed campaign flyers, heading out to knock on his neighbors' doors and introduce himself as a mayoral candidate, starting with the houses closest to Johnson Park",
       60
     ],
     [
-      "Sam is finishing his conversation with the Jenkins family, thanking them for their time, and heading back home to review his campaign notes and prepare for dinner with Jennifer",
+      "Sam is continuing to go door-to-door in the neighborhood near Johnson Park, handing out his campaign flyers and chatting with residents about his vision for the town, pausing to listen to their concerns and share a few humorous anecdotes from his navy days to build rapport",
       60
     ],
     [
-      "Sam is having dinner with Jennifer at home, discussing his afternoon visits with neighbors and sharing highlights from his campaign notes, before winding down for the evening",
+      "Sam is back home after his door-to-door campaign visits, sitting down with Jennifer for their usual 5:00 pm dinner, where he reviews the day's progress and discusses which neighbors seemed most receptive to his mayoral pitch",
       60
     ],
     [
-      "Sam is finishing dinner with Jennifer, clearing the table, and then settling into his favorite armchair in the living room to read the evening newspaper and relax before his usual 9pm bedtime",
+      "Sam is finishing dinner with Jennifer, then clearing the table and washing the dishes while they chat about the day\u2019s campaign interactions, before he heads to the living room to read a chapter from his current book and jot down a few more speech notes for tomorrow",
       60
     ],
     [
-      "Sam is relaxing in his armchair, putting down the newspaper and turning on the evening news, while making a few mental notes for tomorrow's campaign conversations before he winds down for bed",
+      "Sam is settling into his favorite armchair in the living room, reading a chapter from his book and occasionally jotting down notes for his campaign speech, before he starts winding down for the evening",
       60
     ],
     [
-      "Sam is turning off the evening news, setting aside his notepad, and heading to the bathroom to brush his teeth and wash up, preparing to turn in for the night a bit earlier than his usual 9pm bedtime so he can be well-rested for another day of campaigning tomorrow",
+      "Sam is winding down for the evening, setting aside his book and campaign notes, and heading to the bathroom to brush his teeth and wash up before getting ready for bed",
       60
     ],
     [
-      "Sam is asleep in bed, having turned in a bit early, resting up for another day of campaigning and community walks tomorrow",
+      "Sam is settling into bed with Jennifer, turning off the light and drifting off to sleep after a long, productive day of campaigning and connecting with neighbors",
       60
     ],
     [
-      "Sam is asleep in bed, having turned in early, resting peacefully for another day of campaigning and community walks tomorrow",
+      "Sam is sleeping",
       120
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
-    ],
-    [
-      "sleeping",
-      0
     ],
     [
       "sleeping",
@@ -146,90 +126,90 @@
       60
     ],
     [
-      "Sam is finishing his morning routine and heading out to Johnson Park for his morning walk",
+      "Sam is finishing his morning stretches and heading to the kitchen to brew a pot of coffee for him and Jennifer",
       60
     ],
     [
-      "Sam is finishing his walk around Johnson Park and heading to Hobbs Cafe for his morning coffee and reading",
+      "Sam is sitting at the kitchen table with Jennifer, sipping his coffee and reading the morning newspaper, while jotting down notes for his mayoral campaign speech",
       60
     ],
     [
-      "Sam is sitting at Hobbs Cafe, sipping his second cup of coffee, deeply engrossed in a biography about naval history, occasionally jotting notes for his mayoral campaign speech",
+      "Sam is finishing his second cup of coffee, then heading to the bathroom to shower and shave before getting dressed for his morning walk to Johnson Park",
       60
     ],
     [
-      "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign",
+      "Sam is taking his usual morning walk around Johnson Park, enjoying the fresh air and greeting fellow neighbors while mentally rehearsing how he'll announce his mayoral candidacy to them",
       60
     ],
     [
-      "Sam is back home, helping Jennifer tidy up the kitchen, then stepping out onto the front porch to greet his neighbor, Bill, and enthusiastically share his plans for running for mayor, inviting Bill to hear more over a cup of coffee later",
+      "Sam is finishing his walk around Johnson Park and heading over to Hobbs Cafe, where he plans to sit by the window with a cup of black coffee and a book, while casually mentioning his mayoral run to the barista and a few regulars he knows",
       60
     ],
     [
-      "Sam is still on the front porch with Bill, animatedly discussing his vision for the town's parks and local infrastructure, and he suggests they walk over to Hobbs Cafe together so he can share more details over a cup of coffee",
+      "Sam is still at Hobbs Cafe, now on his second cup of coffee, deeply engrossed in a biography of a historical naval commander, but he pauses periodically to chat with neighbors who stop by his table, enthusiastically sharing his plans to run for mayor and asking for their support",
       60
     ],
     [
-      "Sam is wrapping up his conversation with Bill at Hobbs Cafe, paying for both their coffees, and heading back home to have a light lunch with Jennifer before he plans to visit a few more neighbors this afternoon to discuss his mayoral campaign",
+      "Sam is wrapping up his time at Hobbs Cafe, paying his tab, and heading out to walk back home, feeling energized by the conversations he's had about his mayoral campaign and planning to share the good news with Jennifer over lunch",
       60
     ],
     [
-      "Sam is having a light lunch with Jennifer at home, then reviewing his campaign notes before heading out to visit a few more neighbors this afternoon",
+      "Sam is back home, having lunch with Jennifer and excitedly recounting the supportive reactions he received from neighbors at Hobbs Cafe, then outlining his afternoon plan to work on his campaign flyers",
       60
     ],
     [
-      "Sam is visiting his neighbor, Carol, on Maple Street, sharing his mayoral campaign flyers and listening to her concerns about local road maintenance, while making notes in his small pocket notebook",
+      "Sam is at his home office desk, printing out copies of his campaign flyers and carefully reviewing the wording, making small notes in the margins with a pen to refine his message before he starts distributing them to neighbors later in the afternoon",
       60
     ],
     [
-      "Sam is finishing his visit with Carol on Maple Street, thanking her for her input, and walking over to the Jenkins' house two doors down to continue sharing his campaign ideas and listening to their thoughts on community events",
+      "Sam is leaving his home office with a stack of freshly printed campaign flyers, heading out to knock on his neighbors' doors and introduce himself as a mayoral candidate, starting with the houses closest to Johnson Park",
       60
     ],
     [
-      "Sam is finishing his conversation with the Jenkins family, thanking them for their time, and heading back home to review his campaign notes and prepare for dinner with Jennifer",
+      "Sam is continuing to go door-to-door in the neighborhood near Johnson Park, handing out his campaign flyers and chatting with residents about his vision for the town, pausing to listen to their concerns and share a few humorous anecdotes from his navy days to build rapport",
       60
     ],
     [
-      "Sam is having dinner with Jennifer at home, discussing his afternoon visits with neighbors and sharing highlights from his campaign notes, before winding down for the evening",
+      "Sam is back home after his door-to-door campaign visits, sitting down with Jennifer for their usual 5:00 pm dinner, where he reviews the day's progress and discusses which neighbors seemed most receptive to his mayoral pitch",
       60
     ],
     [
-      "Sam is finishing dinner with Jennifer, clearing the table, and then settling into his favorite armchair in the living room to read the evening newspaper and relax before his usual 9pm bedtime",
+      "Sam is finishing dinner with Jennifer, then clearing the table and washing the dishes while they chat about the day\u2019s campaign interactions, before he heads to the living room to read a chapter from his current book and jot down a few more speech notes for tomorrow",
       60
     ],
     [
-      "Sam is relaxing in his armchair, putting down the newspaper and turning on the evening news, while making a few mental notes for tomorrow's campaign conversations before he winds down for bed",
+      "Sam is settling into his favorite armchair in the living room, reading a chapter from his book and occasionally jotting down notes for his campaign speech, before he starts winding down for the evening",
       60
     ],
     [
-      "Sam is turning off the evening news, setting aside his notepad, and heading to the bathroom to brush his teeth and wash up, preparing to turn in for the night a bit earlier than his usual 9pm bedtime so he can be well-rested for another day of campaigning tomorrow",
+      "Sam is winding down for the evening, setting aside his book and campaign notes, and heading to the bathroom to brush his teeth and wash up before getting ready for bed",
       60
     ],
     [
-      "Sam is asleep in bed, having turned in a bit early, resting up for another day of campaigning and community walks tomorrow",
+      "Sam is settling into bed with Jennifer, turning off the light and drifting off to sleep after a long, productive day of campaigning and connecting with neighbors",
       60
     ],
     [
-      "Sam is asleep in bed, having turned in early, resting peacefully for another day of campaigning and community walks tomorrow",
+      "Sam is sleeping",
       120
     ]
   ],
-  "act_address": "the Ville:Moore family's house:{main room:bed",
-  "act_start_time": "February 13, 2023, 09:00:00",
+  "act_address": "the Ville:Moore family's house:{main room:closet",
+  "act_start_time": "February 13, 2023, 08:00:00",
   "act_duration": 60,
-  "act_description": "Sam is finishing his second cup of coffee at Hobbs Cafe, closing his book, and beginning his walk back home to help Jennifer with the morning chores before he starts talking to his neighbors about his mayoral campaign (asleep)",
-  "act_pronunciatio": "\ud83d\ude34",
+  "act_description": "Sam is finishing his second cup of coffee, then heading to the bathroom to shower and shave before getting dressed for his morning walk to Johnson Park",
+  "act_pronunciatio": "\u2615\ud83d\udebf",
   "act_event": [
     "Sam Moore",
     "Sam Moore",
-    "is"
+    "finish"
   ],
-  "act_obj_description": "asleep",
-  "act_obj_pronunciatio": "\ud83d\ude34",
+  "act_obj_description": "empty of Sam's clothes, as Sam is currently getting dressed for his morning walk",
+  "act_obj_pronunciatio": "\ud83d\udc55\ud83d\udeb6",
   "act_obj_event": [
-    "bed",
-    "(be",
-    "asleep"
+    "closet",
+    "closet",
+    "is"
   ],
   "chatting_with": null,
   "chat": null,

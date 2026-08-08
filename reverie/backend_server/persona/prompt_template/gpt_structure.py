@@ -166,17 +166,23 @@ def _llm_chat(messages,
   # Hard wall-clock deadline per attempt. The gateway can trickle a
   # thinking response indefinitely (read timeouts reset per chunk), which
   # would hang the simulation forever. We run the request on a daemon
-  # thread and abandon it after llm_hard_timeout seconds; the retry loop
-  # then opens a fresh connection.
-  def _post():
-    try:
-      box["resp"] = _SESSION.post(url, json=payload, headers=headers, timeout=120)
-    except Exception as e:  # noqa: BLE001 - surface any failure to the caller
-      box["err"] = e
-
+  # thread with its OWN session and abandon it after llm_hard_timeout
+  # seconds. A shared session pool is fatal here: stuck trickle-streams
+  # occupy every pooled connection and later attempts block on pool
+  # acquire forever. Fresh session per attempt = leaked sockets die with
+  # the gateway's keepalive, never the pool.
   for attempt in range(retries):
+    box = {}
+
+    def _post():
+      try:
+        _s = requests.Session()
+        box["resp"] = _s.post(url, json=payload, headers=headers,
+                              timeout=60)
+      except Exception as e:  # noqa: BLE001 - surface any failure to the caller
+        box["err"] = e
+
     try:
-      box = {}
       t = threading.Thread(target=_post, daemon=True)
       t.start()
       t.join(timeout=llm_hard_timeout)
@@ -430,7 +436,7 @@ def get_embedding(text, model=None):
 
   for attempt in range(3):
     try:
-      resp = _SESSION.post(url, json=payload, timeout=60)
+      resp = requests.post(url, json=payload, timeout=60)
       if resp.status_code == 200:
         data = resp.json()
         _record_usage(data.get("usage") or {}, embedding_model, embedding=True)
