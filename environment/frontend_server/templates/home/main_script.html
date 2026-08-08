@@ -19,8 +19,13 @@
 		var update_request_in_flight = false;
 		var update_poll_interval_ms = 2000;
 		var next_update_poll_at = 0;
+		var movement_poll_failures = 0;
+		var movement_has_loaded = false;
 		var chat_request_in_flight = false;
 		var chat_signature = "";
+		var chat_has_rendered = false;
+		var chat_seen_entries = {};
+		var chat_unread_count = 0;
 		var speaker_colors = {};
 		var speaker_color_count = 0;
 
@@ -41,6 +46,9 @@
 
 		var personas = {};
 		var modal_persona = null;
+		var modal_request = null;
+		var modal_return_focus = null;
+		var close_mobile_sidebar = function() {};
 		function updateModalLive() {
 			if (!modal_persona) return;
 			var state = execute_movement && execute_movement.persona
@@ -199,10 +207,6 @@
 			var initial_center = getInitialMapCenter();
 			main_camera.centerOn(initial_center.x, initial_center.y);
 			if (persona_order.length) selectPersona(persona_order[0], false);
-
-			window.requestAnimationFrame(function() {
-				document.getElementById("map-loading").classList.add("is-hidden");
-			});
 		}
 
 		function createPersonas(scene) {
@@ -453,6 +457,7 @@
 			if (now >= next_update_poll_at && !update_request_in_flight) {
 				next_update_poll_at = now + update_poll_interval_ms;
 				update_request_in_flight = true;
+				var request_was_healthy = false;
 				var request = new XMLHttpRequest();
 				request.overrideMimeType("application/json");
 				request.open("POST", "{% url 'update_environment' %}", true);
@@ -465,15 +470,47 @@
 					} catch (error) {
 						return;
 					}
+					if (!payload || typeof payload !== "object") return;
+					request_was_healthy = true;
+					markMovementPollHealthy();
 					if (payload["<step>"] == step) {
 						execute_movement = payload;
 						phase = "execute";
+						markMovementLoaded();
 					}
 				});
 				request.addEventListener("loadend", function() {
+					if (!request_was_healthy) markMovementPollFailed();
 					update_request_in_flight = false;
 				});
 				request.send(JSON.stringify({ "step": step, "sim_code": sim_code }));
+			}
+		}
+
+		function markMovementPollHealthy() {
+			movement_poll_failures = 0;
+			setOfflineBanner(false);
+		}
+
+		function markMovementPollFailed() {
+			movement_poll_failures += 1;
+			if (movement_poll_failures >= 3) setOfflineBanner(true);
+		}
+
+		function markMovementLoaded() {
+			if (movement_has_loaded) return;
+			movement_has_loaded = true;
+			document.getElementById("map-loading").classList.add("is-hidden");
+		}
+
+		function setOfflineBanner(visible) {
+			var banner = document.getElementById("map-offline");
+			if (visible) {
+				banner.hidden = false;
+				banner.classList.add("is-visible");
+			} else {
+				banner.classList.remove("is-visible");
+				banner.hidden = true;
 			}
 		}
 
@@ -617,50 +654,95 @@
 
 			var sidebar = document.getElementById("resident-sidebar");
 			var scrim = document.getElementById("sidebar-scrim");
+			var sidebar_open = document.getElementById("sidebar-open");
+			var sidebar_close = document.getElementById("sidebar-close");
+			var mobile_sidebar_query = window.matchMedia("(max-width: 1000px)");
 			function openSidebar() {
 				document.body.classList.add("sidebar-open");
 				sidebar.classList.add("is-open");
+				sidebar.removeAttribute("aria-hidden");
+				sidebar.removeAttribute("inert");
 				scrim.classList.add("is-visible");
-				document.getElementById("sidebar-open").setAttribute("aria-expanded", "true");
+				sidebar_open.setAttribute("aria-expanded", "true");
+				window.requestAnimationFrame(function() { sidebar_close.focus(); });
 			}
-			function closeSidebar() {
+			function closeSidebar(restore_focus) {
 				document.body.classList.remove("sidebar-open");
 				sidebar.classList.remove("is-open");
 				scrim.classList.remove("is-visible");
-				document.getElementById("sidebar-open").setAttribute("aria-expanded", "false");
+				sidebar_open.setAttribute("aria-expanded", "false");
+				if (mobile_sidebar_query.matches) {
+					sidebar.setAttribute("aria-hidden", "true");
+					sidebar.setAttribute("inert", "");
+				} else {
+					sidebar.removeAttribute("aria-hidden");
+					sidebar.removeAttribute("inert");
+				}
+				if (restore_focus !== false && mobile_sidebar_query.matches) sidebar_open.focus();
+			}
+			function syncSidebarLayout(event) {
+				if (event.matches) {
+					if (!sidebar.classList.contains("is-open")) closeSidebar(false);
+				} else {
+					closeSidebar(false);
+				}
+			}
+			close_mobile_sidebar = closeSidebar;
+			syncSidebarLayout(mobile_sidebar_query);
+			if (mobile_sidebar_query.addEventListener) {
+				mobile_sidebar_query.addEventListener("change", syncSidebarLayout);
+			} else {
+				mobile_sidebar_query.addListener(syncSidebarLayout);
 			}
 
-			document.getElementById("sidebar-open").addEventListener("click", openSidebar);
-			document.getElementById("sidebar-close").addEventListener("click", closeSidebar);
-			scrim.addEventListener("click", closeSidebar);
+			sidebar_open.addEventListener("click", openSidebar);
+			sidebar_close.addEventListener("click", function() { closeSidebar(true); });
+			scrim.addEventListener("click", function() { closeSidebar(true); });
 
-			var chat_panel = document.getElementById("chat-panel");
+			var mobile_chat_query = window.matchMedia("(max-width: 767px)");
 			var chat_toggle = document.getElementById("chat-toggle");
 			chat_toggle.addEventListener("click", function() {
-				var collapsed = chat_panel.classList.toggle("is-collapsed");
-				chat_toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
-				chat_toggle.setAttribute("aria-label", collapsed ? "Expand conversations" : "Collapse conversations");
-				chat_toggle.textContent = collapsed ? "+" : "−";
+				setChatCollapsed(!isChatCollapsed());
 			});
+			function syncChatLayout(event) {
+				setChatCollapsed(event.matches);
+			}
+			syncChatLayout(mobile_chat_query);
+			if (mobile_chat_query.addEventListener) {
+				mobile_chat_query.addEventListener("change", syncChatLayout);
+			} else {
+				mobile_chat_query.addListener(syncChatLayout);
+			}
 
-			// Resident details modal (replaces the old replay_persona_state page).
+			// Resident details stay on the live map and update with each movement.
 			var resident_modal = document.getElementById("resident-modal");
-			function openResidentModal(name) {
+			var modal_close = resident_modal.querySelector(".resident-modal__close");
+			function openResidentModal(name, opener) {
+				if (modal_request) modal_request.abort();
 				modal_persona = name;
-				document.getElementById("rm-name").textContent = name;
+				modal_return_focus = opener || document.activeElement;
+				setText("rm-name", name);
+				setText("rm-age", "Age not listed");
+				setText("rm-lifestyle", "Loading lifestyle…");
+				setText("rm-learned", "Loading…");
+				setText("rm-currently", "Loading…");
+				setText("rm-plan", "Loading…");
+				renderTraitChips("");
 				var avatar = document.getElementById("rm-avatar");
-				var img = document.createElement("img");
-				img.src = "{% static 'assets/characters/profile/' %}" + personaSlug(name) + ".png";
-				img.onerror = function() {
-					img.onerror = null;
-					img.src = "{% static 'assets/characters/profile/Yuriko_Yamamoto.png' %}";
+				avatar.alt = name + " profile";
+				avatar.onerror = function() {
+					avatar.onerror = null;
+					avatar.src = "{% static 'assets/characters/profile/Yuriko_Yamamoto.png' %}";
 				};
-				avatar.parentNode.replaceChild(img, avatar);
-				img.setAttribute("id", "rm-avatar");
-				img.setAttribute("width", "56");
-				img.setAttribute("height", "56");
+				avatar.src = "{% static 'assets/characters/profile/' %}" + personaSlug(name) + ".png";
+				resident_modal.classList.add("is-open");
+				resident_modal.setAttribute("aria-hidden", "false");
 				updateModalLive();
+				window.requestAnimationFrame(function() { modal_close.focus(); });
+
+				var details_loaded = false;
 				var request = new XMLHttpRequest();
+				modal_request = request;
 				request.overrideMimeType("application/json");
 				request.open("GET", "{% url 'persona_state' %}?sim_code=" + encodeURIComponent(sim_code) + "&persona_name=" + encodeURIComponent(personaSlug(name)), true);
 				request.timeout = 15000;
@@ -672,34 +754,98 @@
 					} catch (error) {
 						return;
 					}
-					if (!payload || payload.error) return;
-					setText("rm-innate", payload.innate || "—");
-					setText("rm-learned", payload.learned || "—");
-					setText("rm-currently", payload.currently || "—");
-					setText("rm-plan", payload.daily_plan_req || "—");
-					setText("rm-lifestyle", payload.lifestyle || "—");
+					if (!payload || payload.error || modal_persona !== name) return;
+					details_loaded = true;
+					setText("rm-age", payload.age === undefined || payload.age === null || payload.age === "" ? "Age not listed" : "Age " + payload.age);
+					renderTraitChips(payload.innate);
+					setText("rm-lifestyle", payload.lifestyle || "Lifestyle details unavailable.");
+					setText("rm-learned", payload.learned || "Background details unavailable.");
+					setText("rm-currently", payload.currently || "No current focus listed.");
+					setText("rm-plan", payload.daily_plan_req || "No daily plan listed.");
+				});
+				request.addEventListener("loadend", function() {
+					if (modal_request === request) modal_request = null;
+					if (!details_loaded && modal_persona === name) {
+						setText("rm-lifestyle", "Lifestyle details unavailable.");
+						setText("rm-learned", "Details are temporarily unavailable.");
+						setText("rm-currently", "Details are temporarily unavailable.");
+						setText("rm-plan", "Details are temporarily unavailable.");
+					}
 				});
 				request.send();
-				resident_modal.classList.add("is-open");
-				resident_modal.setAttribute("aria-hidden", "false");
 			}
-			function closeResidentModal() {
+			function closeResidentModal(restore_focus) {
 				modal_persona = null;
+				if (modal_request) {
+					modal_request.abort();
+					modal_request = null;
+				}
 				resident_modal.classList.remove("is-open");
 				resident_modal.setAttribute("aria-hidden", "true");
+				if (restore_focus !== false && modal_return_focus && modal_return_focus.focus) {
+					modal_return_focus.focus();
+				}
+				modal_return_focus = null;
 			}
 			document.querySelectorAll(".resident-details").forEach(function(button) {
 				button.addEventListener("click", function() {
-					openResidentModal(button.getAttribute("data-persona"));
+					openResidentModal(button.getAttribute("data-persona"), button);
 				});
 			});
 			document.querySelectorAll("[data-close-modal]").forEach(function(el) {
-				el.addEventListener("click", closeResidentModal);
+				el.addEventListener("click", function() { closeResidentModal(true); });
 			});
 			document.addEventListener("keydown", function(event) {
-				if (event.key === "Escape") closeSidebar();
-				if (event.key === "Escape") closeResidentModal();
+				if (event.key === "Escape" && resident_modal.classList.contains("is-open")) {
+					event.preventDefault();
+					closeResidentModal(true);
+				} else if (event.key === "Escape" && sidebar.classList.contains("is-open")) {
+					closeSidebar(true);
+				}
+				if (event.key === "Tab" && resident_modal.classList.contains("is-open")) {
+					event.preventDefault();
+					modal_close.focus();
+				}
 			});
+		}
+
+		function renderTraitChips(value) {
+			var container = document.getElementById("rm-traits");
+			var traits = String(value || "").split(/[,;|]/).map(function(trait) {
+				return trait.trim();
+			}).filter(Boolean);
+			if (!traits.length) traits = ["Traits not listed"];
+			while (container.firstChild) container.removeChild(container.firstChild);
+			traits.forEach(function(trait) {
+				var chip = document.createElement("span");
+				chip.className = "resident-modal__trait";
+				chip.textContent = trait;
+				container.appendChild(chip);
+			});
+		}
+
+		function isChatCollapsed() {
+			return document.getElementById("chat-panel").classList.contains("is-collapsed");
+		}
+
+		function setChatCollapsed(collapsed) {
+			var panel = document.getElementById("chat-panel");
+			var toggle = document.getElementById("chat-toggle");
+			var feed = document.getElementById("chat-feed");
+			panel.classList.toggle("is-collapsed", collapsed);
+			toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+			toggle.setAttribute("aria-label", collapsed ? "Expand conversations" : "Collapse conversations");
+			toggle.textContent = collapsed ? "+" : "−";
+			feed.setAttribute("aria-hidden", collapsed ? "true" : "false");
+			if (!collapsed) setChatUnread(0);
+		}
+
+		function setChatUnread(count) {
+			chat_unread_count = Math.max(0, count);
+			var badge = document.getElementById("chat-unread");
+			badge.hidden = chat_unread_count === 0;
+			badge.textContent = chat_unread_count > 99 ? "99+" : String(chat_unread_count);
+			badge.setAttribute("aria-label", chat_unread_count + (chat_unread_count === 1 ? " unread conversation" : " unread conversations"));
 		}
 
 		function startChatPolling() {
@@ -739,6 +885,26 @@
 			}
 			if (signature === chat_signature) return;
 			chat_signature = signature;
+			var next_seen_entries = {};
+			var new_entry_count = 0;
+			entries.forEach(function(entry) {
+				var key;
+				try {
+					key = JSON.stringify(entry);
+				} catch (error) {
+					return;
+				}
+				if (next_seen_entries[key]) return;
+				next_seen_entries[key] = true;
+				if (chat_has_rendered && !chat_seen_entries[key]) new_entry_count += 1;
+			});
+			chat_seen_entries = next_seen_entries;
+			chat_has_rendered = true;
+			if (new_entry_count && isChatCollapsed()) {
+				setChatUnread(chat_unread_count + new_entry_count);
+			} else if (!isChatCollapsed()) {
+				setChatUnread(0);
+			}
 
 			var feed = document.getElementById("chat-feed");
 			var near_bottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 48;
@@ -864,10 +1030,7 @@
 					personas[name].y - main_camera.height * 0.10, 430, "Sine.easeInOut", true);
 			}
 			if (window.matchMedia("(max-width: 1000px)").matches) {
-				document.body.classList.remove("sidebar-open");
-				document.getElementById("resident-sidebar").classList.remove("is-open");
-				document.getElementById("sidebar-scrim").classList.remove("is-visible");
-				document.getElementById("sidebar-open").setAttribute("aria-expanded", "false");
+				close_mobile_sidebar(false);
 			}
 		}
 

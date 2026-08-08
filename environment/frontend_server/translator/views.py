@@ -3,11 +3,7 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 File: views.py
 """
 import os
-import string
-import random
 import json
-from os import listdir
-import os
 
 import datetime
 from django.shortcuts import render, redirect, HttpResponseRedirect
@@ -467,7 +463,6 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
 
 
 
