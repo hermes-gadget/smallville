@@ -312,6 +312,7 @@ class ReverieServer:
     game_obj_cleanup = dict()
 
     # The main while loop of Reverie. 
+    _boot_real = time.time()
     while (True): 
       # Done with this iteration if <int_counter> reaches 0. 
       if int_counter == 0: 
@@ -326,6 +327,9 @@ class ReverieServer:
         # Mark the real-time start of this step so the game clock can be
         # paced from actual elapsed wall time.
         _step_real_start = time.time()
+        # Boot anchor for absolute clock pacing (game time = f(wall time)).
+        if "_boot_real" not in locals():
+          _boot_real = time.time()
         # If we have an environment file, it means we have a new perception
         # input to our personas. So we first retrieve it.
         try: 
@@ -451,10 +455,13 @@ class ReverieServer:
           curr_step = dict()
           curr_step["step"] = self.step
           atomic_json_dump(curr_step, f"{fs_temp_storage}/curr_step.json")
-          # Pace the game clock by REAL elapsed time so the town lives at a
-          # watchable speed (game_sec_per_real_sec: 1.0 = real-time).
-          self.curr_time += datetime.timedelta(
-            seconds=max(0.0, (time.time() - _step_real_start)
+          # Pace the game clock by REAL wall time so the town lives at a
+          # watchable speed regardless of step rate (game_sec_per_real_sec:
+          # 1.0 = real-time). Absolute mapping -- the clock is a pure
+          # function of elapsed wall time, so fast/slow step bursts can
+          # never skew it.
+          self.curr_time = self.start_time + datetime.timedelta(
+            seconds=max(0.0, (time.time() - _boot_real)
                               * game_sec_per_real_sec))
 
           int_counter -= 1
