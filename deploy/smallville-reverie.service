@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/home/hermes-agent/smallville/reverie/backend_server
-ExecStart=/bin/bash -c 'cd /home/hermes-agent/smallville/reverie/backend_server && printf "base_the_ville_isabella_maria_klaus\npublic_sim\n" | /home/hermes-agent/smallville/.venv/bin/python reverie.py'
+ExecStart=/bin/bash -c 'cd /home/hermes-agent/smallville/reverie/backend_server && if [ -d "../../environment/frontend_server/storage/public_sim" ]; then printf "public_sim\npublic_sim\n"; else printf "base_the_ville_isabella_maria_klaus\npublic_sim\n"; fi | /home/hermes-agent/smallville/.venv/bin/python reverie.py'
 Restart=always
 RestartSec=10
 
