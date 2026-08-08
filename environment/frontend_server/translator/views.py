@@ -138,7 +138,9 @@ def home(request):
   with open(f_curr_step) as json_file:  
     step = json.load(json_file)["step"]
 
-  os.remove(f_curr_step)
+  # NOTE: the step file is intentionally NOT deleted here anymore -- the
+  # backend refreshes it every step, so the page can be reloaded any time
+  # instead of showing "please start the back end first".
 
   persona_names = []
   persona_names_set = set()
