@@ -33,6 +33,7 @@ from global_methods import *
 from utils import *
 from maze import *
 from persona.persona import *
+from economy import economy_tick
 
 # Recently-logged conversation signatures (bounded) so a conversation that
 # persists in scratch.chat across many steps is never re-logged, even when
@@ -52,6 +53,34 @@ def _current_pacing():
   except Exception:
     pass
   return game_sec_per_real_sec
+
+
+def _prune_movement_history(movement_folder, newest_step, keep=500,
+                            full_scan=False):
+  """Retain only the newest numeric movement files.
+
+  A single startup scan clears an existing backlog. Normal steps remove one
+  exact old filename, avoiding an ever-growing directory scan in the hot loop.
+  """
+  cutoff = int(newest_step) - int(keep) + 1
+  if cutoff <= 0:
+    return
+  try:
+    if full_scan:
+      candidates = os.listdir(movement_folder)
+    else:
+      candidates = [f"{cutoff - 1}.json"]
+    for filename in candidates:
+      stem, extension = os.path.splitext(filename)
+      if extension != ".json" or not stem.isdigit() or int(stem) >= cutoff:
+        continue
+      try:
+        os.remove(os.path.join(movement_folder, filename))
+      except FileNotFoundError:
+        pass
+  except Exception:
+    # History retention is housekeeping and must never stop a town step.
+    pass
 
 ##############################################################################
 #                                  REVERIE                                   #
@@ -319,6 +348,8 @@ class ReverieServer:
     # doesn't crash on the movement write.
     os.makedirs(f"{sim_folder}/movement", exist_ok=True)
     os.makedirs(f"{sim_folder}/environment", exist_ok=True)
+    _prune_movement_history(f"{sim_folder}/movement", self.step - 1,
+                            full_scan=True)
 
     # When a persona arrives at a game object, we give a unique event
     # to that object. 
@@ -417,6 +448,18 @@ class ReverieServer:
                        None, None, None)
               self.maze.remove_event_from_tile(blank, new_tile)
 
+          # Economy/life state observes the action chosen on the preceding
+          # step at the location just reached. It runs before perception and
+          # is isolated so corrupt runtime state or an admin command can never
+          # interrupt the existing sequential-perceive/parallel-decide loop.
+          economy_snapshot = {}
+          try:
+            economy_snapshot = economy_tick(
+              sim_folder, self.personas, self.personas_tile, self.maze,
+              self.curr_time, self.step, fs_temp_storage)
+          except Exception:
+            traceback.print_exc()
+
           # Then we need to actually have each of the personas perceive and
           # move. The movement for each of the personas comes in the form of
           # x y coordinates where the persona will move towards. e.g., (50, 34)
@@ -470,6 +513,12 @@ class ReverieServer:
               movements["persona"][persona_name]["description"] = description
               movements["persona"][persona_name]["chat"] = (persona
                                                             .scratch.chat)
+              movements["persona"][persona_name]["economy"] = (
+                economy_snapshot.get(persona_name) or {
+                  "balance": getattr(persona.scratch, "economy_balance", 0),
+                  "status": getattr(persona.scratch, "economy_status",
+                                    "stable"),
+                })
 
           # Log EVERY distinct conversation present this step, not just
           # the first one in dict order. A persona's scratch.chat persists
@@ -522,6 +571,7 @@ class ReverieServer:
           #  "meta": {curr_time: <datetime>}}
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           atomic_json_dump(movements, curr_move_file)
+          _prune_movement_history(f"{sim_folder}/movement", self.step)
 
           # Persist each persona's live state. scratch.json is written EVERY
           # step (the frontend modal reads it live); the full memory dump
@@ -787,7 +837,6 @@ if __name__ == '__main__':
 
   rs = ReverieServer(origin, target)
   rs.open_server(run_steps)
-
 
 
 
