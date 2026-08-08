@@ -6,12 +6,16 @@ Description: This defines the "Retrieve" module for generative agents.
 """
 import sys
 sys.path.append('../../')
+import logging
 
 from global_methods import *
 from persona.prompt_template.gpt_structure import *
 
 from numpy import dot
 from numpy.linalg import norm
+
+
+_dimension_mismatch_logged = False
 
 def retrieve(persona, perceived): 
   """
@@ -64,7 +68,18 @@ def cos_sim(a, b):
     a = [0.3, 0.2, 0.5]
     b = [0.2, 0.2, 0.5]
   """
-  return dot(a, b)/(norm(a)*norm(b))
+  global _dimension_mismatch_logged
+  if len(a) != len(b):
+    if not _dimension_mismatch_logged:
+      logging.warning("Skipping cosine similarity for embedding dimension mismatch: %d != %d",
+                      len(a), len(b))
+      _dimension_mismatch_logged = True
+    return 0.0
+
+  denominator = norm(a) * norm(b)
+  if denominator == 0:
+    return 0.0
+  return dot(a, b) / denominator
 
 
 def normalize_dict_floats(d, target_min, target_max):
@@ -191,6 +206,9 @@ def extract_relevance(persona, nodes, focal_pt):
   relevance_out = dict()
   for count, node in enumerate(nodes): 
     node_embedding = persona.a_mem.embeddings[node.embedding_key]
+    if len(node_embedding) != len(focal_embedding):
+      cos_sim(node_embedding, focal_embedding)  # log the mismatch once
+      continue
     relevance_out[node.node_id] = cos_sim(node_embedding, focal_embedding)
 
   return relevance_out
@@ -269,7 +287,6 @@ def new_retrieve(persona, focal_points, n_count=30):
     retrieved[focal_pt] = master_nodes
 
   return retrieved
-
 
 
 

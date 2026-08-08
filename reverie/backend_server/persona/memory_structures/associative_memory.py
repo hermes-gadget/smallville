@@ -103,9 +103,9 @@ class AssociativeMemory:
                    description, keywords, poignancy, embedding_pair, filling)
 
     kw_strength_load = json.load(open(f_saved + "/kw_strength.json"))
-    if kw_strength_load["kw_strength_event"]: 
+    if kw_strength_load.get("kw_strength_event"):
       self.kw_strength_event = kw_strength_load["kw_strength_event"]
-    if kw_strength_load["kw_strength_thought"]: 
+    if kw_strength_load.get("kw_strength_thought"):
       self.kw_strength_thought = kw_strength_load["kw_strength_thought"]
 
     
@@ -331,7 +331,6 @@ class AssociativeMemory:
       return self.kw_to_chat[target_persona_name.lower()][0]
     else: 
       return False
-
 
 
 
