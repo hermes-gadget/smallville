@@ -57,7 +57,7 @@ llm_thinking = False
 #   1.0  = real-time (watchable, default)
 #   60   = one game-minute per real-second (lively, day in ~24 real min)
 #   1/60 = one game-second per real-minute (near-frozen slow motion)
-game_sec_per_real_sec = 1.0
+game_sec_per_real_sec = 60
 # Hard wall-clock deadline for a single LLM call attempt (seconds).
 # Guards against gateway responses that trickle forever (read timeouts
 # reset per chunk). The retry loop gets a fresh attempt afterwards.
