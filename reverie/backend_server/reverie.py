@@ -50,10 +50,14 @@ class ReverieServer:
 
     # <sim_code> indicates our current simulation. The first step here is to 
     # copy everything that's in <fork_sim_code>, but edit its 
-    # reverie/meta/json's fork variable. 
+    # reverie/meta/json's fork variable. When forking a simulation into
+    # ITSELF (resume pattern: same sim name on restart), there is nothing
+    # to copy -- we simply load the existing state. This also avoids
+    # shutil.copytree crashing on an existing destination.
     self.sim_code = sim_code
     sim_folder = f"{fs_storage}/{self.sim_code}"
-    copyanything(fork_folder, sim_folder)
+    if fork_sim_code != sim_code:
+      copyanything(fork_folder, sim_folder)
 
     with open(f"{sim_folder}/reverie/meta.json") as json_file:  
       reverie_meta = json.load(json_file)
