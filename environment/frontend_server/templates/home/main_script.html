@@ -45,8 +45,8 @@
 	// Configuration meant to be passed to the main Phaser game instance. 
 	const config = {
 	  type: Phaser.AUTO,
-	  width: 1500,
-	  height: 800,
+	  width: window.innerWidth,
+	  height: window.innerHeight,
 	  parent: "game-container",
 	  pixelArt: true,
 	  physics: {
@@ -272,9 +272,19 @@
 	  player.setDepth(-1);
 	  // Setting up the camera. 
 	  const camera = this.cameras.main;
-	  camera.startFollow(player);
+	  camera.stopFollow();
+	  camera.centerOn(player.x, player.y);
 	  camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 	  cursors = this.input.keyboard.createCursorKeys();
+	  let dragging = false, lastPointer = null;
+	  this.input.on('pointerdown', function(pointer) { dragging = true; lastPointer = {x:pointer.x, y:pointer.y}; });
+	  this.input.on('pointerup', function() { dragging = false; lastPointer = null; });
+	  this.input.on('pointermove', function(pointer) {
+	    if (!dragging || !lastPointer) return;
+	    camera.scrollX -= (pointer.x - lastPointer.x);
+	    camera.scrollY -= (pointer.y - lastPointer.y);
+	    lastPointer = {x:pointer.x, y:pointer.y};
+	  });
 
 	  // *** SET UP PERSONAS *** 
 	  // We start by creating the game sprite objects. 
@@ -330,21 +340,6 @@
 
 
 	function update(time, delta) {
-		// *** SETUP PLAY AND PAUSE BUTTON *** 
-		let play_context = this;
-		function game_resume() {  
-			play_context.scene.resume();
-		}  
-		play_button.onclick = function(){
-			game_resume();
-		};
-		function game_pause() {  
-			play_context.scene.pause();
-		}  
-		pause_button.onclick = function(){
-			game_pause();
-		};
-
 	  // *** MOVE CAMERA *** 
 	  // This is where we finish up the camera setting we started in the create() 
 	  // function. We set the movement speed of the camera and wire up the keys to
@@ -536,9 +531,18 @@
 		      }
 	        // action_description += description_content + "<br>";
 
-	        document.getElementById("current_action__"+curr_persona_name_os).innerHTML = description_content.split("@")[0];
-	        document.getElementById("target_address__"+curr_persona_name_os).innerHTML = description_content.split("@")[1];
-	        document.getElementById("chat__"+curr_persona_name_os).innerHTML = chat_content;
+	        var action = description_content.split("@")[0];
+	        var location = description_content.split("@")[1] || "Location unknown";
+	        var actionNode = document.getElementById("current_action__"+curr_persona_name_os);
+	        var locationNode = document.getElementById("target_address__"+curr_persona_name_os);
+	        var sidebarAction = document.getElementById("sidebar_action__"+curr_persona_name_os);
+	        var sidebarLocation = document.getElementById("sidebar_location__"+curr_persona_name_os);
+	        if (actionNode) actionNode.innerHTML = action;
+	        if (locationNode) locationNode.innerHTML = location;
+	        if (sidebarAction) sidebarAction.textContent = action;
+	        if (sidebarLocation) sidebarLocation.textContent = location;
+	        var chatNode = document.getElementById("chat__"+curr_persona_name_os);
+	        if (chatNode) chatNode.innerHTML = chat_content;
 	      }
 	      
 	    }
@@ -547,11 +551,18 @@
 	  }
 	}
 
-	// Control button binders
-	var play_button=document.getElementById("play_button");
-	var pause_button=document.getElementById("pause_button");
+	// Sidebar controls and resident focus.
+	document.querySelectorAll('.persona-card').forEach(function(card) {
+	  card.addEventListener('click', function() {
+	    document.querySelectorAll('.persona-card').forEach(function(item){ item.classList.remove('active'); });
+	    card.classList.add('active');
+	    var name = card.getAttribute('data-persona').replace(/_/g, ' ');
+	    if (personas[name] && game.scene.scenes[0].cameras) game.scene.scenes[0].cameras.main.centerOn(personas[name].x, personas[name].y);
+	  });
+	});
+	document.getElementById('sidebar-open').addEventListener('click', function(){ document.getElementById('persona-sidebar').classList.add('open'); });
+	document.getElementById('sidebar-close').addEventListener('click', function(){ document.getElementById('persona-sidebar').classList.remove('open'); });
 </script>
-
 
 
 
