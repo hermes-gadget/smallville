@@ -10,7 +10,29 @@ A coherent, self-running AI town at **maximum 25 residents** that lives at a wat
 real-time pace, with a message feed showing what agents talk about, a polished UI, and a
 hard guard on LLM spend.
 
-## Status: ALL TASKS DONE ✅ (2026-08-08)
+## Status: ALL TASKS DONE ✅ + PERF PASS (2026-08-08)
+
+### Perf pass (2026-08-08, commit e094e8b9)
+- **~4x faster steps**: perceive split into `perceive_collect` (sequential, LLM-free)
+  + `perceive_commit` (poignancy scoring + memory adds) which now runs INSIDE the
+  parallel decide phase. Chat-heavy steps: 4-6s → 0.1-3s. Steady state ≈ 1.4s/step.
+- **Day-rollover crash fixed**: `ChatGPT_single_request` was called by
+  `revise_identity` but never defined — every in-place rollover NameError'd and
+  re-anchored the clock backwards. Now defined (single-shot chat call).
+- **Reflection budget**: max 6 reflections/step (was: boot storm of 200+ calls in
+  one 233s step).
+- **Save throttling**: scratch.json every step, full memory dump every 10 steps
+  (embeddings.json ~250KB × 25 personas was rewriting every step).
+- **Journal quiet**: ~40 debug prints removed, `debug=False` (was 38K lines/90s).
+- **Selection ring fixed**: rewritten as Graphics ellipse @ depth 3 (Shape ellipses
+  don't render in some WebGL envs; old depth 0.9 hid it under roofs; camera also
+  centered selections behind the chat panel). Ring pixel-verified.
+- **Camera follow**: selected resident tracked live (sprite kept at 40% viewport
+  height, clear of the chat panel; user pan/keys suspend follow for 2.5s).
+- **World speed API**: POST `/set_pacing/` `{"pacing": N}` (1..10000) — live flip,
+  no restart. UI selector shipping via agent wave (ui-wave-2).
+- **UI wave in flight**: `ui-wave-1` (public landing page) + `ui-wave-2` (speed
+  control, modal polish, mobile audit) — sol xhigh agents; merge after review.
 
 ### Done — runtime & architecture
 - **Move off VPS complete**: town runs on the local VM only; VPS scrubbed (units, repo,
