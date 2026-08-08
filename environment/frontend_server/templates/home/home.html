@@ -255,9 +255,16 @@
 		font-weight: 650;
 		text-decoration: none;
 		transition: color .15s ease;
+		background: none;
+		border: 0;
+		padding: 0;
+		font-family: inherit;
+		cursor: pointer;
+		text-transform: uppercase;
+		letter-spacing: .04em;
 	}
 	.resident-details:hover,
-	.resident-details:focus { color: var(--amber); text-decoration: none; }
+	.resident-details:focus { color: var(--amber); text-decoration: none; outline: none; }
 	.resident-conversation { display: none; }
 	.sidebar-footer {
 		display: flex;
@@ -464,6 +471,106 @@
 	}
 	.chat-panel.is-collapsed { width: 214px; height: auto; }
 	.chat-panel.is-collapsed .chat-feed { display: none; }
+	.resident-modal {
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		padding: 20px;
+	}
+	.resident-modal.is-open { display: flex; }
+	.resident-modal__backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(2, 8, 14, .62);
+		-webkit-backdrop-filter: blur(6px);
+		backdrop-filter: blur(6px);
+	}
+	.resident-modal__card {
+		position: relative;
+		width: min(440px, 100%);
+		max-height: min(620px, calc(100vh - 40px));
+		overflow: hidden auto;
+		border: 1px solid rgba(129, 220, 199, .22);
+		border-radius: 18px;
+		background: linear-gradient(165deg, rgba(16, 34, 48, .98), rgba(6, 15, 26, .98));
+		box-shadow: 0 24px 64px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .04);
+		animation: rm-pop .16s ease;
+	}
+	@keyframes rm-pop {
+		from { opacity: 0; transform: translateY(10px) scale(.98); }
+		to { opacity: 1; transform: none; }
+	}
+	.resident-modal__header {
+		display: flex;
+		align-items: flex-start;
+		gap: 14px;
+		padding: 18px 18px 14px;
+		border-bottom: 1px solid rgba(255, 255, 255, .07);
+	}
+	.resident-modal__avatar img {
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		border: 1px solid rgba(129, 220, 199, .28);
+		background: rgba(255, 255, 255, .04);
+	}
+	.resident-modal__headcopy { min-width: 0; flex: 1; }
+	.resident-modal__headcopy h2 {
+		margin: 0 0 4px;
+		font-size: 19px;
+		line-height: 1.2;
+		color: var(--ink);
+	}
+	.resident-modal__live {
+		margin: 0 0 3px;
+		font-size: 13px;
+		color: var(--teal);
+	}
+	.resident-modal__location {
+		margin: 0;
+		font-size: 12px;
+		color: rgba(176, 202, 219, .68);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.resident-modal__close {
+		flex: none;
+		width: 30px;
+		height: 30px;
+		border: 1px solid rgba(255, 255, 255, .12);
+		border-radius: 9px;
+		background: transparent;
+		color: rgba(176, 202, 219, .85);
+		font-size: 18px;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.resident-modal__close:hover { border-color: rgba(99, 223, 189, .35); color: var(--teal); }
+	.resident-modal__body { padding: 6px 18px 16px; }
+	.resident-modal__section { padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, .05); }
+	.resident-modal__section:last-child { border-bottom: 0; }
+	.resident-modal__section h3 {
+		margin: 0 0 5px;
+		font-size: 11px;
+		letter-spacing: .14em;
+		text-transform: uppercase;
+		color: rgba(129, 220, 199, .75);
+	}
+	.resident-modal__section p {
+		margin: 0 0 6px;
+		font-size: 13.5px;
+		line-height: 1.5;
+		color: rgba(215, 233, 244, .9);
+	}
+	.resident-modal__section p:last-child { margin-bottom: 0; }
+	.resident-modal__traits {
+		font-style: italic;
+		color: var(--teal) !important;
+	}
 	.chat-panel__header {
 		display: flex;
 		align-items: center;
@@ -695,7 +802,7 @@
 				</button>
 				<div class="resident-meta">
 					<span class="resident-location" id="target_address__{{ p_name_os }}">Location pending</span>
-					<a class="resident-details" href="{% url 'replay_persona_state' sim_code step p_name_os %}">Details ↗</a>
+					<button class="resident-details" type="button" data-persona="{{ p_name }}" aria-haspopup="dialog">Details</button>
 				</div>
 				<div class="resident-conversation" id="chat__{{ p_name_os }}" aria-hidden="true"></div>
 			</article>
@@ -722,6 +829,42 @@
 			<p class="chat-empty">Conversations between residents will appear here as the town unfolds.</p>
 		</div>
 	</section>
+
+	<div class="resident-modal" id="resident-modal" aria-hidden="true">
+		<div class="resident-modal__backdrop" data-close-modal></div>
+		<div class="resident-modal__card" role="dialog" aria-modal="true" aria-labelledby="rm-name">
+			<header class="resident-modal__header">
+				<span class="resident-modal__avatar">
+					<img id="rm-avatar" src="" alt="" width="56" height="56">
+				</span>
+				<div class="resident-modal__headcopy">
+					<h2 id="rm-name"></h2>
+					<p class="resident-modal__live" id="rm-live">Awaiting action</p>
+					<p class="resident-modal__location" id="rm-location">Location pending</p>
+				</div>
+				<button class="resident-modal__close" type="button" aria-label="Close details" data-close-modal>×</button>
+			</header>
+			<div class="resident-modal__body">
+				<section class="resident-modal__section">
+					<h3>Personality</h3>
+					<p id="rm-innate" class="resident-modal__traits"></p>
+					<p id="rm-learned" class="resident-modal__learned"></p>
+				</section>
+				<section class="resident-modal__section">
+					<h3>Currently</h3>
+					<p id="rm-currently"></p>
+				</section>
+				<section class="resident-modal__section">
+					<h3>Daily plan</h3>
+					<p id="rm-plan"></p>
+				</section>
+				<section class="resident-modal__section">
+					<h3>Lifestyle</h3>
+					<p id="rm-lifestyle"></p>
+				</section>
+			</div>
+		</div>
+	</div>
 
 	<section class="map-stage" id="map-stage" aria-label="Live Smallville map">
 		<div class="map-toolbar">

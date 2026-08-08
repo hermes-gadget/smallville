@@ -284,8 +284,40 @@ def replay(request, sim_code, step):
   return render(request, template, context)
 
 
+def persona_state_json(request):
+  """Lightweight persona state for the resident modal: traits, objective,
+  daily plan, lifestyle, age + live action/location. JSON only."""
+  sim_code = request.GET.get("sim_code", "public_sim")
+  persona_name = request.GET.get("persona_name", "")
+  if not persona_name:
+    return JsonResponse({"error": "persona_name required"}, status=400)
+  # Underscore form (URL-safe) or spaced form both accepted.
+  _name = persona_name.replace("_", " ")
+  _safe = os.path.normpath(_name)
+  if _safe != _name or "/" in _name or ".." in _name:
+    return JsonResponse({"error": "bad name"}, status=400)
+  memory = f"storage/{sim_code}/personas/{_name}/bootstrap_memory"
+  if not os.path.exists(memory):
+    return JsonResponse({"error": "no state"}, status=404)
+  try:
+    with open(memory + "/scratch.json") as json_file:
+      scratch = json.load(json_file)
+  except Exception:
+    return JsonResponse({"error": "no state"}, status=404)
+  return JsonResponse({
+    "name": scratch.get("name", _name),
+    "age": scratch.get("age"),
+    "living_area": scratch.get("living_area"),
+    "innate": scratch.get("innate", ""),
+    "learned": scratch.get("learned", ""),
+    "currently": scratch.get("currently", ""),
+    "daily_plan_req": scratch.get("daily_plan_req", ""),
+    "lifestyle": scratch.get("lifestyle", ""),
+    "curr_action": scratch.get("curr_action", ""),
+  })
+
+
 def replay_persona_state(request, sim_code, step, persona_name): 
-  sim_code = sim_code
   step = int(step)
 
   persona_name_underscore = persona_name

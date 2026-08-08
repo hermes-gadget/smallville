@@ -40,6 +40,26 @@
 		});
 
 		var personas = {};
+		var modal_persona = null;
+		function updateModalLive() {
+			if (!modal_persona) return;
+			var state = execute_movement && execute_movement.persona
+				? execute_movement.persona[modal_persona]
+				: null;
+			if (!state) {
+				setText("rm-live", "Awaiting action");
+				setText("rm-location", "Location pending");
+				return;
+			}
+			var description = String(state.description || "");
+			var separator = description.indexOf("@");
+			setText("rm-live", separator === -1
+				? (description.trim() || "Taking in the town")
+				: description.slice(0, separator).trim() || "Taking in the town");
+			setText("rm-location", separator === -1
+				? "Location unavailable"
+				: description.slice(separator + 1).trim() || "Location unavailable");
+		}
 		var persona_labels = {};
 		var persona_rings = {};
 		var persona_animations = {};
@@ -459,6 +479,7 @@
 					return;
 				}
 				updateResidentCard(name, state);
+				if (modal_persona === name) updateModalLive();
 				if (!personas[name] || !Array.isArray(state.movement) || state.movement.length < 2) {
 					delete movement_target[name];
 					return;
@@ -586,8 +607,63 @@
 				chat_toggle.setAttribute("aria-label", collapsed ? "Expand conversations" : "Collapse conversations");
 				chat_toggle.textContent = collapsed ? "+" : "−";
 			});
+
+			// Resident details modal (replaces the old replay_persona_state page).
+			var resident_modal = document.getElementById("resident-modal");
+			function openResidentModal(name) {
+				modal_persona = name;
+				document.getElementById("rm-name").textContent = name;
+				var avatar = document.getElementById("rm-avatar");
+				var img = document.createElement("img");
+				img.src = "{% static 'assets/characters/profile/' %}" + personaSlug(name) + ".png";
+				img.onerror = function() {
+					img.onerror = null;
+					img.src = "{% static 'assets/characters/profile/Yuriko_Yamamoto.png' %}";
+				};
+				avatar.parentNode.replaceChild(img, avatar);
+				img.setAttribute("id", "rm-avatar");
+				img.setAttribute("width", "56");
+				img.setAttribute("height", "56");
+				updateModalLive();
+				var request = new XMLHttpRequest();
+				request.overrideMimeType("application/json");
+				request.open("GET", "{% url 'persona_state' %}?sim_code=" + encodeURIComponent(sim_code) + "&persona_name=" + encodeURIComponent(personaSlug(name)), true);
+				request.timeout = 15000;
+				request.addEventListener("load", function() {
+					if (request.readyState !== 4 || request.status !== 200) return;
+					var payload;
+					try {
+						payload = JSON.parse(request.responseText);
+					} catch (error) {
+						return;
+					}
+					if (!payload || payload.error) return;
+					setText("rm-innate", payload.innate || "—");
+					setText("rm-learned", payload.learned || "—");
+					setText("rm-currently", payload.currently || "—");
+					setText("rm-plan", payload.daily_plan_req || "—");
+					setText("rm-lifestyle", payload.lifestyle || "—");
+				});
+				request.send();
+				resident_modal.classList.add("is-open");
+				resident_modal.setAttribute("aria-hidden", "false");
+			}
+			function closeResidentModal() {
+				modal_persona = null;
+				resident_modal.classList.remove("is-open");
+				resident_modal.setAttribute("aria-hidden", "true");
+			}
+			document.querySelectorAll(".resident-details").forEach(function(button) {
+				button.addEventListener("click", function() {
+					openResidentModal(button.getAttribute("data-persona"));
+				});
+			});
+			document.querySelectorAll("[data-close-modal]").forEach(function(el) {
+				el.addEventListener("click", closeResidentModal);
+			});
 			document.addEventListener("keydown", function(event) {
 				if (event.key === "Escape") closeSidebar();
+				if (event.key === "Escape") closeResidentModal();
 			});
 		}
 
