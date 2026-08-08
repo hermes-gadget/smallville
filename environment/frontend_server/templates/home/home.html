@@ -1,79 +1,631 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 
+{% block title %}Smallville · Live simulation{% endblock title %}
+{% block body_class %}simulator-page{% endblock body_class %}
+
+{% block extra_css %}
+<style>
+	:root {
+		--navy-950: #050b12;
+		--navy-900: #07111c;
+		--navy-850: #0a1724;
+		--navy-800: #0e1d2b;
+		--navy-700: #172b3a;
+		--ink-100: #eff8f6;
+		--ink-200: #d7e7e4;
+		--ink-400: #91aaa9;
+		--ink-500: #6f898a;
+		--teal: #63dfbd;
+		--teal-soft: rgba(99, 223, 189, .12);
+		--amber: #f2bd62;
+		--sidebar-width: 326px;
+	}
+	.simulator-page {
+		min-width: 320px;
+		margin: 0;
+		overflow: hidden;
+		background: var(--navy-950);
+		color: var(--ink-100);
+		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+	.simulator-page button,
+	.simulator-page a { font: inherit; }
+	.simulator-shell {
+		display: flex;
+		height: 100vh;
+		height: 100dvh;
+		min-height: 480px;
+		isolation: isolate;
+		background:
+			radial-gradient(circle at 75% 5%, rgba(28, 81, 91, .3), transparent 35%),
+			var(--navy-950);
+	}
+	.resident-sidebar {
+		position: relative;
+		z-index: 30;
+		display: flex;
+		flex: 0 0 var(--sidebar-width);
+		flex-direction: column;
+		min-width: 0;
+		padding: 26px 18px 17px;
+		padding-top: max(26px, env(safe-area-inset-top));
+		border-right: 1px solid rgba(145, 191, 186, .13);
+		background:
+			linear-gradient(180deg, rgba(14, 31, 44, .98), rgba(7, 17, 28, .985)),
+			var(--navy-900);
+		box-shadow: 14px 0 46px rgba(0, 0, 0, .2);
+	}
+	.sidebar-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 0 7px 19px;
+	}
+	.sidebar-kicker {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		margin-bottom: 7px;
+		color: var(--teal);
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: .18em;
+		text-transform: uppercase;
+	}
+	.sidebar-kicker::before {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--teal);
+		box-shadow: 0 0 12px rgba(99, 223, 189, .65);
+		content: "";
+	}
+	.sidebar-title {
+		margin: 0;
+		color: #fff;
+		font-size: 25px;
+		font-weight: 720;
+		letter-spacing: -.035em;
+		line-height: 1.05;
+	}
+	.resident-count {
+		display: inline-grid;
+		min-width: 27px;
+		height: 27px;
+		margin-top: 13px;
+		place-items: center;
+		border: 1px solid rgba(99, 223, 189, .18);
+		border-radius: 9px;
+		background: var(--teal-soft);
+		color: #b8f3e2;
+		font-size: 10px;
+		font-weight: 750;
+	}
+	.sidebar-close,
+	.sidebar-menu {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 38px;
+		height: 38px;
+		padding: 0;
+		border: 1px solid rgba(255, 255, 255, .11);
+		border-radius: 11px;
+		background: rgba(7, 17, 28, .82);
+		box-shadow: 0 8px 22px rgba(0, 0, 0, .2);
+		color: var(--ink-200);
+		cursor: pointer;
+	}
+	.resident-list {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-x: hidden;
+		overflow-y: auto;
+		padding: 1px 6px 12px 2px;
+		scrollbar-color: rgba(112, 151, 151, .35) transparent;
+		scrollbar-width: thin;
+	}
+	.resident-list::-webkit-scrollbar { width: 5px; }
+	.resident-list::-webkit-scrollbar-thumb {
+		border-radius: 9px;
+		background: rgba(112, 151, 151, .3);
+	}
+	.resident-card {
+		position: relative;
+		margin: 0 0 7px;
+		border: 1px solid rgba(164, 203, 199, .08);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, .023);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, .018);
+		transition: border-color .18s ease, background .18s ease, transform .18s ease;
+	}
+	.resident-card:hover {
+		transform: translateY(-1px);
+		border-color: rgba(99, 223, 189, .2);
+		background: rgba(99, 223, 189, .055);
+	}
+	.resident-card.is-selected {
+		border-color: rgba(242, 189, 98, .42);
+		background: linear-gradient(120deg, rgba(242, 189, 98, .095), rgba(99, 223, 189, .045));
+		box-shadow: 0 9px 24px rgba(0, 0, 0, .16), inset 3px 0 0 var(--amber);
+	}
+	.resident-focus {
+		display: grid;
+		grid-template-columns: 43px minmax(0, 1fr) 8px;
+		align-items: center;
+		gap: 11px;
+		width: 100%;
+		padding: 10px 10px 7px;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+	.resident-focus:focus-visible {
+		border-radius: 13px;
+		box-shadow: 0 0 0 2px var(--teal);
+	}
+	.resident-avatar {
+		position: relative;
+		display: grid;
+		width: 43px;
+		height: 43px;
+		place-items: center;
+		overflow: hidden;
+		border: 1px solid rgba(255, 255, 255, .1);
+		border-radius: 12px;
+		background: linear-gradient(145deg, #203a47, #112532);
+		box-shadow: 0 6px 15px rgba(0, 0, 0, .2);
+	}
+	.resident-avatar img {
+		width: 32px;
+		height: 32px;
+		object-fit: contain;
+		image-rendering: pixelated;
+		transform: scale(1.18);
+	}
+	.resident-copy { min-width: 0; }
+	.resident-name,
+	.resident-action,
+	.resident-location {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.resident-name {
+		margin-bottom: 4px;
+		color: var(--ink-100);
+		font-size: 12.5px;
+		font-weight: 700;
+		letter-spacing: -.01em;
+	}
+	.resident-action {
+		color: var(--ink-400);
+		font-size: 10.5px;
+		line-height: 1.35;
+	}
+	.resident-status {
+		position: relative;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--teal);
+		box-shadow: 0 0 0 4px rgba(99, 223, 189, .085), 0 0 11px rgba(99, 223, 189, .35);
+	}
+	.resident-status::after {
+		position: absolute;
+		inset: -4px;
+		border: 1px solid rgba(99, 223, 189, .35);
+		border-radius: inherit;
+		animation: status-ring 2.2s ease-out infinite;
+		content: "";
+	}
+	.resident-meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 0 10px 9px 64px;
+	}
+	.resident-location {
+		min-width: 0;
+		color: #607d7f;
+		font-size: 9.5px;
+	}
+	.resident-location::before {
+		margin-right: 4px;
+		color: var(--teal);
+		content: "⌖";
+	}
+	.resident-details {
+		flex: none;
+		color: #9bb3b2;
+		font-size: 9.5px;
+		font-weight: 650;
+		text-decoration: none;
+		transition: color .15s ease;
+	}
+	.resident-details:hover,
+	.resident-details:focus { color: var(--amber); text-decoration: none; }
+	.resident-conversation { display: none; }
+	.sidebar-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 13px 7px 0;
+		border-top: 1px solid rgba(153, 198, 193, .1);
+		color: #597578;
+		font-size: 9px;
+		letter-spacing: .08em;
+		text-transform: uppercase;
+	}
+	.sidebar-footer strong {
+		color: #84a09f;
+		font-weight: 650;
+		letter-spacing: .02em;
+		text-transform: none;
+	}
+	.map-stage {
+		position: relative;
+		z-index: 1;
+		flex: 1 1 auto;
+		min-width: 0;
+		height: 100%;
+		overflow: hidden;
+		background: #0b1720;
+	}
+	.map-stage::before,
+	.map-stage::after {
+		position: absolute;
+		z-index: 4;
+		inset: 0;
+		pointer-events: none;
+		content: "";
+	}
+	.map-stage::before {
+		background: linear-gradient(180deg, rgba(3, 9, 14, .34), transparent 18%, transparent 74%, rgba(3, 9, 14, .42));
+	}
+	.map-stage::after {
+		box-shadow: inset 0 0 100px rgba(2, 8, 13, .26);
+	}
+	#game-container {
+		position: absolute;
+		z-index: 1;
+		inset: 0;
+		margin: 0;
+		padding: 0;
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+	}
+	#game-container.is-dragging { cursor: grabbing; }
+	#game-container canvas {
+		display: block;
+		max-width: none;
+		border-radius: 0;
+		image-rendering: pixelated;
+		touch-action: none;
+	}
+	.map-toolbar {
+		position: absolute;
+		z-index: 8;
+		top: max(18px, env(safe-area-inset-top));
+		left: 22px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		pointer-events: none;
+	}
+	.map-brand,
+	.game-clock,
+	.replay-controls {
+		display: flex;
+		align-items: center;
+		min-height: 44px;
+		border: 1px solid rgba(255, 255, 255, .1);
+		border-radius: 14px;
+		background: rgba(7, 17, 28, .82);
+		box-shadow: 0 12px 30px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .04);
+		-webkit-backdrop-filter: blur(16px);
+		backdrop-filter: blur(16px);
+	}
+	.map-brand { gap: 10px; padding: 7px 13px 7px 8px; }
+	.map-brand__mark {
+		display: grid;
+		width: 29px;
+		height: 29px;
+		place-items: center;
+		border-radius: 9px;
+		background: linear-gradient(145deg, #7aefce, #45c7aa);
+		box-shadow: 0 6px 16px rgba(75, 214, 180, .22);
+		color: #092019;
+		font-size: 15px;
+	}
+	.map-brand strong,
+	.map-brand small { display: block; }
+	.map-brand strong {
+		color: #f3fbf9;
+		font-size: 12px;
+		font-weight: 740;
+		letter-spacing: -.01em;
+		line-height: 1.2;
+	}
+	.map-brand small {
+		margin-top: 2px;
+		color: #718d8e;
+		font-size: 8px;
+		font-weight: 700;
+		letter-spacing: .13em;
+		text-transform: uppercase;
+	}
+	.game-clock {
+		gap: 8px;
+		padding: 0 12px;
+		color: #7f9999;
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: .1em;
+		text-transform: uppercase;
+	}
+	.game-clock::before { color: var(--amber); content: "◷"; font-size: 14px; }
+	#game-time-content {
+		max-width: 205px;
+		overflow: hidden;
+		color: #f2d08e;
+		font-size: 10px;
+		letter-spacing: 0;
+		text-overflow: ellipsis;
+		text-transform: none;
+		white-space: nowrap;
+	}
+	.replay-controls { gap: 3px; padding: 4px; pointer-events: auto; }
+	.replay-control {
+		width: 34px;
+		height: 34px;
+		padding: 0;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		color: #9ab0af;
+		cursor: pointer;
+	}
+	.replay-control:hover,
+	.replay-control:focus { outline: 0; background: var(--teal-soft); color: var(--teal); }
+	.map-footer {
+		position: absolute;
+		z-index: 8;
+		right: 20px;
+		bottom: max(18px, env(safe-area-inset-bottom));
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		pointer-events: none;
+	}
+	.focus-chip,
+	.map-help {
+		min-height: 34px;
+		border: 1px solid rgba(255, 255, 255, .09);
+		border-radius: 11px;
+		background: rgba(7, 17, 28, .75);
+		box-shadow: 0 10px 24px rgba(0, 0, 0, .2);
+		color: #91a9a8;
+		font-size: 9px;
+		-webkit-backdrop-filter: blur(12px);
+		backdrop-filter: blur(12px);
+	}
+	.focus-chip {
+		display: none;
+		align-items: center;
+		gap: 7px;
+		padding: 0 11px;
+	}
+	.focus-chip.is-visible { display: flex; }
+	.focus-chip::before { color: var(--amber); content: "⌖"; font-size: 13px; }
+	.focus-chip strong { color: #e7f1ef; font-weight: 700; }
+	.map-help { display: flex; align-items: center; gap: 7px; padding: 0 11px; }
+	.map-help kbd {
+		padding: 2px 5px;
+		border: 1px solid rgba(255, 255, 255, .12);
+		border-radius: 5px;
+		background: rgba(255, 255, 255, .06);
+		box-shadow: none;
+		color: var(--teal);
+		font: inherit;
+	}
+	.map-loading {
+		position: absolute;
+		z-index: 12;
+		inset: 0;
+		display: grid;
+		place-content: center;
+		justify-items: center;
+		gap: 12px;
+		background:
+			radial-gradient(circle at center, rgba(21, 58, 66, .34), transparent 36%),
+			var(--navy-950);
+		color: #8ca6a5;
+		font-size: 9px;
+		font-weight: 750;
+		letter-spacing: .16em;
+		text-transform: uppercase;
+		transition: opacity .4s ease, visibility .4s ease;
+	}
+	.map-loading.is-hidden { visibility: hidden; opacity: 0; }
+	.map-loading__mark {
+		display: grid;
+		width: 42px;
+		height: 42px;
+		place-items: center;
+		border: 1px solid rgba(99, 223, 189, .3);
+		border-radius: 14px;
+		background: var(--teal-soft);
+		box-shadow: 0 0 30px rgba(99, 223, 189, .08);
+		color: var(--teal);
+		font-size: 18px;
+		animation: loading-pulse 1.7s ease-in-out infinite;
+	}
+	.sidebar-scrim {
+		position: fixed;
+		z-index: 24;
+		inset: 0;
+		display: none;
+		border: 0;
+		background: rgba(2, 7, 12, .58);
+		-webkit-backdrop-filter: blur(3px);
+		backdrop-filter: blur(3px);
+	}
+	@keyframes status-ring {
+		0% { opacity: .75; transform: scale(.72); }
+		70%, 100% { opacity: 0; transform: scale(1.35); }
+	}
+	@keyframes loading-pulse {
+		0%, 100% { transform: translateY(0); box-shadow: 0 0 24px rgba(99, 223, 189, .08); }
+		50% { transform: translateY(-3px); box-shadow: 0 0 34px rgba(99, 223, 189, .16); }
+	}
+	@media (max-width: 1040px) {
+		:root { --sidebar-width: 292px; }
+		.resident-sidebar { padding-right: 14px; padding-left: 14px; }
+		.map-brand small { display: none; }
+		#game-time-content { max-width: 150px; }
+	}
+	@media (max-width: 1000px) {
+		.simulator-page.sidebar-open #token-monitor { visibility: hidden; opacity: 0; }
+		.resident-sidebar {
+			position: fixed;
+			inset: 0 auto 0 0;
+			z-index: 30;
+			width: min(88vw, 326px);
+			transform: translateX(calc(-100% - 18px));
+			transition: transform .25s cubic-bezier(.22, .8, .3, 1);
+		}
+		.resident-sidebar.is-open { transform: translateX(0); }
+		.sidebar-close,
+		.sidebar-menu { display: inline-flex; }
+		.sidebar-close { margin-top: 3px; }
+		.sidebar-menu { pointer-events: auto; }
+		.sidebar-scrim.is-visible { display: block; }
+		.map-toolbar { left: max(12px, env(safe-area-inset-left)); }
+		.map-brand { display: none; }
+		.map-footer { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
+	}
+	@media (max-width: 640px) {
+		.map-toolbar { top: max(10px, env(safe-area-inset-top)); }
+		.game-clock { min-height: 38px; max-width: calc(100vw - 260px); padding: 0 10px; }
+		.game-clock > span:first-child { display: none; }
+		#game-time-content { max-width: 105px; }
+		.replay-controls { min-height: 38px; }
+		.replay-control { width: 29px; height: 29px; }
+		.map-help { display: none; }
+		.focus-chip { max-width: calc(100vw - 24px); }
+		.focus-chip strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	}
+	@media (max-width: 380px) {
+		.game-clock { display: none; }
+	}
+	@media (max-height: 650px) and (min-width: 1001px) {
+		.resident-sidebar { padding-top: 16px; padding-bottom: 11px; }
+		.sidebar-header { padding-bottom: 12px; }
+		.sidebar-title { font-size: 21px; }
+		.resident-focus { padding-top: 7px; padding-bottom: 5px; }
+		.resident-avatar { width: 37px; height: 37px; }
+		.resident-focus { grid-template-columns: 37px minmax(0, 1fr) 7px; }
+		.resident-meta { padding-left: 58px; padding-bottom: 7px; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.resident-card,
+		.resident-sidebar,
+		.map-loading { transition: none; }
+		.resident-status::after,
+		.map-loading__mark { animation: none; }
+	}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<br>
-<br>
-<div>
-	<div id="game-container" style="text-align: center"></div>
-
-	<div style="width:55%; margin: 0 auto; margin-top:4.5em">
-		<h3 style="margin-bottom:-0.5em; font-size:1.5em">Current Time:</h3>
-		<div class="row">
-			<div class="col-md-8" id="game-time" style="">
-				<h2><span id="game-time-content"></span></h2> 
+<main class="simulator-shell">
+	<aside class="resident-sidebar" id="resident-sidebar" aria-label="Smallville residents">
+		<header class="sidebar-header">
+			<div>
+				<div class="sidebar-kicker">The Ville · live</div>
+				<h1 class="sidebar-title">Residents</h1>
+				<span class="resident-count" aria-label="{{ persona_names|length }} residents">{{ persona_names|length }}</span>
 			</div>
-			<div class="col-md-4">
-				
-				<h2 style="text-align: right; {% if mode == 'simulate' %} display: none {% endif %}">
-					<button id="play_button" type="button" class="btn btn-default">
-				    <strong style=" font-size:1.2em"><i class="glyphicon glyphicon-play"></i> &nbsp;Play</strong>
-				  </button>
-				  
-				  <button id="pause_button" type="button" class="btn btn-default">
-				    <strong style=" font-size:1.2em"><i class="glyphicon glyphicon-pause"></i> &nbsp;Pause</strong>
-				  </button>
+			<button class="sidebar-close" id="sidebar-close" type="button" aria-label="Close residents panel">×</button>
+		</header>
 
-				</h2>
-				
-			</div>
+		<div class="resident-list" id="resident-list">
+			{% for p_name, p_name_os in persona_names %}
+			<article class="resident-card" data-persona="{{ p_name }}" id="resident-card__{{ p_name_os }}">
+				<button class="resident-focus" type="button" aria-label="Focus map on {{ p_name }}" aria-pressed="false">
+					<span class="resident-avatar">
+						<img src="{% static 'assets/characters/profile/' %}{{ p_name_os }}.png" alt="" width="32" height="32">
+					</span>
+					<span class="resident-copy">
+						<strong class="resident-name">{{ p_name }}</strong>
+						<span class="resident-action" id="current_action__{{ p_name_os }}">Awaiting next action…</span>
+					</span>
+					<span class="resident-status" title="Live" aria-label="Live"></span>
+				</button>
+				<div class="resident-meta">
+					<span class="resident-location" id="target_address__{{ p_name_os }}">Locating…</span>
+					<a class="resident-details" href="{% url 'replay_persona_state' sim_code step p_name_os %}">Details ↗</a>
+				</div>
+				<div class="resident-conversation" id="chat__{{ p_name_os }}" aria-hidden="true"></div>
+			</article>
+			{% endfor %}
 		</div>
 
-		<br>
-		<hr style="border-color:#999999">
-		<br>
+		<footer class="sidebar-footer">
+			<span>Map controls</span>
+			<strong>Drag · click · arrows</strong>
+		</footer>
+	</aside>
 
-		{% for p_name, p_name_os in persona_names %}
-			<div class="media" style="background-color:#EEEEEE; padding:1em; padding-left:3.5em; padding-right:2em; border-radius:10px">
-			  <div class="media-left media-middle">
-			    <a href="#">
-			      <img class="media-object" src="{% static 'img/atlas.png' %}" style="width:5em">
-			    </a>
-			  </div>
-			  <div class="media-body" style='padding-left:3em; padding-top:0.5em; padding-bottom:1em'>
-			  	<div class="row">
-			    	<h2 class="col-md-8" id="name__{{ p_name_os }}" style="margin-bottom:0.8em; font-size:1.85em; ">
-			    		{{p_name}} &nbsp;&nbsp;
-			    		<a href="{% url 'replay_persona_state' sim_code step p_name_os %}" style="font-size:0.6em">State Details</a>
-			    	</h2>
-			    </div>
-			    <div style="">
-					  <p style="font-size:1.2em"><strong>Current Action:</strong> <br><span id="current_action__{{ p_name_os }}"></span></p>
-					  <p style="font-size:1.2em"><strong>Location:</strong> <br><span id="target_address__{{ p_name_os }}"></span></p>
-					  <p style="font-size:1.2em"><strong>Current Conversation:</strong> <br><span id="chat__{{ p_name_os }}"></span></p>
-					</div>
-			  </div>
-			</div>	
-			<br>
-		{% endfor %}
+	<button class="sidebar-scrim" id="sidebar-scrim" type="button" aria-label="Close residents panel"></button>
 
+	<section class="map-stage" id="map-stage" aria-label="Live Smallville map">
+		<div class="map-toolbar">
+			<button class="sidebar-menu" id="sidebar-open" type="button" aria-label="Open residents panel" aria-controls="resident-sidebar" aria-expanded="false">☰</button>
+			<div class="map-brand">
+				<span class="map-brand__mark">✦</span>
+				<span><strong>Smallville</strong><small>Autonomous town</small></span>
+			</div>
+			<div class="game-clock"><span>World time</span><strong id="game-time-content">Synchronising…</strong></div>
+			{% if mode != 'simulate' %}
+			<div class="replay-controls" aria-label="Replay controls">
+				<button class="replay-control" id="play_button" type="button" aria-label="Play replay">▶</button>
+				<button class="replay-control" id="pause_button" type="button" aria-label="Pause replay">Ⅱ</button>
+			</div>
+			{% endif %}
+		</div>
 
+		<div id="game-container"></div>
+		<div class="map-loading" id="map-loading" role="status">
+			<span class="map-loading__mark">✦</span>
+			<span>Drawing The Ville</span>
+		</div>
 
+		<div class="map-footer">
+			<div class="focus-chip" id="focus-chip"><span>Focused</span><strong id="focused-resident"></strong></div>
+			<div class="map-help"><span>Drag to pan</span><kbd>↑ ↓ ← →</kbd><span>Click to focus</span></div>
+		</div>
+	</section>
+</main>
 
-		
-
-	</div>
+<div id="step" hidden>{{ step }}</div>
+<div id="sim_code" hidden>{{ sim_code }}</div>
+<div id="persona_init_pos" hidden>
+	{% for i in persona_init_pos %}<span data-name="{{ i.0 }}" data-x="{{ i.1 }}" data-y="{{ i.2 }}"></span>{% endfor %}
 </div>
 
-  
-
-
-
-<div style="padding-bottom:15em"> </div>
-
-
-<!-- partial -->
-<script src='https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js'></script>
+<!-- Phaser is the existing simulator renderer; no additional client libraries are introduced. -->
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 {% include 'home/main_script.html' %}
 {% endblock content %}
-
