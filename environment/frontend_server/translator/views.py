@@ -7,6 +7,8 @@ import string
 import random
 import json
 import secrets
+import fcntl
+import uuid
 from os import listdir
 import os
 from django.conf import settings
@@ -14,6 +16,7 @@ from django.conf import settings
 import datetime
 from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from global_methods import *
 
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -103,10 +106,95 @@ def get_chat_log(request):
   return JsonResponse(payload)
 
 
+def _safe_sim_code(request, default="public_sim"):
+  sim_code = (request.GET.get("sim_code") or request.POST.get("sim_code")
+              or default)
+  if (not sim_code or sim_code in (".", "..")
+      or os.path.basename(sim_code) != sim_code):
+    return None
+  return sim_code
+
+
+def _read_json(path, default):
+  try:
+    with open(path) as infile:
+      return json.load(infile)
+  except Exception:
+    return default
+
+
+def _atomic_json_dump(payload, path):
+  tmp = path + ".tmp"
+  with open(tmp, "w") as outfile:
+    json.dump(payload, outfile)
+  os.replace(tmp, path)
+
+
+def get_economy_feed(request):
+  """Return the capped public tail of the economy activity feed."""
+  payload = {"entries": []}
+  sim_code = _safe_sim_code(request)
+  if not sim_code:
+    return JsonResponse(payload)
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  feed_file = os.path.join(frontend_root, "storage", sim_code, "economy",
+                           "economy_feed.json")
+  entries = _read_json(feed_file, [])
+  if isinstance(entries, list):
+    payload["entries"] = entries[-200:]
+  return JsonResponse(payload)
+
+
+def get_economy(request):
+  """Return a read-only public projection of the town economy."""
+  payload = {
+    "ok": False, "updated_at": None, "balances": {}, "statuses": {},
+    "residents": {}, "shops": {}, "bank": {}, "treasury": {}, "feed": [],
+  }
+  sim_code = _safe_sim_code(request)
+  if not sim_code:
+    return JsonResponse(payload)
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  economy_root = os.path.join(frontend_root, "storage", sim_code, "economy")
+  state = _read_json(os.path.join(economy_root, "economy_state.json"), {})
+  feed = _read_json(os.path.join(economy_root, "economy_feed.json"), [])
+  if not isinstance(state, dict):
+    state = {}
+  residents = state.get("residents")
+  if isinstance(residents, dict):
+    for name, resident in residents.items():
+      if not isinstance(resident, dict):
+        continue
+      public = {
+        "balance": resident.get("balance", 0),
+        "status": resident.get("status", "stable"),
+        "debt": resident.get("debt", 0),
+        "total_earned": resident.get("total_earned", 0),
+        "total_spent": resident.get("total_spent", 0),
+        "hunger": resident.get("hunger", 75),
+        "energy": resident.get("energy", 75),
+        "social": resident.get("social", 75),
+        "education_score": resident.get("education_score", 0),
+        "jobs": resident.get("jobs", []),
+      }
+      payload["residents"][name] = public
+      payload["balances"][name] = public["balance"]
+      payload["statuses"][name] = public["status"]
+  for key in ("shops", "bank", "treasury"):
+    value = state.get(key)
+    if isinstance(value, dict):
+      payload[key] = value
+  if isinstance(feed, list):
+    payload["feed"] = feed[-200:]
+  payload["updated_at"] = state.get("updated_at")
+  payload["ok"] = bool(state)
+  return JsonResponse(payload)
+
+
 def _is_admin_request(request):
   """Admin-only gate for private endpoints.
 
-  Requires the X-Admin-Token header (or ?admin_token= query param) to
+  Requires the X-Admin-Token header to
   match SMALLVILLE_ADMIN_TOKEN (env var or /home/ben/.smallville_admin_token).
   The token is read by the coordinator/Ben only — never exposed to the
   public site, so no UI code may call these endpoints.
@@ -114,9 +202,70 @@ def _is_admin_request(request):
   token = settings.SMALLVILLE_ADMIN_TOKEN
   if not token:
     return False
-  given = (request.headers.get("X-Admin-Token", "")
-           or request.GET.get("admin_token", ""))
+  given = request.headers.get("X-Admin-Token", "")
   return secrets.compare_digest(given, token)
+
+
+ADMIN_COMMANDS = {
+  "give_money", "bankrupt", "make_rich", "set_status", "inject_event",
+  "broadcast", "restock", "adjust_price", "add_good", "transfer",
+  "set_pacing",
+}
+
+
+@csrf_exempt
+def admin_command(request):
+  """Atomically enqueue a private command for the Reverie step loop."""
+  if not _is_admin_request(request):
+    return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
+  if request.method != "POST":
+    return JsonResponse({"ok": False, "error": "POST only"}, status=405)
+  try:
+    data = json.loads(request.body or "{}")
+  except (TypeError, ValueError):
+    return JsonResponse({"ok": False, "error": "invalid JSON"}, status=400)
+  if not isinstance(data, dict):
+    return JsonResponse({"ok": False, "error": "JSON object required"}, status=400)
+  cmd = data.get("cmd")
+  args = data.get("args", {})
+  if cmd not in ADMIN_COMMANDS:
+    return JsonResponse({"ok": False, "error": "unknown command"}, status=400)
+  if not isinstance(args, dict):
+    return JsonResponse({"ok": False, "error": "args must be an object"}, status=400)
+
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  temp_storage = os.path.join(frontend_root, "temp_storage")
+  os.makedirs(temp_storage, exist_ok=True)
+  queue_file = os.path.join(temp_storage, "admin_commands.json")
+  lock_file = os.path.join(temp_storage, "admin_commands.lock")
+  command_id = uuid.uuid4().hex
+  queued = {
+    "id": command_id,
+    "cmd": cmd,
+    "args": args,
+    "status": "pending",
+    "queued_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+  }
+  try:
+    with open(lock_file, "a+") as lock:
+      fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+      try:
+        queue = _read_json(queue_file, [])
+        if not isinstance(queue, list):
+          queue = []
+        queue.append(queued)
+        pending = [item for item in queue
+                   if isinstance(item, dict)
+                   and item.get("status") not in ("done", "failed")]
+        completed = [item for item in queue
+                     if isinstance(item, dict)
+                     and item.get("status") in ("done", "failed")]
+        _atomic_json_dump(pending + completed[-500:], queue_file)
+      finally:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+  except Exception:
+    return JsonResponse({"ok": False, "error": "queue unavailable"}, status=503)
+  return JsonResponse({"ok": True, "id": command_id})
 
 
 def set_pacing(request):
@@ -140,8 +289,10 @@ def set_pacing(request):
     return JsonResponse({"ok": False, "error": "pacing out of range 1..10000"}, status=400)
   frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
   pacing_file = os.path.join(frontend_root, "temp_storage", "pacing.txt")
-  with open(pacing_file, "w") as outfile:
+  pacing_tmp = pacing_file + ".tmp"
+  with open(pacing_tmp, "w") as outfile:
     outfile.write(str(pacing))
+  os.replace(pacing_tmp, pacing_file)
   return JsonResponse({"ok": True, "pacing": pacing})
 
 
@@ -331,7 +482,9 @@ def replay(request, sim_code, step):
 def persona_state_json(request):
   """Lightweight persona state for the resident modal: traits, objective,
   daily plan, lifestyle, age + live action/location. JSON only."""
-  sim_code = request.GET.get("sim_code", "public_sim")
+  sim_code = _safe_sim_code(request)
+  if not sim_code:
+    return JsonResponse({"error": "bad simulation"}, status=400)
   persona_name = request.GET.get("persona_name", "")
   if not persona_name:
     return JsonResponse({"error": "persona_name required"}, status=400)
@@ -340,7 +493,9 @@ def persona_state_json(request):
   _safe = os.path.normpath(_name)
   if _safe != _name or "/" in _name or ".." in _name:
     return JsonResponse({"error": "bad name"}, status=400)
-  memory = f"storage/{sim_code}/personas/{_name}/bootstrap_memory"
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  memory = os.path.join(frontend_root, "storage", sim_code, "personas", _name,
+                        "bootstrap_memory")
   if not os.path.exists(memory):
     return JsonResponse({"error": "no state"}, status=404)
   try:
@@ -352,12 +507,26 @@ def persona_state_json(request):
     "name": scratch.get("name", _name),
     "age": scratch.get("age"),
     "living_area": scratch.get("living_area"),
+    "curr_sector": scratch.get("curr_sector", ""),
+    "curr_arena": scratch.get("curr_arena", ""),
     "innate": scratch.get("innate", ""),
     "learned": scratch.get("learned", ""),
     "currently": scratch.get("currently", ""),
     "daily_plan_req": scratch.get("daily_plan_req", ""),
     "lifestyle": scratch.get("lifestyle", ""),
-    "curr_action": scratch.get("curr_action", ""),
+    "curr_action": (scratch.get("curr_action")
+                    or scratch.get("act_description", "")),
+    "economy": {
+      "balance": scratch.get("economy_balance", 0),
+      "total_earned": scratch.get("economy_total_earned", 0),
+      "total_spent": scratch.get("economy_total_spent", 0),
+      "debt": scratch.get("economy_debt", 0),
+      "status": scratch.get("economy_status", "stable"),
+      "hunger": scratch.get("health_hunger", 75),
+      "energy": scratch.get("health_energy", 75),
+      "social": scratch.get("health_social", 75),
+      "education_score": scratch.get("education_score", 0),
+    },
   })
 
 
@@ -489,10 +658,6 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
-
-
-
 
 
 
