@@ -522,15 +522,30 @@ def run_gpt_prompt_task_decomp(persona,
     ftime_sum += fi_duration
   
   # print ("for debugging... line 365", fin_output)
-  fin_output[-1][1] += (duration - ftime_sum)
+  if fin_output:
+    fin_output[-1][1] += (duration - ftime_sum)
+  else:
+    # Modern-model format drift: no subtask fit inside the duration.
+    # Fall back to the whole task for the full duration rather than
+    # crashing the simulation.
+    fin_output = [[task, duration]]
   output = fin_output 
 
 
 
   task_decomp = output
   ret = []
+  import re
   for decomp_task, duration in task_decomp: 
-    ret += [[f"{task} ({decomp_task})", duration]]
+    # Strip modern-model drift from subtask labels: markdown bold/backticks
+    # and leading time-range prefixes like "**09:00 AM - 12:00 PM (180m)**".
+    clean = re.sub(
+      r"^[\*#`\s]*(?:\d{1,2}:\d{2}\s*(?:AM|PM)?\s*-\s*)?\d{1,2}:\d{2}"
+      r"\s*(?:AM|PM)?[\s\*]*\([\d\s]*minutes?[^)]*\)[\s\*]*",
+      "", decomp_task).strip()
+    if not clean:
+      clean = decomp_task.strip().strip("*`#").strip()
+    ret += [[f"{task} ({clean})", duration]]
   output = ret
 
 
