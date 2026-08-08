@@ -30,9 +30,14 @@ hard guard on LLM spend.
 - **Camera follow**: selected resident tracked live (sprite kept at 40% viewport
   height, clear of the chat panel; user pan/keys suspend follow for 2.5s).
 - **World speed API**: POST `/set_pacing/` `{"pacing": N}` (1..10000) — live flip,
-  no restart. UI selector shipping via agent wave (ui-wave-2).
-- **UI wave in flight**: `ui-wave-1` (public landing page) + `ui-wave-2` (speed
-  control, modal polish, mobile audit) — sol xhigh agents; merge after review.
+  no restart. **ADMIN-ONLY**: requires `X-Admin-Token` header matching
+  `/home/ben/.smallville_admin_token` (chmod 600) or the `SMALLVILLE_ADMIN_TOKEN`
+  env var — public visitors get 403. No UI calls it; operators manage pacing with
+  `echo N > .../pacing.txt` or curl with the token header.
+- **UI wave in flight**: `ui-wave-1` (public landing page) + `ui-wave-2` (resident
+  modal polish, chat panel mobile collapse, states, mobile audit) — sol xhigh
+  agents; merge after review. World-speed UI deliberately NOT included (private
+  endpoint, operator-managed).
 
 ### Done — runtime & architecture
 - **Move off VPS complete**: town runs on the local VM only; VPS scrubbed (units, repo,

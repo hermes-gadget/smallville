@@ -22,6 +22,26 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'c7l%1%b=2sh$o9zqvd4i*h8*__^@-5sm-y)m(1ib2t92)43@62'
 
+
+def _read_smallville_admin_token():
+  """Admin token for private endpoints (e.g. /set_pacing/).
+
+  Never commit a real token: read it from the SMALLVILLE_ADMIN_TOKEN env
+  var, falling back to the root-owned file /home/ben/.smallville_admin_token
+  (chmod 600). Empty string = endpoint disabled.
+  """
+  tok = os.environ.get("SMALLVILLE_ADMIN_TOKEN", "")
+  if not tok:
+    try:
+      with open("/home/ben/.smallville_admin_token") as f:
+        tok = f.read().strip()
+    except Exception:
+      tok = ""
+  return tok
+
+
+SMALLVILLE_ADMIN_TOKEN = _read_smallville_admin_token()
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

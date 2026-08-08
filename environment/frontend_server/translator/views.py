@@ -6,8 +6,10 @@ import os
 import string
 import random
 import json
+import secrets
 from os import listdir
 import os
+from django.conf import settings
 
 import datetime
 from django.shortcuts import render, redirect, HttpResponseRedirect
@@ -101,12 +103,32 @@ def get_chat_log(request):
   return JsonResponse(payload)
 
 
-def set_pacing(request):
-  """Set the world-clock pacing (game seconds per real second).
+def _is_admin_request(request):
+  """Admin-only gate for private endpoints.
 
-  Writes temp_storage/pacing.txt which the reverie step loop re-reads
-  each step, so the change takes effect live without a restart.
+  Requires the X-Admin-Token header (or ?admin_token= query param) to
+  match SMALLVILLE_ADMIN_TOKEN (env var or /home/ben/.smallville_admin_token).
+  The token is read by the coordinator/Ben only — never exposed to the
+  public site, so no UI code may call these endpoints.
   """
+  token = settings.SMALLVILLE_ADMIN_TOKEN
+  if not token:
+    return False
+  given = (request.headers.get("X-Admin-Token", "")
+           or request.GET.get("admin_token", ""))
+  return secrets.compare_digest(given, token)
+
+
+def set_pacing(request):
+  """Set the world-clock pacing (game seconds per real second). PRIVATE.
+
+  Admin-only (see _is_admin_request) — the public site must never be able
+  to flip world speed. Writes temp_storage/pacing.txt which the reverie
+  step loop re-reads each step, so the change takes effect live without
+  a restart.
+  """
+  if not _is_admin_request(request):
+    return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
   if request.method != "POST":
     return JsonResponse({"ok": False, "error": "POST only"}, status=405)
   try:
