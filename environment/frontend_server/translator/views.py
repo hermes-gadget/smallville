@@ -186,6 +186,9 @@ def get_economy(request):
     payload["feed"] = feed[-200:]
   payload["updated_at"] = state.get("updated_at")
   payload["ok"] = bool(state)
+  return JsonResponse(payload)
+
+
 def get_sim_store_stats(request):
   """Return cheap, public health statistics for the simulation store."""
   frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
