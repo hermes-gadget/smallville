@@ -5,7 +5,11 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/home/hermes-agent/smallville/reverie/backend_server
-ExecStart=/bin/bash -c 'cd /home/hermes-agent/smallville/reverie/backend_server && if [ -d "../../environment/frontend_server/storage/public_sim" ]; then printf "public_sim\npublic_sim\n"; else printf "base_the_ville_isabella_maria_klaus\npublic_sim\n"; fi | /home/hermes-agent/smallville/.venv/bin/python reverie.py'
+# Headless mode: reverie.py <fork_sim> <sim_name> <run_steps>. Resumes the
+# saved public_sim when it exists (no daily-plan regeneration); otherwise
+# forks the base 3-agent town. After the run finishes the service exits and
+# systemd restarts it, continuing from the saved state.
+ExecStart=/bin/bash -c 'cd /home/hermes-agent/smallville/reverie/backend_server && if [ -d "../../environment/frontend_server/storage/public_sim" ]; then exec /home/hermes-agent/smallville/.venv/bin/python reverie.py public_sim public_sim 100000; else exec /home/hermes-agent/smallville/.venv/bin/python reverie.py base_the_ville_isabella_maria_klaus public_sim 100000; fi'
 Restart=always
 RestartSec=10
 

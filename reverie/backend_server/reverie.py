@@ -420,7 +420,7 @@ class ReverieServer:
       time.sleep(self.server_sleep)
 
 
-  def open_server(self): 
+  def open_server(self, run_steps=None): 
     """
     Open up an interactive terminal prompt that lets you run the simulation 
     step by step and probe agent state. 
@@ -437,6 +437,15 @@ class ReverieServer:
 
     # <sim_folder> points to the current simulation folder.
     sim_folder = f"{fs_storage}/{self.sim_code}"
+
+    # When a run length is provided on the command line (headless/unit
+    # mode), execute it directly and exit -- systemd restarts the service
+    # to continue. Interactive mode is unchanged when run_steps is None.
+    if run_steps is not None:
+      print (f"Auto-running {run_steps} steps.")
+      self.start_server(run_steps)
+      print ("Run finished.")
+      return
 
     while True: 
       sim_command = input("Enter option: ")
@@ -607,17 +616,19 @@ class ReverieServer:
 
 
 if __name__ == '__main__':
-  # rs = ReverieServer("base_the_ville_isabella_maria_klaus", 
-  #                    "July1_the_ville_isabella_maria_klaus-step-3-1")
-  # rs = ReverieServer("July1_the_ville_isabella_maria_klaus-step-3-20", 
-  #                    "July1_the_ville_isabella_maria_klaus-step-3-21")
-  # rs.open_server()
-
-  origin = input("Enter the name of the forked simulation: ").strip()
-  target = input("Enter the name of the new simulation: ").strip()
+  # Headless mode: python reverie.py <fork_sim> <sim_name> [run_steps]
+  # lets the unit/systemd drive the simulation without piped stdin.
+  if len(sys.argv) >= 3:
+    origin = sys.argv[1]
+    target = sys.argv[2]
+    run_steps = int(sys.argv[3]) if len(sys.argv) > 3 else None
+  else:
+    origin = input("Enter the name of the forked simulation: ").strip()
+    target = input("Enter the name of the new simulation: ").strip()
+    run_steps = None
 
   rs = ReverieServer(origin, target)
-  rs.open_server()
+  rs.open_server(run_steps)
 
 
 
