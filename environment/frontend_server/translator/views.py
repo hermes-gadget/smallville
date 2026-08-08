@@ -12,16 +12,16 @@ import os
 from django.conf import settings
 
 import datetime
-from django.shortcuts import render, redirect, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
 from global_methods import *
 
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from .models import *
 
-def landing(request): 
-  # The public site lands directly on the live map page.
-  return redirect("home")
+def landing(request):
+  """Render the public introduction to the live Smallville simulation."""
+  return render(request, "landing/landing.html", {})
 
 
 def get_token_usage(request):
@@ -489,8 +489,6 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
-
 
 
 

@@ -1,10 +1,1308 @@
-{% extends "base.html" %}
-{% load staticfiles %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1117">
+  <meta name="description" content="Watch 25 AI residents remember, plan, talk, and live out their days in Smallville.">
+  <title>Smallville — A living town of generative agents</title>
+  <style>
+    :root {
+      --ink: #eef8f6;
+      --muted: #91aaa8;
+      --quiet: #667d7d;
+      --teal: #81dcc7;
+      --teal-bright: #a6eddd;
+      --amber: #f2bd62;
+      --night: #0b1117;
+      --night-soft: #101922;
+      --panel: rgba(17, 28, 37, .82);
+      --line: rgba(129, 220, 199, .18);
+      --line-soft: rgba(255, 255, 255, .075);
+      --shadow: 0 24px 70px rgba(0, 0, 0, .35);
+      --radius: 22px;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
 
-{% block content %}
-<div style="padding:2em">
-<img src="{% static 'img/atlas.png' %}">
-Your environment server is up and running! 
-</div>
-{% endblock content %}
+    * {
+      box-sizing: border-box;
+    }
 
+    html {
+      min-width: 320px;
+      scroll-behavior: smooth;
+      background: var(--night);
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 80% 8%, rgba(129, 220, 199, .085), transparent 31rem),
+        radial-gradient(circle at 12% 34%, rgba(242, 189, 98, .055), transparent 27rem),
+        var(--night);
+      font-family: var(--sans);
+      line-height: 1.6;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:focus-visible {
+      outline: 3px solid rgba(242, 189, 98, .72);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 100;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #09110f;
+      background: var(--teal-bright);
+      font-weight: 800;
+      transform: translateY(-160%);
+      transition: transform .18s ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .site-header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .site-header__inner {
+      display: flex;
+      min-height: 82px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 17px;
+      font-weight: 790;
+      letter-spacing: -.01em;
+    }
+
+    .wordmark__mark {
+      display: grid;
+      width: 35px;
+      height: 35px;
+      place-items: center;
+      border: 1px solid rgba(129, 220, 199, .38);
+      border-radius: 11px;
+      color: var(--teal-bright);
+      background: linear-gradient(145deg, rgba(129, 220, 199, .15), rgba(129, 220, 199, .035));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+      font-size: 18px;
+    }
+
+    .wordmark__name span {
+      color: var(--teal);
+    }
+
+    .header-link {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #d7e8e5;
+      background: rgba(129, 220, 199, .045);
+      font-size: 13px;
+      font-weight: 740;
+      letter-spacing: .02em;
+      transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    .header-link:hover {
+      border-color: rgba(129, 220, 199, .45);
+      background: rgba(129, 220, 199, .09);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      display: grid;
+      min-height: 690px;
+      align-items: center;
+      grid-template-columns: minmax(0, 1.03fr) minmax(390px, .97fr);
+      gap: clamp(48px, 7vw, 92px);
+      padding-block: 82px 68px;
+    }
+
+    .eyebrow,
+    .section-kicker,
+    .metric__label,
+    .feature-card__label,
+    .step__number {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 720;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 24px;
+      color: var(--teal-bright);
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 5px rgba(129, 220, 199, .08), 0 0 18px rgba(129, 220, 199, .34);
+      content: "";
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 720px;
+      margin-bottom: 24px;
+      font-size: clamp(48px, 6vw, 76px);
+      font-weight: 775;
+      letter-spacing: -.052em;
+      line-height: .99;
+    }
+
+    h1 em {
+      color: var(--amber);
+      font-style: normal;
+    }
+
+    .hero__pitch {
+      max-width: 630px;
+      margin-bottom: 34px;
+      color: #a9bfbc;
+      font-size: clamp(17px, 1.8vw, 20px);
+      line-height: 1.55;
+    }
+
+    .hero__actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 13px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 52px;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 21px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      font-size: 14px;
+      font-weight: 790;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .button--primary {
+      color: #07110f;
+      background: var(--teal);
+      box-shadow: 0 12px 34px rgba(129, 220, 199, .16);
+    }
+
+    .button--primary:hover {
+      background: var(--teal-bright);
+      box-shadow: 0 15px 42px rgba(129, 220, 199, .24);
+      transform: translateY(-2px);
+    }
+
+    .button--secondary {
+      border-color: var(--line-soft);
+      color: #c2d3d1;
+      background: rgba(255, 255, 255, .025);
+    }
+
+    .button--secondary:hover {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, .05);
+      transform: translateY(-2px);
+    }
+
+    .hero__note {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 23px 0 0;
+      color: var(--quiet);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+
+    .hero__note span {
+      color: var(--amber);
+    }
+
+    .town-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: linear-gradient(155deg, rgba(25, 41, 50, .94), rgba(10, 17, 24, .96));
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .05);
+      transform: rotate(1deg);
+    }
+
+    .town-card::before {
+      position: absolute;
+      inset: -16px 26px auto;
+      z-index: -1;
+      height: 80%;
+      border: 1px solid rgba(242, 189, 98, .08);
+      border-radius: inherit;
+      background: rgba(242, 189, 98, .02);
+      content: "";
+      transform: rotate(-3deg);
+    }
+
+    .town-card__bar {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line-soft);
+      color: #78908f;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .town-card__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--teal);
+    }
+
+    .town-card__status::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+      content: "";
+    }
+
+    .town {
+      position: relative;
+      min-height: 430px;
+      overflow: hidden;
+      border-radius: 0 0 25px 25px;
+      background-color: #101c22;
+      background-image:
+        linear-gradient(rgba(129, 220, 199, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(129, 220, 199, .04) 1px, transparent 1px),
+        radial-gradient(circle at 70% 16%, rgba(242, 189, 98, .09), transparent 32%);
+      background-size: 26px 26px, 26px 26px, auto;
+    }
+
+    .road {
+      position: absolute;
+      background: #19252b;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .025);
+    }
+
+    .road--horizontal {
+      top: 46%;
+      right: 0;
+      left: 0;
+      height: 58px;
+    }
+
+    .road--vertical {
+      top: 0;
+      bottom: 0;
+      left: 56%;
+      width: 54px;
+    }
+
+    .road::after {
+      position: absolute;
+      content: "";
+    }
+
+    .road--horizontal::after {
+      top: 50%;
+      right: 0;
+      left: 0;
+      border-top: 1px dashed rgba(242, 189, 98, .2);
+    }
+
+    .road--vertical::after {
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      border-left: 1px dashed rgba(242, 189, 98, .2);
+    }
+
+    .building {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(129, 220, 199, .16);
+      border-radius: 9px;
+      background: linear-gradient(145deg, #1b3032, #142328);
+      box-shadow: 5px 7px 0 rgba(0, 0, 0, .11), inset 0 1px 0 rgba(255, 255, 255, .04);
+      color: rgba(242, 189, 98, .84);
+      font-size: 24px;
+    }
+
+    .building::after {
+      position: absolute;
+      right: 8px;
+      bottom: 7px;
+      width: 7px;
+      height: 10px;
+      border-radius: 2px 2px 0 0;
+      background: rgba(242, 189, 98, .28);
+      content: "";
+    }
+
+    .building--one { top: 38px; left: 9%; width: 29%; height: 106px; }
+    .building--two { top: 33px; right: 8%; width: 23%; height: 118px; }
+    .building--three { bottom: 34px; left: 8%; width: 28%; height: 111px; }
+    .building--four { right: 8%; bottom: 38px; width: 24%; height: 101px; }
+
+    .park {
+      position: absolute;
+      right: 35%;
+      bottom: 28px;
+      display: grid;
+      width: 72px;
+      height: 96px;
+      place-items: center;
+      border: 1px solid rgba(129, 220, 199, .15);
+      border-radius: 45%;
+      color: var(--teal);
+      background: rgba(44, 100, 76, .16);
+      font-size: 28px;
+    }
+
+    .resident {
+      position: absolute;
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 50%;
+      background: #26373b;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, .28);
+      font-size: 15px;
+      animation: resident-drift 4s ease-in-out infinite;
+    }
+
+    .resident--one { top: 42%; left: 24%; animation-delay: -.7s; }
+    .resident--two { top: 34%; left: 59%; animation-delay: -1.8s; }
+    .resident--three { right: 18%; bottom: 31%; animation-delay: -2.8s; }
+    .resident--four { bottom: 24%; left: 36%; animation-delay: -3.4s; }
+    .resident--five { top: 19%; left: 44%; animation-delay: -1.1s; }
+
+    .chat-bubble {
+      position: absolute;
+      top: 32%;
+      left: 12%;
+      max-width: 180px;
+      padding: 9px 12px;
+      border: 1px solid rgba(242, 189, 98, .22);
+      border-radius: 12px 12px 12px 3px;
+      color: #d7c79f;
+      background: rgba(20, 27, 31, .92);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .25);
+      font-size: 10px;
+      line-height: 1.45;
+      transform: rotate(-1deg);
+    }
+
+    .map-label {
+      position: absolute;
+      right: 17px;
+      bottom: 14px;
+      color: rgba(145, 170, 168, .44);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    @keyframes resident-drift {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(5px, -4px); }
+    }
+
+    .live-panel {
+      position: relative;
+      margin-bottom: 116px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(18, 30, 39, .92), rgba(12, 20, 28, .9));
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    .live-panel__head {
+      display: flex;
+      min-height: 60px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .live-panel__title {
+      margin: 0;
+      color: #b7ccca;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 720;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .live-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #8da3a1;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .live-state__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 0 4px rgba(242, 189, 98, .08);
+    }
+
+    .live-state[data-state="live"] {
+      color: var(--teal);
+    }
+
+    .live-state[data-state="live"] .live-state__dot {
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(129, 220, 199, .08), 0 0 15px rgba(129, 220, 199, .35);
+    }
+
+    .live-state[data-state="offline"] {
+      color: #b18e79;
+    }
+
+    .live-state[data-state="offline"] .live-state__dot {
+      background: #c78468;
+      box-shadow: 0 0 0 4px rgba(199, 132, 104, .08);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: .65fr .8fr 1fr 1.75fr;
+    }
+
+    .metric {
+      min-width: 0;
+      min-height: 132px;
+      padding: 24px 22px;
+      border-right: 1px solid var(--line-soft);
+    }
+
+    .metric:last-child {
+      border-right: 0;
+    }
+
+    .metric__label {
+      display: block;
+      margin-bottom: 14px;
+      color: #657e7d;
+    }
+
+    .metric__value {
+      display: block;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: clamp(24px, 3vw, 33px);
+      font-weight: 750;
+      letter-spacing: -.04em;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metric__unit {
+      margin-left: 4px;
+      color: #728987;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .metric--conversation .metric__value {
+      display: -webkit-box;
+      color: #c8d9d6;
+      font-size: 14px;
+      font-weight: 560;
+      letter-spacing: 0;
+      line-height: 1.55;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .metric__meta {
+      display: block;
+      margin-top: 8px;
+      overflow: hidden;
+      color: #607978;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .05em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .section {
+      padding-bottom: 120px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 42px;
+    }
+
+    .section-kicker {
+      display: block;
+      margin-bottom: 13px;
+      color: var(--teal);
+    }
+
+    .section-heading h2 {
+      max-width: 650px;
+      margin-bottom: 0;
+      font-size: clamp(34px, 4vw, 50px);
+      font-weight: 750;
+      letter-spacing: -.042em;
+      line-height: 1.08;
+    }
+
+    .section-heading p {
+      max-width: 360px;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      grid-column: span 2;
+      min-height: 238px;
+      padding: 26px;
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(19, 31, 40, .72), rgba(12, 20, 27, .52));
+      transition: border-color .2s ease, transform .2s ease, background .2s ease;
+    }
+
+    .feature-card:nth-last-child(-n+2) {
+      grid-column: span 3;
+    }
+
+    .feature-card:hover {
+      border-color: var(--line);
+      background: linear-gradient(145deg, rgba(22, 37, 46, .82), rgba(13, 22, 29, .62));
+      transform: translateY(-3px);
+    }
+
+    .feature-card__icon {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(129, 220, 199, .055);
+      font-size: 20px;
+    }
+
+    .feature-card__label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--amber);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 9px;
+      color: #e8f2f0;
+      font-size: 20px;
+      letter-spacing: -.02em;
+    }
+
+    .feature-card p {
+      margin-bottom: 0;
+      color: #819997;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .how-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(129, 220, 199, .035) 1px, transparent 1px),
+        linear-gradient(rgba(129, 220, 199, .035) 1px, transparent 1px),
+        rgba(14, 23, 31, .72);
+      background-size: 32px 32px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .step {
+      position: relative;
+      min-height: 275px;
+      padding: 38px 34px;
+      border-right: 1px solid var(--line-soft);
+    }
+
+    .step:last-child {
+      border-right: 0;
+    }
+
+    .step__number {
+      display: inline-grid;
+      width: 34px;
+      height: 34px;
+      margin-bottom: 55px;
+      place-items: center;
+      border: 1px solid rgba(242, 189, 98, .26);
+      border-radius: 50%;
+      color: var(--amber);
+      background: rgba(242, 189, 98, .045);
+    }
+
+    .step:not(:last-child)::after {
+      position: absolute;
+      top: 54px;
+      right: -13px;
+      z-index: 2;
+      display: grid;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--teal);
+      background: #0f1921;
+      content: "→";
+      font-size: 12px;
+    }
+
+    .step h3 {
+      margin-bottom: 12px;
+      font-size: 21px;
+      letter-spacing: -.025em;
+    }
+
+    .step p {
+      margin-bottom: 0;
+      color: #819896;
+      font-size: 14px;
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .site-footer__inner {
+      display: flex;
+      min-height: 112px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .site-footer p {
+      margin: 0;
+      color: #677e7c;
+      font-size: 13px;
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .footer-link:hover {
+      color: var(--teal-bright);
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 64px;
+        padding-block: 72px 80px;
+      }
+
+      .hero__copy {
+        max-width: 740px;
+      }
+
+      .town-card {
+        width: min(100%, 600px);
+        margin-inline: auto;
+      }
+
+      .live-panel {
+        margin-bottom: 96px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .metric:nth-child(3) {
+        border-right: 0;
+      }
+
+      .metric--conversation {
+        grid-column: 1 / -1;
+        min-height: 116px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      .section-heading {
+        display: block;
+      }
+
+      .section-heading p {
+        margin-top: 20px;
+      }
+
+      .feature-card,
+      .feature-card:nth-last-child(-n+2) {
+        grid-column: span 3;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100% - 28px, 1160px);
+      }
+
+      .site-header__inner {
+        min-height: 72px;
+      }
+
+      .header-link {
+        min-height: 42px;
+        padding-inline: 13px;
+        font-size: 12px;
+      }
+
+      .header-link span {
+        display: none;
+      }
+
+      .hero {
+        gap: 52px;
+        padding-block: 60px 64px;
+      }
+
+      h1 {
+        font-size: clamp(43px, 13.5vw, 62px);
+      }
+
+      .hero__pitch {
+        font-size: 17px;
+      }
+
+      .hero__actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .town-card {
+        transform: none;
+      }
+
+      .town-card::before {
+        display: none;
+      }
+
+      .town {
+        min-height: 330px;
+      }
+
+      .building--one { left: 6%; width: 31%; }
+      .building--two { right: 5%; width: 25%; }
+      .building--three { left: 5%; width: 30%; }
+      .building--four { right: 5%; width: 26%; }
+      .park { right: 31%; transform: scale(.82); }
+      .chat-bubble { top: 35%; left: 5%; max-width: 145px; }
+
+      .live-panel {
+        margin-bottom: 82px;
+      }
+
+      .live-panel__head {
+        min-height: 56px;
+        padding-inline: 17px;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .metric {
+        min-height: 118px;
+        padding: 20px 17px;
+      }
+
+      .metric:nth-child(2) {
+        border-right: 0;
+      }
+
+      .metric:nth-child(3) {
+        border-top: 1px solid var(--line-soft);
+        border-right: 1px solid var(--line-soft);
+      }
+
+      .metric--conversation {
+        grid-column: auto;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      .metric--conversation .metric__value {
+        font-size: 12px;
+        -webkit-line-clamp: 3;
+      }
+
+      .metric__value {
+        font-size: 25px;
+      }
+
+      .section {
+        padding-bottom: 88px;
+      }
+
+      .section-heading {
+        margin-bottom: 30px;
+      }
+
+      .feature-grid {
+        display: block;
+      }
+
+      .feature-card {
+        min-height: 0;
+        margin-bottom: 12px;
+        padding: 23px;
+      }
+
+      .feature-card__icon {
+        margin-bottom: 24px;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        min-height: 0;
+        padding: 30px 25px 34px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .step:last-child {
+        border-bottom: 0;
+      }
+
+      .step__number {
+        margin-bottom: 28px;
+      }
+
+      .step:not(:last-child)::after {
+        top: auto;
+        right: 28px;
+        bottom: -13px;
+        content: "↓";
+      }
+
+      .site-footer__inner {
+        min-height: 132px;
+        align-items: flex-start;
+        justify-content: center;
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell site-header__inner">
+      <a class="wordmark" href="{% url 'landing' %}" aria-label="Smallville home">
+        <span class="wordmark__mark" aria-hidden="true">⌂</span>
+        <span class="wordmark__name">Small<span>ville</span></span>
+      </a>
+      <a class="header-link" href="{% url 'home' %}">
+        <span>Enter the town</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="shell hero" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <p class="eyebrow">The town is running now</p>
+        <h1 id="hero-title">A small town with a <em>life of its own.</em></h1>
+        <p class="hero__pitch">Watch 25 AI residents remember, plan, talk, and live out their days together.</p>
+        <div class="hero__actions">
+          <a class="button button--primary" href="{% url 'home' %}">
+            Enter the live town <span aria-hidden="true">→</span>
+          </a>
+          <a class="button button--secondary" href="#how-it-works">How it works</a>
+        </div>
+        <p class="hero__note"><span aria-hidden="true">●</span> No account needed · Time runs at 60×</p>
+      </div>
+
+      <div class="town-card" aria-hidden="true">
+        <div class="town-card__bar">
+          <span>Public simulation</span>
+          <span class="town-card__status">Live map</span>
+        </div>
+        <div class="town">
+          <span class="road road--horizontal"></span>
+          <span class="road road--vertical"></span>
+          <span class="building building--one">⌂</span>
+          <span class="building building--two">☕</span>
+          <span class="building building--three">✚</span>
+          <span class="building building--four">▤</span>
+          <span class="park">♧</span>
+          <span class="resident resident--one">🧑</span>
+          <span class="resident resident--two">👩</span>
+          <span class="resident resident--three">🧔</span>
+          <span class="resident resident--four">👩</span>
+          <span class="resident resident--five">🧑</span>
+          <span class="chat-bubble">“Meet me by Hobbs Café after work?”</span>
+          <span class="map-label">The Ville · 14:32</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell live-panel" aria-labelledby="live-heading" aria-busy="true" id="live-panel">
+      <div class="live-panel__head">
+        <h2 class="live-panel__title" id="live-heading">Live from Smallville</h2>
+        <span class="live-state" id="live-state" data-state="connecting" role="status" aria-live="polite">
+          <span class="live-state__dot" aria-hidden="true"></span>
+          <span id="live-state-text">Connecting</span>
+        </span>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <span class="metric__label">Residents</span>
+          <span class="metric__value">25<span class="metric__unit">active</span></span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">LLM calls</span>
+          <span class="metric__value" id="live-calls">—</span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">Tokens</span>
+          <span class="metric__value" id="live-tokens">—</span>
+        </div>
+        <div class="metric metric--conversation">
+          <span class="metric__label">Latest conversation</span>
+          <span class="metric__value" id="live-conversation">Listening for the residents…</span>
+          <span class="metric__meta" id="live-conversation-meta">public_sim</span>
+        </div>
+      </div>
+      <noscript>
+        <p style="margin:0;padding:12px 22px;border-top:1px solid rgba(255,255,255,.075);color:#b18e79;font:11px/1.5 ui-monospace,monospace;">Live updates need JavaScript. The town itself is still available.</p>
+      </noscript>
+    </section>
+
+    <section class="shell section" aria-labelledby="features-heading">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">What happens here</span>
+          <h2 id="features-heading">An experiment you can simply watch unfold.</h2>
+        </div>
+        <p>Smallville is a continuous social simulation. Its residents make plans, form memories, and respond to one another without a script.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-card__icon" aria-hidden="true">◉</span>
+          <span class="feature-card__label">Population</span>
+          <h3>25 autonomous residents</h3>
+          <p>Each person has their own routines, relationships, personality, and a memory of what came before.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon" aria-hidden="true">“ ”</span>
+          <span class="feature-card__label">Social life</span>
+          <h3>Real-time conversations</h3>
+          <p>Residents meet around town, share news, make plans, and let one conversation shape the next.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon" aria-hidden="true">☾</span>
+          <span class="feature-card__label">Rhythm</span>
+          <h3>A full day and night</h3>
+          <p>The world wakes, works, socialises, winds down, and begins again on its own daily cycle.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon" aria-hidden="true">⌖</span>
+          <span class="feature-card__label">Live view</span>
+          <h3>A map running at 60×</h3>
+          <p>Follow the whole town from above as hours pass in minutes and residents move between familiar places.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon" aria-hidden="true">↗</span>
+          <span class="feature-card__label">Open door</span>
+          <h3>No account, no setup</h3>
+          <p>Step straight into the public simulation. There is nothing to install and nothing to sign up for.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="shell section" id="how-it-works" aria-labelledby="how-heading">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">How it works</span>
+          <h2 id="how-heading">Simple rules. Unexpected lives.</h2>
+        </div>
+      </div>
+
+      <div class="how-card">
+        <div class="steps">
+          <article class="step">
+            <span class="step__number">01</span>
+            <h3>Residents remember</h3>
+            <p>Everyday experiences become memories—people, places, conversations, and the small details of a life.</p>
+          </article>
+          <article class="step">
+            <span class="step__number">02</span>
+            <h3>They plan and react</h3>
+            <p>Those memories inform daily plans, while new encounters can change what happens moment by moment.</p>
+          </article>
+          <article class="step">
+            <span class="step__number">03</span>
+            <h3>The town emerges</h3>
+            <p>Individual choices overlap into friendships, routines, chance meetings, and a story no one pre-wrote.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell site-footer__inner">
+      <p>Smallville · a live generative-agent town simulation</p>
+      <a class="footer-link" href="{% url 'home' %}">Visit the live town <span aria-hidden="true">→</span></a>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var panel = document.getElementById("live-panel");
+      var state = document.getElementById("live-state");
+      var stateText = document.getElementById("live-state-text");
+      var calls = document.getElementById("live-calls");
+      var tokens = document.getElementById("live-tokens");
+      var conversation = document.getElementById("live-conversation");
+      var conversationMeta = document.getElementById("live-conversation-meta");
+      var tokenUrl = "{% url 'get_token_usage' %}";
+      var chatUrl = "{% url 'get_chat_log' %}?sim_code=public_sim";
+      var pollInFlight = false;
+
+      function formatNumber(value) {
+        var number = Number(value);
+        if (!isFinite(number)) {
+          number = 0;
+        }
+        return number.toLocaleString("en-GB");
+      }
+
+      function requestJson(url) {
+        return new Promise(function (resolve, reject) {
+          var request = new XMLHttpRequest();
+          request.open("GET", url, true);
+          request.timeout = 8000;
+          request.setRequestHeader("Accept", "application/json");
+          request.onreadystatechange = function () {
+            if (request.readyState !== 4) {
+              return;
+            }
+            if (request.status < 200 || request.status >= 300) {
+              reject(new Error("Request failed"));
+              return;
+            }
+            try {
+              resolve(JSON.parse(request.responseText));
+            } catch (error) {
+              reject(error);
+            }
+          };
+          request.onerror = function () { reject(new Error("Network unavailable")); };
+          request.ontimeout = function () { reject(new Error("Request timed out")); };
+          request.send();
+        });
+      }
+
+      function settle(promise) {
+        return promise.then(
+          function (value) { return { ok: true, value: value }; },
+          function () { return { ok: false }; }
+        );
+      }
+
+      function updateUsage(data) {
+        calls.textContent = formatNumber(data && data.calls);
+        tokens.textContent = formatNumber(data && data.total_tokens);
+      }
+
+      function updateConversation(data) {
+        var entries = data && Array.isArray(data.entries) ? data.entries : [];
+        var latest = entries.length ? entries[entries.length - 1] : null;
+        var text = latest && typeof latest.chat === "string" ? latest.chat.replace(/\s+/g, " ").trim() : "";
+
+        if (!text) {
+          conversation.textContent = "Waiting for the next conversation…";
+          conversationMeta.textContent = "public_sim";
+          return;
+        }
+
+        conversation.textContent = text.length > 180 ? text.slice(0, 177) + "…" : text;
+        var details = [];
+        if (latest.step !== undefined && latest.step !== null && latest.step !== "") {
+          details.push("step " + latest.step);
+        }
+        if (latest.ts) {
+          details.push(String(latest.ts));
+        }
+        conversationMeta.textContent = details.length ? details.join(" · ") : "public_sim";
+      }
+
+      function setConnectionState(isLive) {
+        state.setAttribute("data-state", isLive ? "live" : "offline");
+        stateText.textContent = isLive ? "Live now" : "Offline · retrying";
+        panel.setAttribute("aria-busy", "false");
+      }
+
+      function scheduleNextPoll() {
+        window.setTimeout(poll, 10000);
+      }
+
+      function poll() {
+        if (pollInFlight) {
+          return;
+        }
+
+        pollInFlight = true;
+        panel.setAttribute("aria-busy", "true");
+
+        Promise.all([
+          settle(requestJson(tokenUrl)),
+          settle(requestJson(chatUrl))
+        ]).then(function (results) {
+          if (results[0].ok) {
+            updateUsage(results[0].value);
+          }
+          if (results[1].ok) {
+            updateConversation(results[1].value);
+          }
+          setConnectionState(results[0].ok && results[1].ok);
+        }).then(function () {
+          pollInFlight = false;
+          scheduleNextPoll();
+        }, function () {
+          setConnectionState(false);
+          pollInFlight = false;
+          scheduleNextPoll();
+        });
+      }
+
+      poll();
+    }());
+  </script>
+</body>
+</html>

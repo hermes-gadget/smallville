@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 from translator import views as translator_views
 
 urlpatterns = [
-    url(r'^$', translator_views.home, name='landing'),
+    url(r'^$', translator_views.landing, name='landing'),
     url(r'^get_token_usage/$', translator_views.get_token_usage, name='get_token_usage'),
     url(r'^get_chat_log/$', translator_views.get_chat_log, name='get_chat_log'),
     url(r'^set_pacing/$', translator_views.set_pacing, name='set_pacing'),
