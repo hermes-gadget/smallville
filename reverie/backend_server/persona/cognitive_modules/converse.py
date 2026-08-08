@@ -15,6 +15,47 @@ from global_methods import *
 from persona.memory_structures.spatial_memory import *
 from persona.memory_structures.associative_memory import *
 from persona.memory_structures.scratch import *
+
+
+import threading
+import json
+import os
+from utils import fs_storage
+
+_live_chat_log_lock = threading.Lock()
+
+def _live_log_chat(chat_thread):
+  """Append the current (possibly mid-conversation) thread to chat_log.json.
+
+  Runs inside worker threads, so guarded by a lock. Each exchange that
+  happens during a conversation lands in the feed immediately (the thread
+  snapshot grows entry by entry instead of only the final state appearing).
+  """
+  try:
+    import utils
+    step = utils.current_step
+    chat_log_file = os.path.join(fs_storage, "public_sim", "chat_log.json")
+    with _live_chat_log_lock:
+      chat_log = []
+      if os.path.exists(chat_log_file):
+        with open(chat_log_file) as json_file:
+          chat_log = json.load(json_file)
+      if not isinstance(chat_log, list):
+        chat_log = []
+      if (chat_log and chat_log[-1].get("chat") == chat_thread):
+        return
+      chat_log.append({
+        "ts": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "step": step,
+        "chat": chat_thread,
+      })
+      chat_log = chat_log[-500:]
+      _tmp = chat_log_file + ".tmp"
+      with open(_tmp, "w") as outfile:
+        json.dump(chat_log, outfile)
+      os.replace(_tmp, chat_log_file)
+  except Exception:
+    pass
 from persona.cognitive_modules.retrieve import *
 from persona.prompt_template.run_gpt_prompt import *
 
@@ -137,6 +178,7 @@ def agent_chat_v2(maze, init_persona, target_persona):
     utt, end = generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_chat)
 
     curr_chat += [[init_persona.scratch.name, utt]]
+    _live_log_chat(curr_chat)
     if end:
       break
 
@@ -158,6 +200,7 @@ def agent_chat_v2(maze, init_persona, target_persona):
     utt, end = generate_one_utterance(maze, target_persona, init_persona, retrieved, curr_chat)
 
     curr_chat += [[target_persona.scratch.name, utt]]
+    _live_log_chat(curr_chat)
     if end:
       break
 
