@@ -48,6 +48,11 @@ key_owner = "Ben"
 openai_base_url = "https://opencode.ai/zen/go/v1"
 llm_model = "deepseek-v4-flash"
 llm_max_tokens = 64000
+# Reasoning budget: False = fast completions (deepseek-v4-flash without
+# thinking) -- ideal for the bulk daily-plan generation and step loops.
+# Set True to re-enable the thinking budget when simulation quality needs
+# the extra reasoning.
+llm_thinking = False
 # Hard wall-clock deadline for a single LLM call attempt (seconds).
 # Guards against gateway responses that trickle forever (read timeouts
 # reset per chunk). The retry loop gets a fresh attempt afterwards.

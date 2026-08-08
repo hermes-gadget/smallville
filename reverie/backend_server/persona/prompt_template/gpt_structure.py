@@ -152,6 +152,8 @@ def _llm_chat(messages,
     "frequency_penalty": frequency_penalty,
     "presence_penalty": presence_penalty,
   }
+  if not llm_thinking:
+    payload["thinking"] = {"type": "disabled"}
   if stop:
     payload["stop"] = stop
 
