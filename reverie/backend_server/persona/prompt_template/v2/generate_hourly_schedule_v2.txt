@@ -15,4 +15,5 @@ Hourly schedule format:
 !<INPUT 1>!
 !<INPUT 2>!
 !<INPUT 3>!!<INPUT 4>!
+IMPORTANT INSTRUCTION: The hour listed at the very end of this prompt is the ONLY one you must fill in. Use the intended hourly breakdown above to decide what the person is doing at that specific hour. Do NOT repeat any earlier hours.
 !<INPUT 5>!
