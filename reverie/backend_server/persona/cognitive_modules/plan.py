@@ -957,6 +957,13 @@ def _long_term_planning_parallel(persona, new_day, personas):
     ev = _ltp_state[day_key]
   if leader:
     try:
+      # The move loop assigns scratch.curr_time to each persona right
+      # before its own move(); personas later in the loop still have
+      # None when the leader's batch starts, and their prompts would
+      # crash. Sync everyone to the leader's current time first.
+      for p in personas.values():
+        if p.scratch.curr_time is None:
+          p.scratch.curr_time = persona.scratch.curr_time
       with ThreadPoolExecutor(max_workers=6) as ex:
         futures = [ex.submit(_long_term_planning, p, new_day)
                    for p in personas.values()]
