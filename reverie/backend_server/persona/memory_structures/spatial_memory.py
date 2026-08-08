@@ -97,7 +97,10 @@ class MemoryTree:
     EXAMPLE STR OUTPUT
       "bedroom, kitchen, dining room, office, bathroom"
     """
-    curr_world, curr_sector = sector.split(":")
+    parts = str(sector).split(":", 1)
+    if len(parts) != 2:
+      return ""
+    curr_world, curr_sector = parts
     if not curr_sector: 
       return ""
     world_key = self._resolve_key(self.tree, curr_world)
@@ -151,7 +154,6 @@ if __name__ == '__main__':
   x.print_tree()
 
   print (x.get_str_accessible_sector_arenas("dolores double studio:double studio"))
-
 
 
 

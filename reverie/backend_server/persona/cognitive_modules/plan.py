@@ -35,7 +35,10 @@ def generate_wake_up_hour(persona):
     8
   """
   if debug: print ("GNS FUNCTION: <generate_wake_up_hour>")
-  return int(run_gpt_prompt_wake_up_hour(persona)[0])
+  try:
+    return int(run_gpt_prompt_wake_up_hour(persona)[0])
+  except (TypeError, ValueError):
+    return 8
 
 
 def generate_first_daily_plan(persona, wake_up_hour): 
@@ -261,7 +264,8 @@ def generate_action_event_triple(act_desp, persona):
     "🧈🍞"
   """
   if debug: print ("GNS FUNCTION: <generate_action_event_triple>")
-  return run_gpt_prompt_event_triple(act_desp, persona)[0]
+  triple = run_gpt_prompt_event_triple(act_desp, persona)[0]
+  return triple if isinstance(triple, (tuple, list)) and len(triple) == 3 else (persona.name, "is", "idle")
 
 
 def generate_act_obj_desc(act_game_object, act_desp, persona): 
@@ -271,7 +275,8 @@ def generate_act_obj_desc(act_game_object, act_desp, persona):
 
 def generate_act_obj_event_triple(act_game_object, act_obj_desc, persona): 
   if debug: print ("GNS FUNCTION: <generate_act_obj_event_triple>")
-  return run_gpt_prompt_act_obj_event_triple(act_game_object, act_obj_desc, persona)[0]
+  triple = run_gpt_prompt_act_obj_event_triple(act_game_object, act_obj_desc, persona)[0]
+  return triple if isinstance(triple, (tuple, list)) and len(triple) == 3 else (act_game_object, "is", "idle")
 
 
 def generate_convo(maze, init_persona, target_persona): 

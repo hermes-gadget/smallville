@@ -107,7 +107,11 @@ def perceive(persona, maze):
   # associative memory. 
   ret_events = []
   for p_event in perceived_events: 
+    if not isinstance(p_event, (tuple, list)) or len(p_event) != 4:
+      continue
     s, p, o, desc = p_event
+    if not all(str(x).strip() for x in (s, p, o)):
+      continue
     if not p: 
       # If the object is not present, then we default the event to "idle".
       p = "is"
@@ -134,10 +138,8 @@ def perceive(persona, maze):
 
       # Get event embedding
       desc_embedding_in = desc
-      if "(" in desc: 
-        desc_embedding_in = (desc_embedding_in.split("(")[1]
-                                              .split(")")[0]
-                                              .strip())
+      if "(" in desc and ")" in desc:
+        desc_embedding_in = desc_embedding_in.split("(", 1)[1].split(")", 1)[0].strip()
       if desc_embedding_in in persona.a_mem.embeddings: 
         event_embedding = persona.a_mem.embeddings[desc_embedding_in]
       else: 
@@ -184,7 +186,6 @@ def perceive(persona, maze):
 
 
   
-
 
 
 
