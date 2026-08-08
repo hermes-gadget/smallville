@@ -2,7 +2,7 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 08:00:00",
+  "curr_time": "February 13, 2023, 08:01:01",
   "curr_tile": [
     94,
     18
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 240,
-  "importance_ele_n": 8,
+  "importance_trigger_curr": 237,
+  "importance_ele_n": 9,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 13:00 am"
@@ -132,10 +132,5 @@
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": [
-    [
-      95,
-      16
-    ]
-  ]
+  "planned_path": []
 }

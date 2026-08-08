@@ -2,10 +2,10 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 08:00:00",
+  "curr_time": "February 13, 2023, 08:01:01",
   "curr_tile": [
-    16,
-    18
+    41,
+    26
   ],
   "daily_plan_req": "",
   "name": "Latoya Williams",
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 241,
-  "importance_ele_n": 6,
+  "importance_trigger_curr": 235,
+  "importance_ele_n": 11,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 6:00 am"
@@ -204,130 +204,5 @@
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": [
-    [
-      18,
-      19
-    ],
-    [
-      18,
-      20
-    ],
-    [
-      18,
-      21
-    ],
-    [
-      18,
-      22
-    ],
-    [
-      18,
-      23
-    ],
-    [
-      18,
-      24
-    ],
-    [
-      18,
-      25
-    ],
-    [
-      19,
-      25
-    ],
-    [
-      20,
-      25
-    ],
-    [
-      21,
-      25
-    ],
-    [
-      22,
-      25
-    ],
-    [
-      23,
-      25
-    ],
-    [
-      24,
-      25
-    ],
-    [
-      25,
-      25
-    ],
-    [
-      26,
-      25
-    ],
-    [
-      27,
-      25
-    ],
-    [
-      28,
-      25
-    ],
-    [
-      29,
-      25
-    ],
-    [
-      30,
-      25
-    ],
-    [
-      31,
-      25
-    ],
-    [
-      32,
-      25
-    ],
-    [
-      33,
-      25
-    ],
-    [
-      34,
-      25
-    ],
-    [
-      35,
-      25
-    ],
-    [
-      36,
-      25
-    ],
-    [
-      37,
-      25
-    ],
-    [
-      38,
-      25
-    ],
-    [
-      39,
-      25
-    ],
-    [
-      40,
-      25
-    ],
-    [
-      41,
-      25
-    ],
-    [
-      41,
-      26
-    ]
-  ]
+  "planned_path": []
 }

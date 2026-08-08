@@ -101,3 +101,6 @@ ENV/
 storage/modern_ai_test*
 environment/frontend_server/temp_storage/
 .venv/
+storage/public_sim/
+storage/local_nine*/
+temp_storage/*.db

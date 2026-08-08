@@ -2,9 +2,9 @@
   "vision_r": 8,
   "att_bandwidth": 8,
   "retention": 8,
-  "curr_time": "February 13, 2023, 08:00:00",
+  "curr_time": "February 13, 2023, 08:01:01",
   "curr_tile": [
-    126,
+    128,
     46
   ],
   "daily_plan_req": "Klaus Mueller goes to the library at Oak Hill College early in the morning, spends his days writing, and eats at Hobbs Cafe.",
@@ -28,8 +28,8 @@
   "importance_w": 1,
   "recency_decay": 0.995,
   "importance_trigger_max": 250,
-  "importance_trigger_curr": 242,
-  "importance_ele_n": 6,
+  "importance_trigger_curr": 240,
+  "importance_ele_n": 8,
   "thought_count": 5,
   "daily_req": [
     "wake up and complete the morning routine at 7:00 am"
@@ -204,94 +204,5 @@
   "chatting_with_buffer": {},
   "chatting_end_time": null,
   "act_path_set": true,
-  "planned_path": [
-    [
-      129,
-      46
-    ],
-    [
-      130,
-      46
-    ],
-    [
-      131,
-      46
-    ],
-    [
-      131,
-      47
-    ],
-    [
-      131,
-      48
-    ],
-    [
-      131,
-      49
-    ],
-    [
-      131,
-      50
-    ],
-    [
-      130,
-      50
-    ],
-    [
-      129,
-      50
-    ],
-    [
-      128,
-      50
-    ],
-    [
-      127,
-      50
-    ],
-    [
-      126,
-      50
-    ],
-    [
-      125,
-      50
-    ],
-    [
-      124,
-      50
-    ],
-    [
-      123,
-      50
-    ],
-    [
-      122,
-      50
-    ],
-    [
-      122,
-      49
-    ],
-    [
-      122,
-      48
-    ],
-    [
-      122,
-      47
-    ],
-    [
-      122,
-      46
-    ],
-    [
-      121,
-      46
-    ],
-    [
-      121,
-      45
-    ]
-  ]
+  "planned_path": []
 }

@@ -333,6 +333,19 @@ class ReverieServer:
           with open(curr_env_file) as json_file:
             new_env = json.load(json_file)
             env_retrieved = True
+            # Robustness: the frontend can post a PARTIAL env (missing
+            # residents) when its sprite data is incomplete. Fill any
+            # gaps from the previous movement's targets so the step
+            # never crashes on a missing resident.
+            if self.step > 0:
+              _prev_mv = f"{sim_folder}/movement/{self.step - 1}.json"
+              if check_if_file_exists(_prev_mv):
+                with open(_prev_mv) as _jf:
+                  _pmv = json.load(_jf)
+                for _pn, _pm in _pmv.get("persona", {}).items():
+                  if _pn not in new_env:
+                    _t = _pm.get("movement") or [0, 0]
+                    new_env[_pn] = {"x": _t[0], "y": _t[1]}
 
         except: 
           pass
