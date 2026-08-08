@@ -1,4 +1,5 @@
-reverie/backend_server/utils.py
+# reverie/backend_server/utils.py is now tracked (no secrets inside: API key
+# is read from ~/.opencode-go.key at runtime)
 frontend_server/settings/local.py
 storage/*
 static_dirs/*
