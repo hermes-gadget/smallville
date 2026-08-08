@@ -34,6 +34,11 @@ from utils import *
 from maze import *
 from persona.persona import *
 
+# Recently-logged conversation signatures (bounded) so a conversation that
+# persists in scratch.chat across many steps is never re-logged, even when
+# several distinct conversations coexist in the same step.
+_chat_log_recent = set()
+
 def _current_pacing():
   """Live-flippable game speed: <fs_temp_storage>/pacing.txt overrides the
   utils default, so the speed can change WITHOUT restarting the service
@@ -460,31 +465,44 @@ class ReverieServer:
               movements["persona"][persona_name]["chat"] = (persona
                                                             .scratch.chat)
 
-          chat = next((state["chat"]
-                       for state in movements["persona"].values()
-                       if state["chat"]), None)
-          if chat:
-            chat_log_file = f"{sim_folder}/chat_log.json"
-            try:
+          # Log EVERY distinct conversation present this step, not just
+          # the first one in dict order. A persona's scratch.chat persists
+          # for many steps (until the next chat overwrites it), so a stale
+          # conversation sitting first in the dict used to suppress the
+          # newer ones behind it (they never got logged).
+          chat_log_file = f"{sim_folder}/chat_log.json"
+          try:
+            chat_log = []
+            if check_if_file_exists(chat_log_file):
+              with open(chat_log_file) as json_file:
+                chat_log = json.load(json_file)
+            if not isinstance(chat_log, list):
               chat_log = []
-              if check_if_file_exists(chat_log_file):
-                with open(chat_log_file) as json_file:
-                  chat_log = json.load(json_file)
-              if not isinstance(chat_log, list):
-                chat_log = []
-              # Dedup: a conversation stays in scratch.chat for several
-              # steps (until the next chat overwrites it). Only log when
-              # it actually differs from the last logged conversation.
+            _seen_this_step = set()
+            for _state in movements["persona"].values():
+              _c = _state.get("chat")
+              if not _c:
+                continue
+              _key = json.dumps(_c, ensure_ascii=False)
+              if _key in _seen_this_step or _key in _chat_log_recent:
+                continue
+              _seen_this_step.add(_key)
+              # Dedup across steps: a conversation stays in scratch.chat
+              # until overwritten -- skip it if it was already logged.
               if (not chat_log
-                  or chat_log[-1].get("chat") != chat):
+                  or chat_log[-1].get("chat") != _c):
                 chat_log.append({
                   "ts": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                   "step": self.step,
-                  "chat": chat,
+                  "chat": _c,
                 })
                 atomic_json_dump(chat_log[-500:], chat_log_file)
-            except Exception:
-              pass
+                _chat_log_recent.add(_key)
+                if len(_chat_log_recent) > 200:
+                  for _old in list(_chat_log_recent)[:-100]:
+                    _chat_log_recent.discard(_old)
+          except Exception:
+            pass
 
           # Include the meta information about the current stage in the 
           # movements dictionary. 
