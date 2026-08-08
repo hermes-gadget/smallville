@@ -232,15 +232,27 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
     return prompt_input
 
   def __func_clean_up(gpt_response, prompt=""):
-    cr = gpt_response.strip()
-    if cr[-1] == ".":
+    # The model sometimes echoes the whole schedule (or a preamble like
+    # "Here is the corrected schedule:") instead of filling only the
+    # current hour. Extract the LAST "Activity: <content>" line; if there
+    # is none, fall back to the final line of the response.
+    lines = [ln.strip() for ln in str(gpt_response).split("\n") if ln.strip()]
+    cr = lines[-1] if lines else str(gpt_response).strip()
+    m = re.search(r"Activity:\s*(.+)$", cr, re.M)
+    if m:
+      cr = m.group(1).strip()
+    cr = cr.strip().strip('"\'`*')
+    if cr.endswith("."):
       cr = cr[:-1]
     return cr
 
   def __func_validate(gpt_response, prompt=""): 
-    try: __func_clean_up(gpt_response, prompt="")
-    except: return False
-    return True
+    try:
+      cr = __func_clean_up(gpt_response, prompt="")
+      if not cr:
+        return None
+    except: return None
+    return gpt_response
 
   def get_fail_safe(): 
     fs = "asleep"
