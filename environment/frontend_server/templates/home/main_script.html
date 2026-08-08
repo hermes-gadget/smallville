@@ -193,6 +193,9 @@
 				sprite.on("pointerout", function() {
 					if (selected_persona !== name) ring.setVisible(false).setAlpha(1);
 				});
+				sprite.on("pointerdown", function() {
+					selectPersona(name, false);
+				});
 			});
 		}
 

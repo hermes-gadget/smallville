@@ -48,6 +48,10 @@ key_owner = "Ben"
 openai_base_url = "https://opencode.ai/zen/go/v1"
 llm_model = "deepseek-v4-flash"
 llm_max_tokens = 64000
+# Hard wall-clock deadline for a single LLM call attempt (seconds).
+# Guards against gateway responses that trickle forever (read timeouts
+# reset per chunk). The retry loop gets a fresh attempt afterwards.
+llm_hard_timeout = 300
 
 # ---------------------------------------------------------------------------
 # Local embedding server (LM Studio on the AI box).

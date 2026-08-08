@@ -161,9 +161,29 @@ def _llm_chat(messages,
     "Content-Type": "application/json",
   }
 
+  # Hard wall-clock deadline per attempt. The gateway can trickle a
+  # thinking response indefinitely (read timeouts reset per chunk), which
+  # would hang the simulation forever. We run the request on a daemon
+  # thread and abandon it after llm_hard_timeout seconds; the retry loop
+  # then opens a fresh connection.
+  def _post():
+    try:
+      box["resp"] = _SESSION.post(url, json=payload, headers=headers, timeout=120)
+    except Exception as e:  # noqa: BLE001 - surface any failure to the caller
+      box["err"] = e
+
   for attempt in range(retries):
     try:
-      resp = _SESSION.post(url, json=payload, headers=headers, timeout=120)
+      box = {}
+      t = threading.Thread(target=_post, daemon=True)
+      t.start()
+      t.join(timeout=llm_hard_timeout)
+      if "err" in box:
+        raise box["err"]
+      if "resp" not in box:
+        raise RuntimeError(
+          f"LLM call exceeded hard timeout ({llm_hard_timeout}s)")
+      resp = box["resp"]
       if resp.status_code == 200:
         data = resp.json()
         _record_usage(data.get("usage") or {}, payload["model"])
