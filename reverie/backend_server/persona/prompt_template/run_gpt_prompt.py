@@ -9,12 +9,27 @@ import re
 import datetime
 import sys
 import ast
+import json
 
 sys.path.append('../../')
 
 from global_methods import *
 from persona.prompt_template.gpt_structure import *
 from persona.prompt_template.print_prompt import *
+
+def _first_int(value):
+  match = re.search(r"[-+]?\d+", str(value))
+  if not match:
+    raise ValueError("no integer")
+  return int(match.group())
+
+def _json_payload(value):
+  value = re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", str(value), flags=re.I)
+  value = value.strip().strip('`').strip('"').strip("'")
+  start, end = value.find("{"), value.rfind("}")
+  if start >= 0 and end > start:
+    value = value[start:end + 1]
+  return json.loads(value)
 
 def get_random_alphanumeric(i=6, j=6): 
   """
@@ -54,12 +69,12 @@ def run_gpt_prompt_wake_up_hour(persona, test_input=None, verbose=False):
     return prompt_input
 
   def __func_clean_up(gpt_response, prompt=""):
-    cr = int(gpt_response.strip().lower().split("am")[0])
+    cr = _first_int(gpt_response)
     return cr
   
   def __func_validate(gpt_response, prompt=""): 
     try: __func_clean_up(gpt_response, prompt="")
-    except: return False
+    except: return None
     return True
 
   def get_fail_safe(): 
@@ -113,17 +128,17 @@ def run_gpt_prompt_daily_plan(persona,
   def __func_clean_up(gpt_response, prompt=""):
     cr = []
     _cr = gpt_response.split(")")
-    for i in _cr: 
-      if i[-1].isdigit(): 
+    for i in _cr:
+      if i.strip() and i.strip()[-1].isdigit():
         i = i[:-1].strip()
-        if i[-1] == "." or i[-1] == ",": 
+        if i and i[-1] == "." or i and i[-1] == ",":
           cr += [i[:-1].strip()]
     return cr
 
   def __func_validate(gpt_response, prompt=""):
     try: __func_clean_up(gpt_response, prompt="")
-    except: 
-      return False
+    except:
+      return None
     return True
 
   def get_fail_safe(): 
@@ -898,17 +913,19 @@ def run_gpt_prompt_event_triple(action_description, persona, verbose=False):
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    cr = gpt_response.strip()
-    cr = [i.strip() for i in cr.split(")")[0].split(",")]
-    return cr
+    cr = str(gpt_response).strip().strip("`\"'")
+    cr = cr.split("(", 1)[-1].split(")", 1)[0]
+    parts = [i.strip(" \t\"'") for i in cr.split(",")]
+    if len(parts) != 3 or not all(parts):
+      raise ValueError("event triple must have three non-empty elements")
+    return tuple(parts)
 
   def __func_validate(gpt_response, prompt=""): 
     try: 
       gpt_response = __func_clean_up(gpt_response, prompt="")
-      if len(gpt_response) != 2: 
-        return False
-    except: return False
-    return True 
+    except:
+      return None
+    return gpt_response
 
   def get_fail_safe(persona): 
     fs = (persona.name, "is", "idle")
@@ -1866,7 +1883,7 @@ def run_gpt_prompt_event_poignancy(persona, event_description, test_input=None, 
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    gpt_response = int(gpt_response.strip())
+    gpt_response = _first_int(gpt_response)
     return gpt_response
 
   def __func_validate(gpt_response, prompt=""): 
@@ -1939,7 +1956,7 @@ def run_gpt_prompt_thought_poignancy(persona, event_description, test_input=None
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    gpt_response = int(gpt_response.strip())
+    gpt_response = _first_int(gpt_response)
     return gpt_response
 
   def __func_validate(gpt_response, prompt=""): 
@@ -2010,7 +2027,7 @@ def run_gpt_prompt_chat_poignancy(persona, event_description, test_input=None, v
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    gpt_response = int(gpt_response.strip())
+    gpt_response = _first_int(gpt_response)
     return gpt_response
 
   def __func_validate(gpt_response, prompt=""): 
@@ -2777,13 +2794,13 @@ def run_gpt_generate_safety_score(persona, comment, test_input=None, verbose=Fal
     return prompt_input
 
   def __chat_func_clean_up(gpt_response, prompt=""): 
-    gpt_response = json.loads(gpt_response)
+    gpt_response = _json_payload(gpt_response)
     return gpt_response["output"]
 
   def __chat_func_validate(gpt_response, prompt=""): 
     try: 
       fields = ["output"]
-      response = json.loads(gpt_response)
+      response = _json_payload(gpt_response)
       for field in fields: 
         if field not in response: 
           return False
@@ -2924,9 +2941,6 @@ def run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retr
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
-
-
-
 
 
 
