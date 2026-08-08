@@ -1,0 +1,13 @@
+[Unit]
+Description=Smallville Django frontend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/hermes-agent/smallville/environment/frontend_server
+ExecStart=/home/hermes-agent/smallville/.venv/bin/python manage.py runserver 0.0.0.0:8000 --noreload
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
