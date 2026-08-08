@@ -421,8 +421,13 @@ class ReverieServer:
           # perception, which must not race, so this stays ordered.
           perceive_state = dict()
           for persona_name, persona in self.personas.items():
-            perceive_state[persona_name] = persona._move_perceive(
-              self.maze, self.personas_tile[persona_name], self.curr_time)
+            try:
+              perceive_state[persona_name] = persona._move_perceive(
+                self.maze, self.personas_tile[persona_name], self.curr_time)
+            except Exception:
+              # A perception failure must not kill the whole town.
+              traceback.print_exc()
+              perceive_state[persona_name] = (None, None)
 
           # Phase 2 (parallel): retrieve / plan / reflect / execute. All
           # persona-private LLM + embedding work with no shared writes, so
@@ -436,7 +441,17 @@ class ReverieServer:
                      for n, persona in self.personas.items()}
             for _f in _futs: 
               persona_name = _futs[_f]
-              next_tile, pronunciatio, description = _f.result()
+              try:
+                next_tile, pronunciatio, description = _f.result()
+              except Exception:
+                # One persona's failure must never kill the whole town:
+                # fall back to "stay in place, doing what they were doing".
+                traceback.print_exc()
+                _p = self.personas[persona_name]
+                next_tile = self.personas_tile[persona_name]
+                pronunciatio = "…"
+                description = (getattr(_p.scratch, "curr_description", None)
+                               or "continuing what I was doing")
               persona = self.personas[persona_name]
               movements["persona"][persona_name] = {}
               movements["persona"][persona_name]["movement"] = next_tile

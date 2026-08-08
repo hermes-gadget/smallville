@@ -76,11 +76,18 @@ def generate_poig_score(persona, event_type, description):
   if "is idle" in description: 
     return 1
 
-  if event_type == "event" or event_type == "thought": 
-    return run_gpt_prompt_event_poignancy(persona, description)[0]
-  elif event_type == "chat": 
-    return run_gpt_prompt_chat_poignancy(persona, 
-                           persona.scratch.act_description)[0]
+  # The LLM can return None when every attempt fails validation. Never
+  # crash the sim on it -- default to mid poignancy (5).
+  try:
+    if event_type == "event" or event_type == "thought": 
+      ret = run_gpt_prompt_event_poignancy(persona, description)
+      return ret[0] if ret else 5
+    elif event_type == "chat": 
+      ret = run_gpt_prompt_chat_poignancy(persona, 
+                            persona.scratch.act_description)
+      return ret[0] if ret else 5
+  except Exception:
+    return 5
 
 
 
