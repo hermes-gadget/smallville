@@ -497,6 +497,16 @@ def run_gpt_prompt_task_decomp(persona,
   # print (prompt)
   print (output)
 
+  # Normalize degenerate/fallback outputs into (task, duration) pairs.
+  # safe_generate_response can return the fail-safe (["asleep"]) or other
+  # plain-string lists when every retry failed; unpacking those as pairs
+  # would crash the simulation.
+  if isinstance(output, str):
+    output = [output]
+  if output and all(isinstance(x, str) for x in output):
+    share = max(duration // max(len(output), 1), 5)
+    output = [[x, share] for x in output]
+
   fin_output = []
   time_sum = 0
   for i_task, i_duration in output: 
