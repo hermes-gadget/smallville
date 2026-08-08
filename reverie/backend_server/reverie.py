@@ -313,6 +313,10 @@ class ReverieServer:
 
     # The main while loop of Reverie. 
     _boot_real = time.time()
+    # Clock anchor: the game clock maps absolute wall time onto the sim's
+    # boot time (meta curr_time), NOT start_date (midnight) -- otherwise a
+    # morning-start town shows 00:0x for hours.
+    _clock_anchor = self.curr_time
     while (True): 
       # Done with this iteration if <int_counter> reaches 0. 
       if int_counter == 0: 
@@ -439,12 +443,17 @@ class ReverieServer:
                   chat_log = json.load(json_file)
               if not isinstance(chat_log, list):
                 chat_log = []
-              chat_log.append({
-                "ts": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "step": self.step,
-                "chat": chat,
-              })
-              atomic_json_dump(chat_log[-500:], chat_log_file)
+              # Dedup: a conversation stays in scratch.chat for several
+              # steps (until the next chat overwrites it). Only log when
+              # it actually differs from the last logged conversation.
+              if (not chat_log
+                  or chat_log[-1].get("chat") != chat):
+                chat_log.append({
+                  "ts": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                  "step": self.step,
+                  "chat": chat,
+                })
+                atomic_json_dump(chat_log[-500:], chat_log_file)
             except Exception:
               pass
 
@@ -481,7 +490,7 @@ class ReverieServer:
           # 1.0 = real-time). Absolute mapping -- the clock is a pure
           # function of elapsed wall time, so fast/slow step bursts can
           # never skew it.
-          self.curr_time = self.start_time + datetime.timedelta(
+          self.curr_time = _clock_anchor + datetime.timedelta(
             seconds=max(0.0, (time.time() - _boot_real)
                               * game_sec_per_real_sec))
 
