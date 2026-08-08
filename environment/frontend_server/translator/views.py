@@ -3,12 +3,8 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 File: views.py
 """
 import os
-import string
-import random
 import json
 import secrets
-from os import listdir
-import os
 from django.conf import settings
 
 import datetime
