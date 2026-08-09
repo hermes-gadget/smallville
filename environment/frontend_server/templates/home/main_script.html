@@ -7,7 +7,13 @@
 		// Simulation state. The update endpoint's step/sim_code payload stays
 		// stable; the autonomous backend now advances the environment itself.
 		// -----------------------------------------------------------------------
-		var step = parseInt(document.getElementById("step").textContent, 10);
+		// Start at the LAST COMPLETED step: curr_step.json holds the next
+		// step the sim will process, whose movement file doesn't exist yet —
+		// polling it directly would sit on "Synchronising…" until the next
+		// step lands (minutes during post-restart reflection storms). One
+		// back, the file already exists, so the page renders instantly and
+		// then tracks the live frontier step-by-step.
+		var step = Math.max(0, parseInt(document.getElementById("step").textContent, 10) - 1);
 		var sim_code = document.getElementById("sim_code").textContent.trim();
 		var tile_width = 32;
 		var movement_speed = 32;
