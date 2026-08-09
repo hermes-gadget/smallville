@@ -380,6 +380,23 @@ class ReverieServer:
     os.makedirs(f"{sim_folder}/environment", exist_ok=True)
     _prune_movement_history(f"{sim_folder}/movement", self.step - 1,
                             full_scan=True)
+    # A resumed run may find STALE movement files from a previous run at
+    # step numbers >= the resume point (the old run kept writing past the
+    # saved meta step). The frontend polls movement/{step}.json and would
+    # show those old dates until the new run overwrites each file, so
+    # delete them at boot: the new run recreates each file when it reaches
+    # that step.
+    try:
+      _stale_movement = [
+        filename for filename in os.listdir(f"{sim_folder}/movement")
+        if filename.endswith(".json")
+        and filename[:-5].isdigit()
+        and int(filename[:-5]) >= self.step
+      ]
+      for filename in _stale_movement:
+        os.remove(os.path.join(f"{sim_folder}/movement", filename))
+    except Exception:
+      pass
 
     # When a persona arrives at a game object, we give a unique event
     # to that object. 
