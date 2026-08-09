@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^get_economy_feed/$', translator_views.get_economy_feed, name='get_economy_feed'),
     url(r'^admin/command/$', translator_views.admin_command, name='admin_command'),
     url(r'^get_sim_store_stats/$', translator_views.get_sim_store_stats, name='get_sim_store_stats'),
+    url(r'^get_sim_state/$', translator_views.get_sim_state, name='get_sim_state'),
     url(r'^set_pacing/$', translator_views.set_pacing, name='set_pacing'),
     url(r'^persona_state/$', translator_views.persona_state_json, name='persona_state'),
     url(r'^simulator_home$', translator_views.home, name='home'),

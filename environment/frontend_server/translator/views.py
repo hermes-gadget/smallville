@@ -250,6 +250,40 @@ def get_sim_store_stats(request):
   return JsonResponse(payload)
 
 
+_sim_state_cache = {"at": 0.0, "running": None}
+
+
+def get_sim_state(request):
+  """Return whether the Reverie AI loop is currently running (public).
+
+  The town website stays up while the simulation is paused; this endpoint
+  lets the UI show a visible PAUSED banner. The check runs ``systemctl --user
+  is-active smallville-reverie.service`` (cheap, ~30ms) with a 5-second TTL
+  cache so the 2-5s frontend poll never hammers subprocess spawn.
+  """
+  import subprocess
+  import time as _time
+  now = _time.time()
+  if _sim_state_cache["at"] + 5.0 >= now and _sim_state_cache["running"] is not None:
+    running = _sim_state_cache["running"]
+  else:
+    try:
+      completed = subprocess.run(
+        ["systemctl", "--user", "is-active", "smallville-reverie.service"],
+        capture_output=True, text=True, timeout=3.0, check=False,
+      )
+      running = completed.returncode == 0 and completed.stdout.strip() == "active"
+    except (OSError, subprocess.SubprocessError):
+      running = None  # unknown — do not show a banner on failure
+    _sim_state_cache["at"] = now
+    _sim_state_cache["running"] = running
+  return JsonResponse({
+    "sim_running": running,
+    "unit": "smallville-reverie.service",
+    "checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+  })
+
+
 def _is_admin_request(request):
   """Admin-only gate for private endpoints.
 

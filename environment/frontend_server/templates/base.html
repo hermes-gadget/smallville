@@ -61,6 +61,24 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 			color: #6f8b8c;
 			font: 9px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		}
+		#sim-state-banner {
+			position: fixed;
+			top: 12px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 10000;
+			width: min(560px, calc(100vw - 32px));
+			padding: 10px 18px;
+			border: 1px solid rgba(255, 183, 77, .45);
+			border-radius: 999px;
+			background: rgba(38, 30, 10, .92);
+			color: #ffd591;
+			font: 600 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+			text-align: center;
+			box-shadow: 0 4px 24px rgba(0, 0, 0, .45);
+			backdrop-filter: blur(4px);
+		}
+		#sim-state-banner strong { color: #ffc069; }
 		#token-monitor {
 			position: fixed;
 			top: 16px;
@@ -166,6 +184,10 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 </head>
 
 <body class="{% block body_class %}top-navigation{% endblock body_class %}">
+	<!-- Simulation paused banner (public state, shown when Reverie is stopped) -->
+	<div id="sim-state-banner" role="status" aria-label="Simulation paused" hidden>
+		⏸ <strong>Simulation paused</strong> — the town is frozen and is not using any AI tokens.
+	</div>
 	{% block content %}{% endblock content %}
 
 	<script src="https://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
@@ -259,12 +281,20 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 				$('#tm-models').text(models);
 			}).fail(function() {});
 		}
+		function refreshSimState() {
+			$.getJSON('/get_sim_state/', function(d) {
+				var running = d && d.sim_running;
+				$('#sim-state-banner').toggle(running === false);
+			}).fail(function() {});
+		}
 		$(document).ready(function() {
 			refreshTownSummary();
 			refreshTokenMonitor();
+			refreshSimState();
 			positionTownPanels();
 			setInterval(refreshTownSummary, 60000);
 			setInterval(refreshTokenMonitor, 2000);
+			setInterval(refreshSimState, 5000);
 			$(window).on('resize', positionTownPanels);
 		});
 	</script>
