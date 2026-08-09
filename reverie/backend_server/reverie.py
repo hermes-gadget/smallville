@@ -560,6 +560,7 @@ class ReverieServer:
           # movements dictionary. 
           movements["meta"]["curr_time"] = (self.curr_time 
                                             .strftime("%B %d, %Y, %H:%M:%S"))
+          movements["meta"]["step"] = self.step
           # We then write the personas' movements to a file that will be sent 
           # to the frontend server. 
           # Example json output: 

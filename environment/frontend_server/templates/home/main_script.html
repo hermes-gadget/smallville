@@ -522,6 +522,9 @@
 			if (execute_movement.meta && execute_movement.meta.curr_time) {
 				setText("game-time-content", execute_movement.meta.curr_time);
 			}
+			if (execute_movement.meta && execute_movement.meta.step !== undefined) {
+				setText("game-step-content", execute_movement.meta.step);
+			}
 
 			if (execute_count === execute_count_max) {
 				prepareMovementTargets();
@@ -1048,6 +1051,10 @@
 			entries.forEach(function(entry) {
 				var lines = normaliseChatLines(entry && entry.chat);
 				if (!lines.length) return;
+				// Live feed: each chat_log entry is a growing thread snapshot,
+				// so render ONLY the newest utterance (the last line) — the
+				// feed then streams exchange-by-exchange as agents talk.
+				var live_line = lines[lines.length - 1];
 				var participants = [];
 				var participant_lookup = {};
 				lines.forEach(function(line) {
@@ -1071,20 +1078,18 @@
 				meta.appendChild(time_node);
 				article.appendChild(meta);
 
-				lines.forEach(function(line) {
-					var row = document.createElement("div");
-					row.className = "chat-line";
-					var speaker = document.createElement("span");
-					speaker.className = "chat-line__speaker";
-					speaker.style.color = speakerColor(line.speaker);
-					speaker.textContent = line.speaker;
-					var utterance = document.createElement("span");
-					utterance.className = "chat-line__utterance";
-					utterance.textContent = line.utterance;
-					row.appendChild(speaker);
-					row.appendChild(utterance);
-					article.appendChild(row);
-				});
+				var row = document.createElement("div");
+				row.className = "chat-line";
+				var speaker = document.createElement("span");
+				speaker.className = "chat-line__speaker";
+				speaker.style.color = speakerColor(live_line.speaker);
+				speaker.textContent = live_line.speaker;
+				var utterance = document.createElement("span");
+				utterance.className = "chat-line__utterance";
+				utterance.textContent = live_line.utterance;
+				row.appendChild(speaker);
+				row.appendChild(utterance);
+				article.appendChild(row);
 				feed.appendChild(article);
 			});
 

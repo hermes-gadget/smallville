@@ -405,6 +405,23 @@
 		text-transform: none;
 		white-space: nowrap;
 	}
+	.game-clock__step {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		color: #62dfbd;
+	}
+	.game-clock__step::before {
+		content: "·";
+		color: #7f9999;
+	}
+	.game-clock__step strong {
+		color: #62dfbd;
+		font-size: 10px;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0;
+		text-transform: none;
+	}
 	.replay-controls { gap: 3px; padding: 4px; pointer-events: auto; }
 	.replay-control {
 		width: 34px;
@@ -1205,7 +1222,7 @@
 				<span class="map-brand__mark" aria-hidden="true">✦</span>
 				<span><strong>Smallville</strong><small>Autonomous town</small></span>
 			</div>
-			<div class="game-clock" role="status" aria-label="World time"><span>World time</span><strong id="game-time-content">Synchronising…</strong></div>
+			<div class="game-clock" role="status" aria-label="World time"><span>World time</span><strong id="game-time-content">Synchronising…</strong><span class="game-clock__step">step <strong id="game-step-content">—</strong></span></div>
 			{% if mode != 'simulate' %}
 			<div class="replay-controls" aria-label="Replay controls">
 				<button class="replay-control" id="play_button" type="button" aria-label="Play replay">▶</button>
