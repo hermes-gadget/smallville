@@ -227,6 +227,10 @@ Return only valid JSON with exactly this shape:
 
 Rules: no prose paragraphs, no headings, no extra keys. Bullets must be short
 and punchy. Do not invent events; if records are sparse say so in the summary.
+IMPORTANT: ignore simulation artifacts — impossible times like "13:00 AM",
+placeholders like <random>, repeated/duplicated log entries, and meta talk
+about "glitches in the logs". Never mention them; focus on real resident life,
+conversations, and relationships.
 Town records:
 ''' + json.dumps(context, ensure_ascii=False, separators=(',', ':'))
 
