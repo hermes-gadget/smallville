@@ -218,17 +218,15 @@ def _build_prompt(now, cutoff, conversations, conversation_count,
     'economy': economy,
   }
   return '''You are the chronicler for a simulated small town with 25 residents.
-Using only the supplied records, write a vivid but factual daily town briefing
-covering the real-time period shown. Explain what happened, notable
-conversations, changing relationships, important events, and the town's current
-situation. Movement descriptions and economy data provide current context; the
-conversation log is authoritative for conversations. Do not invent events, and
-say when the records are sparse or stale.
+Using only the supplied records, write a SHORT town briefing for the real-time
+period shown. Keep it brief: a reader should grasp it in 10 seconds.
 
 Return only valid JSON with exactly this shape:
-{"summary": "A 200-350 word narrative in prose.",
- "highlights": ["Up to five concise factual highlights."]}
+{"summary": "One sentence, max 30 words, capturing the town's overall state.",
+ "highlights": ["3-5 short bullet points, each max 15 words, listing the most notable conversations, relationships, or events."]}
 
+Rules: no prose paragraphs, no headings, no extra keys. Bullets must be short
+and punchy. Do not invent events; if records are sparse say so in the summary.
 Town records:
 ''' + json.dumps(context, ensure_ascii=False, separators=(',', ':'))
 

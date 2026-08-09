@@ -215,14 +215,17 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 		}
 		function refreshTownSummary() {
 			$.getJSON('/get_town_summary/', function(d) {
-				var summary = d && d.summary ? d.summary : 'No summary yet';
-				$('#town-summary-text').text(summary);
+				var summary = d && d.summary ? d.summary : '';
 				var highlights = d && Array.isArray(d.highlights) ? d.highlights.slice(0, 5) : [];
+				$('#town-summary-text').text(summary).toggle(summary.length > 0);
 				var list = $('#town-summary-highlights').empty();
 				highlights.forEach(function(highlight) {
 					$('<li>').text(highlight).appendTo(list);
 				});
 				list.toggle(highlights.length > 0);
+				if (!summary && highlights.length === 0) {
+					$('#town-summary-text').text('No summary yet').show();
+				}
 				var generated = '—';
 				if (d && d.generated_at) {
 					var date = new Date(d.generated_at);
