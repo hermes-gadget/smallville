@@ -19,6 +19,48 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 			--tm-teal: #62dfbd;
 			--tm-amber: #f2bd62;
 		}
+		#town-summary {
+			position: fixed;
+			top: 16px;
+			right: 16px;
+			z-index: 9998;
+			width: min(360px, calc(100vw - 32px));
+			max-height: calc(100vh - 210px);
+			padding: 15px 17px 14px;
+			overflow-y: auto;
+			border: 1px solid rgba(129, 220, 199, .2);
+			border-radius: 15px;
+			background:
+				linear-gradient(145deg, rgba(20, 38, 52, .96), rgba(8, 18, 29, .94));
+			box-shadow: 0 18px 44px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .04);
+			color: var(--tm-ink);
+			font: 12px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			-webkit-backdrop-filter: blur(18px);
+			backdrop-filter: blur(18px);
+		}
+		.town-summary__heading {
+			margin-bottom: 8px;
+			color: #fff;
+			font-size: 11px;
+			font-weight: 750;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+		.town-summary__text {
+			color: #d7e6e4;
+			white-space: pre-line;
+		}
+		.town-summary__highlights {
+			margin: 10px 0 0;
+			padding-left: 18px;
+			color: #b8ccca;
+		}
+		.town-summary__highlights li + li { margin-top: 4px; }
+		.town-summary__meta {
+			margin-top: 9px;
+			color: #6f8b8c;
+			font: 9px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		}
 		#token-monitor {
 			position: fixed;
 			top: 16px;
@@ -91,6 +133,22 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 			font-size: 9px;
 		}
 		@media (max-width: 640px) {
+			#town-summary {
+				top: max(10px, env(safe-area-inset-top));
+				right: max(10px, env(safe-area-inset-right));
+				width: 196px;
+				max-height: none;
+				padding: 10px 12px;
+				border-radius: 13px;
+			}
+			.town-summary__heading { margin-bottom: 5px; font-size: 10px; }
+			.town-summary__text {
+				display: -webkit-box;
+				overflow: hidden;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 3;
+			}
+			.town-summary__secondary { display: none; }
 			#token-monitor {
 				top: max(10px, env(safe-area-inset-top));
 				right: max(10px, env(safe-area-inset-right));
@@ -117,6 +175,14 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 	<script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=Xha1v8a6ENHDAgZ2dJoH85LCl6H1VwpYfgwfbgau8r4&cl=ffffff&w=a"></script>
 	<style>#clustrmaps-widget-v2 { display: none !important; }</style>
 
+	<!-- Daily public-town summary -->
+	<div id="town-summary" role="status" aria-label="Latest town summary">
+		<div class="town-summary__heading">Town summary</div>
+		<div id="town-summary-text" class="town-summary__text">No summary yet</div>
+		<ul id="town-summary-highlights" class="town-summary__highlights town-summary__secondary"></ul>
+		<div class="town-summary__meta town-summary__secondary">generated <span id="town-summary-generated">—</span></div>
+	</div>
+
 	<!-- LLM token usage monitor (hermes-gadget fork) -->
 	<div id="token-monitor" role="status" aria-label="Live LLM token usage">
 		<div class="token-monitor__heading"><span class="token-monitor__pulse"></span>LLM tokens</div>
@@ -140,6 +206,34 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 		<div class="token-monitor__meta">updated <span id="tm-updated">-</span> · since <span id="tm-started">-</span></div>
 	</div>
 	<script type="text/javascript">
+		function positionTownPanels() {
+			var summary = document.getElementById('town-summary');
+			var monitor = document.getElementById('token-monitor');
+			if (summary && monitor) {
+				monitor.style.top = Math.ceil(summary.getBoundingClientRect().bottom + 12) + 'px';
+			}
+		}
+		function refreshTownSummary() {
+			$.getJSON('/get_town_summary/', function(d) {
+				var summary = d && d.summary ? d.summary : 'No summary yet';
+				$('#town-summary-text').text(summary);
+				var highlights = d && Array.isArray(d.highlights) ? d.highlights.slice(0, 5) : [];
+				var list = $('#town-summary-highlights').empty();
+				highlights.forEach(function(highlight) {
+					$('<li>').text(highlight).appendTo(list);
+				});
+				list.toggle(highlights.length > 0);
+				var generated = '—';
+				if (d && d.generated_at) {
+					var date = new Date(d.generated_at);
+					generated = isNaN(date.getTime()) ? d.generated_at : date.toLocaleString();
+				}
+				$('#town-summary-generated').text(generated);
+				positionTownPanels();
+			}).fail(function() {
+				positionTownPanels();
+			});
+		}
 		function refreshTokenMonitor() {
 			$.getJSON('/get_token_usage/', function(d) {
 				var n = function(v) { return Number(v || 0).toLocaleString(); };
@@ -163,8 +257,12 @@ Author: Joon Sung Park (joonspk@stanford.edu)
 			}).fail(function() {});
 		}
 		$(document).ready(function() {
+			refreshTownSummary();
 			refreshTokenMonitor();
+			positionTownPanels();
+			setInterval(refreshTownSummary, 60000);
 			setInterval(refreshTokenMonitor, 2000);
+			$(window).on('resize', positionTownPanels);
 		});
 	</script>
 </body>

@@ -104,6 +104,23 @@ def get_chat_log(request):
   return JsonResponse(payload)
 
 
+def get_town_summary(request):
+  '''Return the latest generated summary for the public town.'''
+  payload = {'summary': None, 'generated_at': None, 'covered': None}
+  frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  summary_file = os.path.join(frontend_root, 'storage', 'public_sim',
+                              'town_summary.json')
+  if os.path.exists(summary_file):
+    try:
+      with open(summary_file) as json_file:
+        summary = json.load(json_file)
+      if isinstance(summary, dict):
+        return JsonResponse(summary)
+    except Exception:
+      pass
+  return JsonResponse(payload)
+
+
 def _safe_sim_code(request, default="public_sim"):
   sim_code = (request.GET.get("sim_code") or request.POST.get("sim_code")
               or default)
@@ -700,6 +717,5 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
 
 

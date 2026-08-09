@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^$', translator_views.landing, name='landing'),
     url(r'^get_token_usage/$', translator_views.get_token_usage, name='get_token_usage'),
     url(r'^get_chat_log/$', translator_views.get_chat_log, name='get_chat_log'),
+    url(r'^get_town_summary/$', translator_views.get_town_summary, name='get_town_summary'),
     url(r'^get_economy/$', translator_views.get_economy, name='get_economy'),
     url(r'^get_economy_feed/$', translator_views.get_economy_feed, name='get_economy_feed'),
     url(r'^admin/command/$', translator_views.admin_command, name='admin_command'),
