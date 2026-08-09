@@ -1093,7 +1093,7 @@
 				feed.appendChild(article);
 			});
 
-			setText("chat-count", entries.length + (entries.length === 1 ? " conversation" : " conversations"));
+			setText("chat-count", entries.length + (entries.length === 1 ? " message" : " messages"));
 			feed.scrollTop = near_bottom ? feed.scrollHeight : previous_scroll_top;
 		}
 
