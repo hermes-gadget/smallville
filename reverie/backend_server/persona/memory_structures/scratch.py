@@ -581,6 +581,8 @@ class Scratch:
       
     if self.chatting_with: 
       end_time = self.chatting_end_time
+      if not end_time:
+        return True
     else: 
       x = self.act_start_time
       if x.second != 0: 
@@ -588,9 +590,7 @@ class Scratch:
         x = (x + datetime.timedelta(minutes=1))
       end_time = (x + datetime.timedelta(minutes=self.act_duration))
 
-    if end_time.strftime("%H:%M:%S") == self.curr_time.strftime("%H:%M:%S"): 
-      return True
-    return False
+    return self.curr_time >= end_time
 
 
   def act_summarize(self):
@@ -650,7 +650,6 @@ class Scratch:
       minute = curr_min_sum%60
       ret += f"{hour:02}:{minute:02} || {row[0]}\n"
     return ret
-
 
 
 
