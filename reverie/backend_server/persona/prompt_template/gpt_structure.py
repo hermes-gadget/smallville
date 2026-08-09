@@ -135,7 +135,9 @@ def _llm_chat(messages,
               frequency_penalty=0.0,
               presence_penalty=0.0,
               stop=None,
-              retries=4):
+              retries=4,
+              thinking=None,
+              reasoning_effort=None):
   """POST a chat-completions request to the OpenCode Go gateway.
 
   Returns the assistant message content. Raises RuntimeError when the
@@ -152,8 +154,12 @@ def _llm_chat(messages,
     "frequency_penalty": frequency_penalty,
     "presence_penalty": presence_penalty,
   }
-  if not llm_thinking:
+  if thinking is False or (thinking is None and not llm_thinking):
     payload["thinking"] = {"type": "disabled"}
+  elif thinking:
+    payload['thinking'] = {'type': 'enabled'}
+  if reasoning_effort:
+    payload['reasoning_effort'] = reasoning_effort
   if stop:
     payload["stop"] = stop
 
@@ -225,11 +231,15 @@ def GPT4_request(prompt):
     return "ChatGPT ERROR"
 
 
-def ChatGPT_request(prompt):
+def ChatGPT_request(prompt, thinking=None, reasoning_effort=None,
+                    max_tokens=None):
   """Single-shot request on the default model (deepseek-v4-flash)."""
   temp_sleep()
   try:
-    return _llm_chat([{"role": "user", "content": prompt}])
+    return _llm_chat([{"role": "user", "content": prompt}],
+                     max_tokens=max_tokens,
+                     thinking=thinking,
+                     reasoning_effort=reasoning_effort)
   except Exception as e:
     print(f"[LLM ERROR] ChatGPT_request: {e}", file=sys.stderr)
     return "ChatGPT ERROR"
