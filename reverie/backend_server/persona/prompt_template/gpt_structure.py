@@ -386,7 +386,7 @@ def _llm_chat(messages,
 
   url = openai_base_url.rstrip("/") + "/chat/completions"
   headers = {
-    "Authorization": f"Bearer {openai_api_key}",
+    "Authorization": f"Bearer {get_api_key()}",
     "Content-Type": "application/json",
   }
 

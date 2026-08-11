@@ -34,10 +34,23 @@ def load_api_key():
     )
 
 
+def get_api_key():
+    """Lazy API-key accessor (import-time safe).
+
+    Importing this module must never require a secret: the key is loaded
+    only when an LLM call actually needs it, so unit tests and CI can
+    import the simulation modules without a key file present.
+    """
+    global openai_api_key
+    if openai_api_key is None:
+        openai_api_key = load_api_key()
+    return openai_api_key
+
+
 # ---------------------------------------------------------------------------
 # OpenCode Go (LLM gateway) configuration
 # ---------------------------------------------------------------------------
-openai_api_key = load_api_key()          # kept name for compatibility
+openai_api_key = None          # lazy: set by get_api_key() on first LLM call
 key_owner = "Ben"
 
 # OpenAI-compatible gateway endpoint + model.
