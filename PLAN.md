@@ -88,24 +88,21 @@ hard guard on LLM spend.
   reflect/execute run 6-way concurrent.
 - **Live-flippable speed**: `game_sec_per_real_sec` in `utils.py` is the default;
   `environment/frontend_server/temp_storage/pacing.txt` overrides it LIVE (no service
-  restart — the step loop re-reads it every step). `echo 60 > .../pacing.txt` flips
-  instantly. Current: 60× (one game-minute per real second → game day ≈ 24 real min).
-  NOTE: the clock is an absolute wall-time mapping (anchor = boot time), so lowering
-  the ratio makes the clock tick slower but keeps it monotonic-in-real-time; the world
-  time pill reflects the CURRENT ratio.
+  restart — the step loop re-reads it every step). Each sample advances the accumulated
+  clock by `elapsed × current pacing`, so rate changes apply only to future elapsed time
+  and can neither rewind nor jump the town clock.
 - **Resilience**: None-safe poignancy scores (LLM None → mid score 5); per-persona
   try/except in both perceive and decide phases — one persona's failure can no longer
   kill the town (falls back to "stay in place").
-- **Autonomous advance**: backend writes its own env files when no browser drives the
-  walk — town never freezes without a viewer. Partial env POSTs from the browser are
-  gap-filled (was crashing the sim on missing residents).
-- **Atomic saves**: all hot JSON writes (movement, env, scratch, embeddings, curr_step)
-  go through tmp+rename — a kill mid-save can no longer corrupt persona state (this
-  crash-looped the unit once; `repair_embeddings.py` regenerates a corrupted
-  `embeddings.json` from `nodes.json`).
-- **Robustness**: hard 90s LLM deadline; fresh session per LLM attempt (kills the
-  connection-pool deadlock from trickling gateway streams); task-decomp drift
-  normalization; runtime state untracked from git.
+- **Autonomous advance**: backend writes its own complete env files when no browser
+  drives the walk. Inputs must contain the exact roster and finite in-bounds integer
+  coordinates; malformed files are retained for bounded retry without advancing.
+- **Crash-consistent saves**: full persona state is written to a validated generation,
+  fsynced, then published by one atomic manifest switch with previous-generation
+  fallback. Signal saves wait for the active step boundary.
+- **Robustness**: model calls use bounded concurrency, one end-to-end retry/deadline
+  policy, killable child transports, `Retry-After` backoff, and circuit breakers;
+  embedding outages defer percepts instead of blocking the sequential phase.
 
 ### Done — features
 - **Chat message UI (gpt-5.6-sol @ xhigh agent, `sw-chat-ui`)**: backend appends
@@ -116,9 +113,10 @@ hard guard on LLM spend.
 - **UI improvements (same agent)**: `process_environment` POST removed (backend is
   autonomous — it was the partial-env crash source); sprite fallback for all 25
   residents; roster from meta order; awaiting-action empty states.
-- **500M token guard**: cron `smallville-token-guard` (every 30 min) — reads
-  `token_usage.db` `calls` table `SUM(total_tokens)`; ≥ 500,000,000 → stops
-  `smallville-reverie` + alerts. Current burn ≈ 5.3M all-time — guard is a safety net.
+- **500M token cap**: every model/embedding request durably reserves its maximum budget
+  in `token_usage.db` before dispatch and reconciles authoritative response usage.
+  Accounting failures fail closed and ambiguous hard timeouts charge the full
+  reservation. The external watchdog remains defense in depth.
 
 ### Verified live (screenshots on record)
 - 25 residents in drawer, 17/25 awake at 08:00 boot (sleepers have later wake hours)

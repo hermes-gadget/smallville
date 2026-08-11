@@ -973,7 +973,24 @@ def _long_term_planning_parallel(persona, new_day, personas):
     ev.wait(timeout=900)
 
 
-def plan(persona, maze, personas, new_day, retrieved): 
+def prepare_reaction(persona, focused_event, personas):
+  """Produce a read-only reaction intention for the step coordinator."""
+  if not focused_event:
+    return False
+  return _should_react(persona, focused_event, personas)
+
+
+def commit_reaction(maze, persona, focused_event, reaction_mode, personas):
+  """Apply one coordinator-approved reaction."""
+  if not reaction_mode:
+    return
+  if reaction_mode[:9] == "chat with":
+    _chat_react(maze, persona, focused_event, reaction_mode, personas)
+  elif reaction_mode[:4] == "wait":
+    _wait_react(persona, reaction_mode)
+
+
+def plan(persona, maze, personas, new_day, retrieved, enable_reactions=True):
   """
   Main cognitive function of the chain. It takes the retrieved memory and 
   perception, as well as the maze and the first day state to conduct both 
@@ -1013,7 +1030,7 @@ def plan(persona, maze, personas, new_day, retrieved):
   #                     ["events"] = [<ConceptNode>, ...], 
   #                     ["thoughts"] = [<ConceptNode>, ...]}
   focused_event = False
-  if retrieved.keys(): 
+  if enable_reactions and retrieved.keys():
     focused_event = _choose_retrieved(persona, retrieved)
   
   # Step 2: Once we choose an event, we need to determine whether the
@@ -1022,16 +1039,10 @@ def plan(persona, maze, personas, new_day, retrieved):
   #         a) "chat with {target_persona.name}"
   #         b) "react"
   #         c) False
-  if focused_event: 
-    reaction_mode = _should_react(persona, focused_event, personas)
-    if reaction_mode: 
-      # If we do want to chat, then we generate conversation 
-      if reaction_mode[:9] == "chat with":
-        _chat_react(maze, persona, focused_event, reaction_mode, personas)
-      elif reaction_mode[:4] == "wait": 
-        _wait_react(persona, reaction_mode)
-      # elif reaction_mode == "do other things": 
-      #   _chat_react(persona, focused_event, reaction_mode, personas)
+  if enable_reactions and focused_event:
+    commit_reaction(
+      maze, persona, focused_event,
+      prepare_reaction(persona, focused_event, personas), personas)
 
   # Step 3: Chat-related state clean up. 
   # If the persona is not chatting with anyone, we clean up any of the 

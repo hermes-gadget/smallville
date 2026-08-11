@@ -17,7 +17,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from global_methods import *
 
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from .models import *
 
 def landing(request):
@@ -361,6 +361,7 @@ def admin_command(request):
   return JsonResponse({"ok": True, "id": command_id})
 
 
+@csrf_exempt
 def set_pacing(request):
   """Set the world-clock pacing (game seconds per real second). PRIVATE.
 
@@ -724,4 +725,3 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-

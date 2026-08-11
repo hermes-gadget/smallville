@@ -94,8 +94,8 @@ def perceive_collect(persona, maze):
   for dist, event in percept_events_list[:persona.scratch.att_bandwidth]: 
     perceived_events += [event]
 
-  # Collect pending percepts (embeddings are cheap local calls; poignancy
-  # LLM scoring and a_mem commits are deferred to perceive_commit).
+  # Collect pending percepts without remote I/O. Embeddings and poignancy are
+  # deferred to the bounded parallel commit phase.
   pending = []
   for p_event in perceived_events: 
     if not isinstance(p_event, (tuple, list)) or len(p_event) != 4:
@@ -134,7 +134,7 @@ def perceive_collect(persona, maze):
       if desc_embedding_in in persona.a_mem.embeddings: 
         event_embedding = persona.a_mem.embeddings[desc_embedding_in]
       else: 
-        event_embedding = get_embedding(desc_embedding_in)
+        event_embedding = None
       spec = {
         "kind": "event",
         "s": s, "p": p, "o": o, "desc": desc,
@@ -152,8 +152,7 @@ def perceive_collect(persona, maze):
           chat_embedding = persona.a_mem.embeddings[
                              persona.scratch.act_description]
         else: 
-          chat_embedding = get_embedding(persona.scratch
-                                                .act_description)
+          chat_embedding = None
         spec["chat"] = {
           "curr_event": curr_event,
           "chat_embedding_pair": (persona.scratch.act_description,
@@ -175,6 +174,21 @@ def perceive_commit(persona, pending):
   """
   ret_events = []
   for spec in pending: 
+    if spec["embedding_pair"][1] is None:
+      embedding = get_embedding(spec["embedding_pair"][0],
+                                defer_on_error=True)
+      if embedding is None:
+        continue
+      spec["embedding_pair"] = (spec["embedding_pair"][0], embedding)
+    if (spec.get("chat")
+        and spec["chat"]["chat_embedding_pair"][1] is None):
+      chat_embedding = get_embedding(
+        spec["chat"]["chat_embedding_pair"][0], defer_on_error=True)
+      if chat_embedding is None:
+        spec["chat"] = None
+      else:
+        spec["chat"]["chat_embedding_pair"] = (
+          spec["chat"]["chat_embedding_pair"][0], chat_embedding)
     # Get event poignancy. 
     event_poignancy = generate_poig_score(persona, 
                                           "event", 
@@ -209,7 +223,6 @@ def perceive_commit(persona, pending):
 
 
   
-
 
 
 

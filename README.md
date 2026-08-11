@@ -21,14 +21,14 @@ Create `~/.opencode-go.key` containing your OpenCode Go key on one line. The key
 
 ### 1. Install Python dependencies
 
-Python 3.9 is the supported baseline. From the repository root:
+Python 3.12 is the supported baseline. From the repository root:
 
 ```bash
-uv venv --python 3.9 .venv
+uv venv --python 3.12 .venv
 uv pip install -r requirements.txt --python .venv/bin/python
 ```
 
-With standard `venv`/`pip`: `python3.9 -m venv .venv`, `source .venv/bin/activate`, then `pip install -r requirements.txt`. Runtime dependencies are intentionally small: NumPy and Requests for Reverie, plus Django 2.2 and Pillow for the frontend.
+With standard `venv`/`pip`: `python3.12 -m venv .venv`, `source .venv/bin/activate`, then `pip install -r requirements.txt`. Runtime dependencies are intentionally small: NumPy and Requests for Reverie, plus Django 5.2 LTS, Gunicorn, and Pillow for the frontend.
 
 ## Configuration reference
 

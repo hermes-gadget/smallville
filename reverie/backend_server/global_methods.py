@@ -16,6 +16,7 @@ import numpy
 import math
 import shutil, errno
 import json
+import tempfile
 
 from os import listdir
 
@@ -249,7 +250,24 @@ if __name__ == '__main__':
 def atomic_json_dump(obj, path):
   """Write JSON to <path> atomically (tmp file + rename) so a kill
   mid-write can never truncate the destination (crash-safe saves)."""
-  tmp = f"{path}.tmp"
-  with open(tmp, "w") as outfile:
-    json.dump(obj, outfile)
-  os.replace(tmp, path)
+  directory = os.path.dirname(os.path.abspath(path))
+  fd, tmp = tempfile.mkstemp(
+    prefix="." + os.path.basename(path) + ".", suffix=".tmp",
+    dir=directory, text=True)
+  try:
+    with os.fdopen(fd, "w") as outfile:
+      json.dump(obj, outfile)
+      outfile.flush()
+      os.fsync(outfile.fileno())
+    os.replace(tmp, path)
+    directory_fd = os.open(directory, os.O_RDONLY)
+    try:
+      os.fsync(directory_fd)
+    finally:
+      os.close(directory_fd)
+  except Exception:
+    try:
+      os.unlink(tmp)
+    except OSError:
+      pass
+    raise

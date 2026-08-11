@@ -13,8 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import path, re_path
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -22,23 +21,23 @@ from django.conf.urls.static import static
 from translator import views as translator_views
 
 urlpatterns = [
-    url(r'^$', translator_views.landing, name='landing'),
-    url(r'^get_token_usage/$', translator_views.get_token_usage, name='get_token_usage'),
-    url(r'^get_chat_log/$', translator_views.get_chat_log, name='get_chat_log'),
-    url(r'^get_town_summary/$', translator_views.get_town_summary, name='get_town_summary'),
-    url(r'^get_economy/$', translator_views.get_economy, name='get_economy'),
-    url(r'^get_economy_feed/$', translator_views.get_economy_feed, name='get_economy_feed'),
-    url(r'^admin/command/$', translator_views.admin_command, name='admin_command'),
-    url(r'^get_sim_store_stats/$', translator_views.get_sim_store_stats, name='get_sim_store_stats'),
-    url(r'^get_sim_state/$', translator_views.get_sim_state, name='get_sim_state'),
-    url(r'^set_pacing/$', translator_views.set_pacing, name='set_pacing'),
-    url(r'^persona_state/$', translator_views.persona_state_json, name='persona_state'),
-    url(r'^simulator_home$', translator_views.home, name='home'),
-    url(r'^demo/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/(?P<play_speed>[\w-]+)/$', translator_views.demo, name='demo'),
-    url(r'^replay/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/$', translator_views.replay, name='replay'),
-    url(r'^replay_persona_state/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/(?P<persona_name>[\w-]+)/$', translator_views.replay_persona_state, name='replay_persona_state'),
-    url(r'^update_environment/$', translator_views.update_environment, name='update_environment'),
-    url(r'^path_tester/$', translator_views.path_tester, name='path_tester'),
-    url(r'^path_tester_update/$', translator_views.path_tester_update, name='path_tester_update'),
+    re_path(r'^$', translator_views.landing, name='landing'),
+    re_path(r'^get_token_usage/$', translator_views.get_token_usage, name='get_token_usage'),
+    re_path(r'^get_chat_log/$', translator_views.get_chat_log, name='get_chat_log'),
+    re_path(r'^get_town_summary/$', translator_views.get_town_summary, name='get_town_summary'),
+    re_path(r'^get_economy/$', translator_views.get_economy, name='get_economy'),
+    re_path(r'^get_economy_feed/$', translator_views.get_economy_feed, name='get_economy_feed'),
+    re_path(r'^admin/command/$', translator_views.admin_command, name='admin_command'),
+    re_path(r'^get_sim_store_stats/$', translator_views.get_sim_store_stats, name='get_sim_store_stats'),
+    re_path(r'^get_sim_state/$', translator_views.get_sim_state, name='get_sim_state'),
+    re_path(r'^set_pacing/$', translator_views.set_pacing, name='set_pacing'),
+    re_path(r'^persona_state/$', translator_views.persona_state_json, name='persona_state'),
+    re_path(r'^simulator_home$', translator_views.home, name='home'),
+    re_path(r'^demo/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/(?P<play_speed>[\w-]+)/$', translator_views.demo, name='demo'),
+    re_path(r'^replay/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/$', translator_views.replay, name='replay'),
+    re_path(r'^replay_persona_state/(?P<sim_code>[\w-]+)/(?P<step>[\w-]+)/(?P<persona_name>[\w-]+)/$', translator_views.replay_persona_state, name='replay_persona_state'),
+    re_path(r'^update_environment/$', translator_views.update_environment, name='update_environment'),
+    re_path(r'^path_tester/$', translator_views.path_tester, name='path_tester'),
+    re_path(r'^path_tester_update/$', translator_views.path_tester_update, name='path_tester_update'),
     path('admin/', admin.site.urls),
 ]

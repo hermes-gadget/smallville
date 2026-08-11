@@ -236,18 +236,13 @@ Town records:
 
 
 def _request_summary(prompt):
-  with tempfile.TemporaryDirectory(prefix='smallville-summary-') as telemetry_dir:
-    import utils
-    utils.token_usage_file = os.path.join(telemetry_dir, 'token_usage.json')
-    utils.token_usage_db = os.path.join(telemetry_dir, 'token_usage.db')
-
-    from persona.prompt_template import gpt_structure
-    return gpt_structure.ChatGPT_request(
-      prompt,
-      thinking=True,
-      reasoning_effort='high',
-      max_tokens=64000,
-    )
+  from persona.prompt_template import gpt_structure
+  return gpt_structure.ChatGPT_request(
+    prompt,
+    thinking=True,
+    reasoning_effort='high',
+    max_tokens=64000,
+  )
 
 
 def _parse_response(response):

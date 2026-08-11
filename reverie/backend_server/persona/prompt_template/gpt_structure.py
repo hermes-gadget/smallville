@@ -14,6 +14,8 @@ Function signatures are kept identical to the upstream file so the persona
 cognitive modules work unchanged.
 """
 import json
+import datetime
+import email.utils
 import os
 import random
 import sqlite3
@@ -21,12 +23,17 @@ import sys
 import tempfile
 import threading
 import time
-
-import requests
+import uuid
 
 from utils import *
+from persona.prompt_template.http_transport import (
+  TransportError, TransportTimeout, post_json)
 
-_SESSION = requests.Session()
+TOKEN_LIMIT = int(os.environ.get("SMALLVILLE_TOKEN_LIMIT", "500000000"))
+
+
+class TokenQuotaExceeded(RuntimeError):
+  pass
 
 # ---------------------------------------------------------------------------
 # Token usage telemetry
@@ -48,9 +55,147 @@ _usage = {
 }
 
 
-def _record_usage(usage, model, embedding=False):
+def _ledger_connection():
+  path = os.path.abspath(token_usage_db)
+  os.makedirs(os.path.dirname(path), exist_ok=True)
+  conn = sqlite3.connect(path, timeout=5)
+  conn.execute("PRAGMA journal_mode=WAL")
+  conn.execute("PRAGMA busy_timeout=5000")
+  conn.executescript(
+    """
+    CREATE TABLE IF NOT EXISTS calls (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts TEXT NOT NULL,
+      model TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      prompt_tokens INTEGER NOT NULL,
+      completion_tokens INTEGER NOT NULL,
+      total_tokens INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS quota_state (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      used_tokens INTEGER NOT NULL,
+      reserved_tokens INTEGER NOT NULL,
+      limit_tokens INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS quota_reservations (
+      reservation_id TEXT PRIMARY KEY,
+      reserved_tokens INTEGER NOT NULL,
+      created_at TEXT NOT NULL);
+    """)
+  if conn.execute("SELECT 1 FROM quota_state WHERE id = 1").fetchone() is None:
+    total = conn.execute(
+      "SELECT COALESCE(SUM(total_tokens), 0) FROM calls").fetchone()[0]
+    conn.execute(
+      "INSERT INTO quota_state "
+      "(id, used_tokens, reserved_tokens, limit_tokens) VALUES (1, ?, 0, ?)",
+      (int(total), TOKEN_LIMIT))
+  else:
+    conn.execute("UPDATE quota_state SET limit_tokens = ? WHERE id = 1",
+                 (TOKEN_LIMIT,))
+  conn.commit()
+  return conn
+
+
+def _reserve_usage(maximum_tokens):
+  maximum_tokens = max(1, int(maximum_tokens))
+  reservation_id = uuid.uuid4().hex
+  conn = _ledger_connection()
+  try:
+    conn.execute("BEGIN IMMEDIATE")
+    used, reserved, limit = conn.execute(
+      "SELECT used_tokens, reserved_tokens, limit_tokens "
+      "FROM quota_state WHERE id = 1").fetchone()
+    if used + reserved + maximum_tokens > limit:
+      raise TokenQuotaExceeded(
+        "token quota exhausted (%d used, %d reserved, %d limit)" %
+        (used, reserved, limit))
+    conn.execute(
+      "INSERT INTO quota_reservations "
+      "(reservation_id, reserved_tokens, created_at) VALUES (?, ?, ?)",
+      (reservation_id, maximum_tokens,
+       time.strftime("%Y-%m-%d %H:%M:%S")))
+    conn.execute(
+      "UPDATE quota_state SET reserved_tokens = reserved_tokens + ? "
+      "WHERE id = 1", (maximum_tokens,))
+    conn.commit()
+    return reservation_id, maximum_tokens
+  except Exception:
+    conn.rollback()
+    raise
+  finally:
+    conn.close()
+
+
+def _finish_reservation(reservation, model, usage, embedding=False,
+                        charge_reserved=False):
+  reservation_id, reserved_tokens = reservation
+  prompt = int(usage.get("prompt_tokens") or 0)
+  completion = int(usage.get("completion_tokens") or 0)
+  actual = int(usage.get("total_tokens") or prompt + completion)
+  if charge_reserved or actual <= 0:
+    actual = reserved_tokens
+    prompt = actual if embedding else 0
+    completion = 0 if embedding else actual
+  actual = max(0, actual)
+  conn = _ledger_connection()
+  try:
+    conn.execute("BEGIN IMMEDIATE")
+    row = conn.execute(
+      "SELECT reserved_tokens FROM quota_reservations "
+      "WHERE reservation_id = ?", (reservation_id,)).fetchone()
+    if row is None:
+      raise RuntimeError("token reservation is missing")
+    held = int(row[0])
+    conn.execute(
+      "INSERT INTO calls "
+      "(ts, model, kind, prompt_tokens, completion_tokens, total_tokens) "
+      "VALUES (?, ?, ?, ?, ?, ?)",
+      (time.strftime("%Y-%m-%d %H:%M:%S"), model,
+       "embedding" if embedding else
+       ("llm_timeout_reservation" if charge_reserved else "llm"),
+       prompt, completion, actual))
+    conn.execute("DELETE FROM quota_reservations WHERE reservation_id = ?",
+                 (reservation_id,))
+    conn.execute(
+      "UPDATE quota_state SET used_tokens = used_tokens + ?, "
+      "reserved_tokens = MAX(0, reserved_tokens - ?) WHERE id = 1",
+      (actual, held))
+    conn.commit()
+  except Exception:
+    conn.rollback()
+    raise
+  finally:
+    conn.close()
+
+
+def _release_reservation(reservation):
+  reservation_id, _ = reservation
+  conn = _ledger_connection()
+  try:
+    conn.execute("BEGIN IMMEDIATE")
+    row = conn.execute(
+      "SELECT reserved_tokens FROM quota_reservations "
+      "WHERE reservation_id = ?", (reservation_id,)).fetchone()
+    if row:
+      conn.execute("DELETE FROM quota_reservations WHERE reservation_id = ?",
+                   (reservation_id,))
+      conn.execute(
+        "UPDATE quota_state SET reserved_tokens = MAX(0, reserved_tokens - ?) "
+        "WHERE id = 1", (int(row[0]),))
+    conn.commit()
+  except Exception:
+    conn.rollback()
+    raise
+  finally:
+    conn.close()
+
+
+def _record_usage(usage, model, embedding=False, reservation=None,
+                  charge_reserved=False):
   """Add one API response's usage to the counter, persist the snapshot and
   append the call to the cumulative SQLite store (queryable)."""
+  if reservation is None:
+    raise RuntimeError("usage must have a durable token reservation")
+  _finish_reservation(reservation, model, usage, embedding, charge_reserved)
   with _usage_lock:
     if embedding:
       _usage["embedding_calls"] += 1
@@ -68,41 +213,6 @@ def _record_usage(usage, model, embedding=False):
       + _usage["embedding_tokens"])
     _usage["updated_at"] = time.strftime("%H:%M:%S")
     _write_usage_snapshot()
-    _log_usage_row(model, usage, embedding)
-
-
-def _log_usage_row(model, usage, embedding):
-  """Append one call to the cumulative SQLite log (never breaks the sim)."""
-  try:
-    path = os.path.abspath(token_usage_db)
-    directory = os.path.dirname(path)
-    os.makedirs(directory, exist_ok=True)
-    conn = sqlite3.connect(path, timeout=5)
-    try:
-      conn.execute(
-        "CREATE TABLE IF NOT EXISTS calls ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "ts TEXT NOT NULL,"
-        "model TEXT NOT NULL,"
-        "kind TEXT NOT NULL,"
-        "prompt_tokens INTEGER NOT NULL,"
-        "completion_tokens INTEGER NOT NULL,"
-        "total_tokens INTEGER NOT NULL)")
-      conn.execute(
-        "INSERT INTO calls (ts, model, kind, prompt_tokens, completion_tokens, total_tokens)"
-        " VALUES (?, ?, ?, ?, ?, ?)",
-        (time.strftime("%Y-%m-%d %H:%M:%S"), model,
-         "embedding" if embedding else "llm",
-         int(usage.get("prompt_tokens") or 0),
-         int(usage.get("completion_tokens") or 0),
-         int(usage.get("total_tokens")
-             or (usage.get("prompt_tokens") or 0)
-             + (usage.get("completion_tokens") or 0))))
-      conn.commit()
-    finally:
-      conn.close()
-  except Exception as e:  # telemetry must never break the simulation
-    print(f"[usage telemetry] db: {e}", file=sys.stderr)
 
 
 def _write_usage_snapshot():
@@ -125,6 +235,55 @@ _write_usage_snapshot()
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
+
+
+_request_slots = threading.BoundedSemaphore(
+  max(1, int(os.environ.get("SMALLVILLE_LLM_CONCURRENCY", "6"))))
+_circuit_lock = threading.Lock()
+_circuit_failures = 0
+_circuit_open_until = 0.0
+
+
+def _circuit_guard():
+  with _circuit_lock:
+    if time.monotonic() < _circuit_open_until:
+      raise RuntimeError("model gateway circuit breaker is open")
+
+
+def _circuit_success():
+  global _circuit_failures, _circuit_open_until
+  with _circuit_lock:
+    _circuit_failures = 0
+    _circuit_open_until = 0.0
+
+
+def _circuit_failure():
+  global _circuit_failures, _circuit_open_until
+  with _circuit_lock:
+    _circuit_failures += 1
+    if _circuit_failures >= 3:
+      _circuit_open_until = max(_circuit_open_until, time.monotonic() + 30.0)
+
+
+def _retry_delay(headers, attempt):
+  value = (headers or {}).get("Retry-After")
+  if value:
+    try:
+      return min(60.0, max(0.0, float(value)))
+    except (TypeError, ValueError):
+      try:
+        retry_at = email.utils.parsedate_to_datetime(value)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return min(60.0, max(0.0, (retry_at - now).total_seconds()))
+      except (TypeError, ValueError, OverflowError):
+        pass
+  return min(2 ** attempt, 30) + random.random()
+
+
+def _message_budget(messages, completion_budget):
+  input_bytes = sum(len(str(message.get("content", "")).encode("utf-8"))
+                    for message in messages)
+  return max(1, int(completion_budget) + input_bytes + 1024)
 
 
 def _llm_chat(messages,
@@ -169,51 +328,79 @@ def _llm_chat(messages,
     "Content-Type": "application/json",
   }
 
-  # Hard wall-clock deadline per attempt. The gateway can trickle a
-  # thinking response indefinitely (read timeouts reset per chunk), which
-  # would hang the simulation forever. We run the request on a daemon
-  # thread with its OWN session and abandon it after llm_hard_timeout
-  # seconds. A shared session pool is fatal here: stuck trickle-streams
-  # occupy every pooled connection and later attempts block on pool
-  # acquire forever. Fresh session per attempt = leaked sockets die with
-  # the gateway's keepalive, never the pool.
-  for attempt in range(retries):
-    box = {}
-
-    def _post():
-      try:
-        _s = requests.Session()
-        box["resp"] = _s.post(url, json=payload, headers=headers,
-                              timeout=60)
-      except Exception as e:  # noqa: BLE001 - surface any failure to the caller
-        box["err"] = e
-
-    try:
-      t = threading.Thread(target=_post, daemon=True)
-      t.start()
-      t.join(timeout=llm_hard_timeout)
-      if "err" in box:
-        raise box["err"]
-      if "resp" not in box:
-        raise RuntimeError(
-          f"LLM call exceeded hard timeout ({llm_hard_timeout}s)")
-      resp = box["resp"]
-      if resp.status_code == 200:
-        data = resp.json()
-        _record_usage(data.get("usage") or {}, payload["model"])
+  _circuit_guard()
+  completion_budget = int(payload["max_tokens"])
+  reservation = _reserve_usage(_message_budget(messages, completion_budget))
+  logical_deadline = time.monotonic() + float(llm_hard_timeout)
+  acquired = False
+  dispatched = False
+  try:
+    remaining = logical_deadline - time.monotonic()
+    acquired = _request_slots.acquire(timeout=max(0.0, remaining))
+    if not acquired:
+      _release_reservation(reservation)
+      reservation = None
+      raise RuntimeError("LLM concurrency deadline exhausted")
+    attempts = min(3, max(1, int(retries)))
+    for attempt in range(attempts):
+      remaining = logical_deadline - time.monotonic()
+      if remaining <= 0:
+        raise TransportTimeout("logical LLM deadline exhausted")
+      dispatched = True
+      result = post_json(url, payload, headers, deadline=remaining)
+      status = int(result["status"])
+      if status == 200:
+        try:
+          data = json.loads(result.get("text") or "{}")
+        except (TypeError, ValueError):
+          _record_usage({}, payload["model"], reservation=reservation,
+                        charge_reserved=True)
+          reservation = None
+          raise RuntimeError("LLM API returned malformed JSON")
+        try:
+          _record_usage(data.get("usage") or {}, payload["model"],
+                        reservation=reservation)
+        except Exception:
+          # Preserve the durable reservation on accounting failure. New
+          # requests fail closed against it until an operator reconciles it.
+          reservation = None
+          raise
+        reservation = None
         content = data["choices"][0]["message"].get("content") or ""
-        if content.strip():
-          return content
-        raise RuntimeError("empty completion (reasoning ate the token budget)")
-      if resp.status_code in (429, 500, 502, 503, 504):
-        time.sleep(min(2 ** attempt, 30) + random.random())
-        continue
-      raise RuntimeError(f"LLM API {resp.status_code}: {resp.text[:300]}")
-    except requests.RequestException as e:
-      if attempt == retries - 1:
-        raise RuntimeError(f"LLM request failed: {e}") from e
-      time.sleep(min(2 ** attempt, 30) + random.random())
-  raise RuntimeError("LLM request failed after retries")
+        if not content.strip():
+          raise RuntimeError("empty completion")
+        _circuit_success()
+        return content
+      if status in (429, 500, 502, 503, 504):
+        _circuit_failure()
+        if attempt + 1 < attempts:
+          delay = _retry_delay(result.get("headers"), attempt)
+          if time.monotonic() + delay < logical_deadline:
+            time.sleep(delay)
+            continue
+      _release_reservation(reservation)
+      reservation = None
+      raise RuntimeError("LLM API %s: %s" %
+                         (status, (result.get("text") or "")[:300]))
+    raise RuntimeError("LLM request failed after retries")
+  except (TransportTimeout, TransportError) as error:
+    _circuit_failure()
+    if reservation is not None and dispatched:
+      # The gateway may have accepted an abandoned request. Charge the full
+      # reservation so uncertain completion can never bypass the hard cap.
+      _record_usage({}, payload["model"], reservation=reservation,
+                    charge_reserved=True)
+      reservation = None
+    elif reservation is not None:
+      _release_reservation(reservation)
+      reservation = None
+    raise RuntimeError("LLM transport failed: %s" % error) from error
+  finally:
+    if acquired:
+      _request_slots.release()
+    if reservation is not None:
+      # Only known pre-dispatch or explicit HTTP error paths reach here.
+      _release_reservation(reservation)
 
 
 # ============================================================================
@@ -278,7 +465,9 @@ def ChatGPT_safe_generate_response(prompt,
     print("CHAT GPT PROMPT")
     print(prompt)
 
-  for i in range(repeat):
+  # Transport owns the single retry policy; parsing never dispatches another
+  # logical request after a valid-but-malformed completion.
+  for i in range(min(1, repeat)):
     try:
       curr_gpt_response = ChatGPT_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
@@ -316,7 +505,7 @@ def GPT4_safe_generate_response(prompt,
     print("CHAT GPT PROMPT")
     print(prompt)
 
-  for i in range(repeat):
+  for i in range(min(1, repeat)):
     try:
       curr_gpt_response = GPT4_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
@@ -347,7 +536,7 @@ def ChatGPT_safe_generate_response_OLD(prompt,
     print("CHAT GPT PROMPT")
     print(prompt)
 
-  for i in range(repeat):
+  for i in range(min(1, repeat)):
     try:
       curr_gpt_response = ChatGPT_request(prompt).strip()
       if func_validate(curr_gpt_response, prompt=prompt):
@@ -433,7 +622,7 @@ def safe_generate_response(prompt,
   if verbose:
     print(prompt)
 
-  for i in range(repeat):
+  for i in range(min(1, repeat)):
     curr_gpt_response = GPT_request(prompt, gpt_parameter)
     try:
       if func_validate(curr_gpt_response, prompt=prompt):
@@ -450,28 +639,84 @@ def safe_generate_response(prompt,
   return fail_safe_response
 
 
-def get_embedding(text, model=None):
-  """Embed text via the local LM Studio server (OpenAI-compatible)."""
+_embedding_slots = threading.BoundedSemaphore(
+  max(1, int(os.environ.get("SMALLVILLE_EMBEDDING_CONCURRENCY", "4"))))
+_embedding_circuit_lock = threading.Lock()
+_embedding_failures = 0
+_embedding_open_until = 0.0
+_embedding_dimension = int(os.environ.get("SMALLVILLE_EMBEDDING_DIMENSION", "768"))
+
+
+def _embedding_fallback(defer_on_error):
+  return None if defer_on_error else [0.0] * _embedding_dimension
+
+
+def get_embedding(text, model=None, defer_on_error=False):
+  """Embed with a short deadline; defer percepts during server outages."""
+  global _embedding_failures, _embedding_open_until
   text = text.replace("\n", " ")
   if not text:
     text = "this is blank"
 
   url = embedding_base_url.rstrip("/") + "/embeddings"
-  payload = {"model": model or embedding_model, "input": [text]}
+  active_model = model or embedding_model
+  payload = {"model": active_model, "input": [text]}
+  deadline_seconds = max(
+    0.5, float(os.environ.get("SMALLVILLE_EMBEDDING_DEADLINE", "5")))
+  with _embedding_circuit_lock:
+    if time.monotonic() < _embedding_open_until:
+      return _embedding_fallback(defer_on_error)
 
-  for attempt in range(3):
+  reservation = _reserve_usage((len(text) + 2) // 3 + 64)
+  deadline = time.monotonic() + deadline_seconds
+  acquired = False
+  dispatched = False
+  try:
+    acquired = _embedding_slots.acquire(timeout=deadline_seconds)
+    if not acquired:
+      _release_reservation(reservation)
+      reservation = None
+      return _embedding_fallback(defer_on_error)
+    dispatched = True
+    result = post_json(url, payload, deadline=max(0.1, deadline-time.monotonic()))
+    if int(result["status"]) != 200:
+      _release_reservation(reservation)
+      reservation = None
+      raise TransportError("embedding API %s" % result["status"])
     try:
-      resp = requests.post(url, json=payload, timeout=60)
-      if resp.status_code == 200:
-        data = resp.json()
-        _record_usage(data.get("usage") or {}, embedding_model, embedding=True)
-        return data["data"][0]["embedding"]
-      raise RuntimeError(f"embedding API {resp.status_code}: {resp.text[:200]}")
-    except (requests.RequestException, RuntimeError) as e:
-      if attempt == 2:
-        raise RuntimeError(f"embedding request failed: {e}") from e
-      time.sleep(2 ** attempt + random.random())
-  raise RuntimeError("embedding request failed")
+      data = json.loads(result.get("text") or "{}")
+      embedding = data["data"][0]["embedding"]
+    except (TypeError, ValueError, KeyError, IndexError):
+      _record_usage({}, active_model, embedding=True, reservation=reservation,
+                    charge_reserved=True)
+      reservation = None
+      raise TransportError("embedding API returned malformed JSON")
+    try:
+      _record_usage(data.get("usage") or {}, active_model, embedding=True,
+                    reservation=reservation)
+    except Exception:
+      reservation = None
+      raise
+    reservation = None
+    with _embedding_circuit_lock:
+      _embedding_failures = 0
+      _embedding_open_until = 0.0
+    return embedding
+  except (TransportTimeout, TransportError):
+    if reservation is not None and dispatched:
+      _record_usage({}, active_model, embedding=True, reservation=reservation,
+                    charge_reserved=True)
+      reservation = None
+    with _embedding_circuit_lock:
+      _embedding_failures += 1
+      if _embedding_failures >= 2:
+        _embedding_open_until = time.monotonic() + 30.0
+    return _embedding_fallback(defer_on_error)
+  finally:
+    if acquired:
+      _embedding_slots.release()
+    if reservation is not None:
+      _release_reservation(reservation)
 
 
 if __name__ == '__main__':
