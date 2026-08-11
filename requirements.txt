@@ -1,4 +1,4 @@
-# Runtime dependencies for the hermes-gadget modernized fork (Python 3.9+).
+# Runtime dependencies for the hermes-gadget modernized fork (Python 3.12+).
 #
 # NOTE: the LLM layer no longer uses the openai SDK. All model traffic goes
 # through the OpenCode Go gateway via a small `requests`-based client in
@@ -12,5 +12,6 @@ numpy>=1.25,<2
 requests>=2.31
 
 # Frontend (Django environment server)
-Django==2.2.*
+Django==5.2.*
+gunicorn>=23,<24
 Pillow>=9.0

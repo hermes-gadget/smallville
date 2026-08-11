@@ -11,7 +11,12 @@ paper.
 import math
 import sys
 import datetime
+import json
+import os
 import random
+import shutil
+import tempfile
+import time
 sys.path.append('../')
 
 from global_methods import *
@@ -27,6 +32,52 @@ from persona.cognitive_modules.reflect import *
 from persona.cognitive_modules.execute import *
 from persona.cognitive_modules.converse import *
 
+
+def _checkpoint_valid(directory):
+  try:
+    with open(os.path.join(directory, "associative_memory", "nodes.json")) as f:
+      nodes = json.load(f)
+    with open(os.path.join(directory, "associative_memory", "embeddings.json")) as f:
+      embeddings = json.load(f)
+    with open(os.path.join(directory, "associative_memory", "kw_strength.json")) as f:
+      json.load(f)
+    with open(os.path.join(directory, "scratch.json")) as f:
+      json.load(f)
+    with open(os.path.join(directory, "spatial_memory.json")) as f:
+      json.load(f)
+    return all(node.get("embedding_key") in embeddings
+               for node in nodes.values())
+  except (OSError, ValueError, TypeError, AttributeError):
+    return False
+
+
+def _resolve_checkpoint(bootstrap):
+  manifest_path = os.path.join(bootstrap, "checkpoint.json")
+  try:
+    with open(manifest_path) as f:
+      manifest = json.load(f)
+    for generation in (manifest.get("current"), manifest.get("previous")):
+      if not generation:
+        continue
+      candidate = os.path.join(bootstrap, "checkpoints", generation)
+      if _checkpoint_valid(candidate):
+        return candidate
+  except (OSError, ValueError, TypeError):
+    pass
+  return bootstrap
+
+
+def _fsync_tree(directory):
+  for root, _, files in os.walk(directory):
+    for filename in files:
+      with open(os.path.join(root, filename), "rb") as checkpoint_file:
+        os.fsync(checkpoint_file.fileno())
+    descriptor = os.open(root, os.O_RDONLY)
+    try:
+      os.fsync(descriptor)
+    finally:
+      os.close(descriptor)
+
 class Persona: 
   def __init__(self, name, folder_mem_saved=False):
     # PERSONA BASE STATE 
@@ -38,13 +89,15 @@ class Persona:
     # If there is already memory in folder_mem_saved, we load that. Otherwise,
     # we create new memory instances. 
     # <s_mem> is the persona's spatial memory. 
-    f_s_mem_saved = f"{folder_mem_saved}/bootstrap_memory/spatial_memory.json"
+    bootstrap = f"{folder_mem_saved}/bootstrap_memory"
+    checkpoint = _resolve_checkpoint(bootstrap)
+    f_s_mem_saved = f"{checkpoint}/spatial_memory.json"
     self.s_mem = MemoryTree(f_s_mem_saved)
     # <s_mem> is the persona's associative memory. 
-    f_a_mem_saved = f"{folder_mem_saved}/bootstrap_memory/associative_memory"
+    f_a_mem_saved = f"{checkpoint}/associative_memory"
     self.a_mem = AssociativeMemory(f_a_mem_saved)
     # <scratch> is the persona's scratch (short term memory) space. 
-    scratch_saved = f"{folder_mem_saved}/bootstrap_memory/scratch.json"
+    scratch_saved = f"{checkpoint}/scratch.json"
     self.scratch = Scratch(scratch_saved)
 
 
@@ -67,19 +120,47 @@ class Persona:
     if not full:
       return
 
-    # Spatial memory contains a tree in a json format. 
-    # e.g., {"double studio": 
-    #         {"double studio": 
-    #           {"bedroom 2": 
-    #             ["painting", "easel", "closet", "bed"]}}}
-    f_s_mem = f"{save_folder}/spatial_memory.json"
-    self.s_mem.save(f_s_mem)
-    
-    # Associative memory contains a csv with the following rows: 
-    # [event.type, event.created, event.expiration, s, p, o]
-    # e.g., event,2022-10-23 00:00:00,,Isabella Rodriguez,is,idle
-    f_a_mem = f"{save_folder}/associative_memory"
-    self.a_mem.save(f_a_mem)
+    checkpoints = os.path.join(save_folder, "checkpoints")
+    os.makedirs(checkpoints, exist_ok=True)
+    pending = tempfile.mkdtemp(prefix=".pending-", dir=checkpoints)
+    try:
+      os.makedirs(os.path.join(pending, "associative_memory"))
+      self.scratch.save(os.path.join(pending, "scratch.json"))
+      self.s_mem.save(os.path.join(pending, "spatial_memory.json"))
+      self.a_mem.save(os.path.join(pending, "associative_memory"))
+      if not _checkpoint_valid(pending):
+        raise ValueError("persona checkpoint failed validation")
+      _fsync_tree(pending)
+      generation = "generation-%d" % time.time_ns()
+      completed = os.path.join(checkpoints, generation)
+      os.replace(pending, completed)
+      directory_fd = os.open(checkpoints, os.O_RDONLY)
+      try:
+        os.fsync(directory_fd)
+      finally:
+        os.close(directory_fd)
+
+      manifest_path = os.path.join(save_folder, "checkpoint.json")
+      previous = None
+      try:
+        with open(manifest_path) as manifest_file:
+          previous = json.load(manifest_file).get("current")
+      except (OSError, ValueError, TypeError):
+        pass
+      atomic_json_dump({"current": generation, "previous": previous},
+                       manifest_path)
+      directory_fd = os.open(save_folder, os.O_RDONLY)
+      try:
+        os.fsync(directory_fd)
+      finally:
+        os.close(directory_fd)
+      retained = {generation, previous}
+      for entry in os.listdir(checkpoints):
+        if entry.startswith("generation-") and entry not in retained:
+          shutil.rmtree(os.path.join(checkpoints, entry), ignore_errors=True)
+    except Exception:
+      shutil.rmtree(pending, ignore_errors=True)
+      raise
 
 
   def perceive(self, maze):
@@ -108,7 +189,7 @@ class Persona:
     return retrieve(self, perceived)
 
 
-  def plan(self, maze, personas, new_day, retrieved):
+  def plan(self, maze, personas, new_day, retrieved, enable_reactions=True):
     """
     Main cognitive function of the chain. It takes the retrieved memory and 
     perception, as well as the maze and the first day state to conduct both 
@@ -130,7 +211,7 @@ class Persona:
     OUTPUT 
       The target action address of the persona (persona.scratch.act_address).
     """
-    return plan(self, maze, personas, new_day, retrieved)
+    return plan(self, maze, personas, new_day, retrieved, enable_reactions)
 
 
   def execute(self, maze, personas, plan):
@@ -225,24 +306,32 @@ class Persona:
     pending = perceive_collect(self, maze)
     return new_day, pending
 
-  def _move_decide(self, maze, personas, new_day, percept_batch):
+  def _move_decide(self, maze, personas, new_day, percept_batch,
+                   defer_reactions=False):
     """Phase 2 of move(): perceive commit (poignancy + memory) + retrieve +
     plan + reflect + execute. All work is persona-private (own memory, LLM,
     embeddings) -- safe to run concurrently for all personas in a step."""
     perceived = perceive_commit(self, percept_batch)
     retrieved = self.retrieve(perceived)
-    plan = self.plan(maze, personas, new_day, retrieved)
+    plan = self.plan(maze, personas, new_day, retrieved,
+                     enable_reactions=not defer_reactions)
     self.reflect()
+    if defer_reactions:
+      focused_event = False
+      if retrieved.keys():
+        focused_event = _choose_retrieved(self, retrieved)
+      return focused_event
     return self.execute(maze, personas, plan)
+
+
+  def _move_execute(self, maze, personas):
+    """Execute after the step coordinator has committed reactions."""
+    return self.execute(maze, personas, self.scratch.act_address)
 
 
   def open_convo_session(self, convo_mode): 
     open_convo_session(self, convo_mode)
     
-
-
-
-
 
 
 

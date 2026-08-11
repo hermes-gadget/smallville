@@ -1,6 +1,6 @@
 # Smallville VPS deployment
 
-Target: `hermes-agent@217.154.42.46:32720`, with the repository at `/home/hermes-agent/smallville`. The app runs as plain user processes under systemd; Python 3.9 is supplied by `uv` because the VPS system Python is 3.14 and Django 2.2 is required.
+Target: `hermes-agent@217.154.42.46:32720`, with the repository at `/home/hermes-agent/smallville`. The app runs as plain user processes under systemd; `uv` supplies Python 3.12 and Django 5.2 LTS.
 
 ## Initial setup
 
@@ -10,7 +10,7 @@ Copy the `deploy/` directory to the VPS (or run the script from a checkout), the
 bash deploy/setup_vps.sh
 ```
 
-Before starting services, ensure `~/.opencode-go.key` already exists. The setup script checks it but never creates or prints it. The script clones or fast-forwards `~/smallville`, installs Python 3.9 and dependencies, adds `smallville.justarobot.uk` to the Django host allow-list, and enables the two user units.
+Before starting services, ensure `~/.opencode-go.key` already exists. The setup script checks it but never creates or prints it. It installs Python 3.12 and dependencies, creates a protected `~/.config/smallville/django.env` with a random Django signing key, and enables the two user units. Gunicorn binds only to loopback behind the Cloudflare tunnel.
 
 On the home VM, install `vm-embedding-tunnel.service` at `~/.config/systemd/user/`, then run `systemctl --user daemon-reload && systemctl --user enable --now vm-embedding-tunnel.service`. Do not install or run that tunnel on the VPS.
 

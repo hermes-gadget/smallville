@@ -28,6 +28,7 @@ import os
 import shutil
 import traceback
 import signal
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from global_methods import *
@@ -60,6 +61,55 @@ def _current_pacing():
   except Exception:
     pass
   return game_sec_per_real_sec
+
+
+def _advance_clock(curr_time, last_real_time, now_real_time, pacing):
+  """Advance a simulation clock without applying a new rate retroactively."""
+  elapsed = max(0.0, float(now_real_time) - float(last_real_time))
+  candidate = curr_time + datetime.timedelta(
+    seconds=elapsed * max(0.0, float(pacing)))
+  return max(curr_time, candidate), float(now_real_time)
+
+
+def _validate_environment(value, persona_names, maze_width, maze_height):
+  """Return a strict, normalized resident-to-coordinate mapping."""
+  if not isinstance(value, dict) or set(value) != set(persona_names):
+    raise ValueError("environment must contain exactly the resident roster")
+  normalized = {}
+  for name in persona_names:
+    position = value[name]
+    if not isinstance(position, dict) or set(position) != {"x", "y"}:
+      raise ValueError("resident position must contain only x and y")
+    x, y = position["x"], position["y"]
+    if (isinstance(x, bool) or isinstance(y, bool)
+        or not isinstance(x, int) or not isinstance(y, int)):
+      raise ValueError("resident coordinates must be integers")
+    if not (0 <= x < maze_width and 0 <= y < maze_height):
+      raise ValueError("resident coordinates are outside the maze")
+    normalized[name] = {"x": x, "y": y}
+  return normalized
+
+
+def _select_disjoint_reactions(intents, persona_names):
+  """Select deterministic reactions in which each chat participant is unique."""
+  available = set(persona_names)
+  claimed = set()
+  selected = []
+  for persona_name in sorted(intents):
+    reaction_mode = intents[persona_name]
+    if (not reaction_mode or persona_name not in available
+        or persona_name in claimed):
+      continue
+    if reaction_mode[:9] == "chat with":
+      target_name = reaction_mode[9:].strip()
+      if (persona_name in claimed or target_name in claimed
+          or target_name not in available):
+        continue
+      claimed.update((persona_name, target_name))
+    else:
+      claimed.add(persona_name)
+    selected.append((persona_name, reaction_mode))
+  return selected
 
 
 def _prune_movement_history(movement_folder, newest_step, keep=500,
@@ -118,9 +168,8 @@ class ReverieServer:
     with open(f"{sim_folder}/reverie/meta.json") as json_file:  
       reverie_meta = json.load(json_file)
 
-    with open(f"{sim_folder}/reverie/meta.json", "w") as outfile: 
-      reverie_meta["fork_sim_code"] = fork_sim_code
-      outfile.write(json.dumps(reverie_meta, indent=2))
+    reverie_meta["fork_sim_code"] = fork_sim_code
+    atomic_json_dump(reverie_meta, f"{sim_folder}/reverie/meta.json")
 
     # LOADING REVERIE'S GLOBAL VARIABLES
     # The start datetime of the Reverie: 
@@ -241,9 +290,11 @@ class ReverieServer:
     reverie_meta["maze_name"] = self.maze.maze_name
     reverie_meta["persona_names"] = list(self.personas.keys())
     reverie_meta["step"] = self.step
+    reverie_meta["clock_pacing"] = _current_pacing()
+    reverie_meta["clock_updated_at"] = datetime.datetime.utcnow().strftime(
+      "%Y-%m-%dT%H:%M:%SZ")
     reverie_meta_f = f"{sim_folder}/reverie/meta.json"
-    with open(reverie_meta_f, "w") as outfile: 
-      outfile.write(json.dumps(reverie_meta, indent=2))
+    atomic_json_dump(reverie_meta, reverie_meta_f)
 
     # Save the personas.
     for persona_name, persona in self.personas.items(): 
@@ -359,14 +410,13 @@ class ReverieServer:
     # Graceful shutdown: a SIGTERM (systemd restart) mid-run used to lose
     # the world clock + step (save() only ran at run end), rewinding the
     # town on every restart. Save on signal so restarts resume in place.
+    _shutdown_requested = False
+
     def _shutdown_save(signum, frame):
-      print("[reverie] signal %s received; saving state" % signum,
-            flush=True)
-      try:
-        self.save()
-      except Exception:
-        traceback.print_exc()
-      os._exit(0)
+      nonlocal _shutdown_requested
+      print("[reverie] signal %s received; deferring save to step boundary" %
+            signum, flush=True)
+      _shutdown_requested = True
     try:
       signal.signal(signal.SIGTERM, _shutdown_save)
       signal.signal(signal.SIGINT, _shutdown_save)
@@ -409,12 +459,12 @@ class ReverieServer:
     game_obj_cleanup = dict()
 
     # The main while loop of Reverie. 
-    _boot_real = time.time()
-    # Clock anchor: the game clock maps absolute wall time onto the sim's
-    # boot time (meta curr_time), NOT start_date (midnight) -- otherwise a
-    # morning-start town shows 00:0x for hours.
-    _clock_anchor = self.curr_time
+    _last_clock_real = time.monotonic()
+    _last_env_error_log = 0.0
     while (True): 
+      if _shutdown_requested:
+        self.save()
+        return
       # Done with this iteration if <int_counter> reaches 0. 
       if int_counter == 0: 
         break
@@ -424,36 +474,28 @@ class ReverieServer:
       # new environment file that matches our step count. That's when we run 
       # the content of this for loop. Otherwise, we just wait. 
       curr_env_file = f"{sim_folder}/environment/{self.step}.json"
+      if self._data_store is not None:
+        self._data_store.poll_maintenance(self.personas, sim_folder)
       if check_if_file_exists(curr_env_file):
         # Mark the real-time start of this step so the game clock can be
         # paced from actual elapsed wall time.
         _step_real_start = time.time()
-        # Boot anchor for absolute clock pacing (game time = f(wall time)).
-        if "_boot_real" not in locals():
-          _boot_real = time.time()
+        env_retrieved = False
+        new_env = None
         # If we have an environment file, it means we have a new perception
         # input to our personas. So we first retrieve it.
-        try: 
-          # Try and save block for robustness of the while loop.
+        try:
           with open(curr_env_file) as json_file:
-            new_env = json.load(json_file)
-            env_retrieved = True
-            # Robustness: the frontend can post a PARTIAL env (missing
-            # residents) when its sprite data is incomplete. Fill any
-            # gaps from the previous movement's targets so the step
-            # never crashes on a missing resident.
-            if self.step > 0:
-              _prev_mv = f"{sim_folder}/movement/{self.step - 1}.json"
-              if check_if_file_exists(_prev_mv):
-                with open(_prev_mv) as _jf:
-                  _pmv = json.load(_jf)
-                for _pn, _pm in _pmv.get("persona", {}).items():
-                  if _pn not in new_env:
-                    _t = _pm.get("movement") or [0, 0]
-                    new_env[_pn] = {"x": _t[0], "y": _t[1]}
-
-        except: 
-          pass
+            new_env = _validate_environment(
+              json.load(json_file), self.personas.keys(),
+              self.maze.maze_width, self.maze.maze_height)
+          env_retrieved = True
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+          now = time.monotonic()
+          if now - _last_env_error_log >= 5.0:
+            print("[reverie] invalid environment step %s: %s" %
+                  (self.step, error), file=sys.stderr, flush=True)
+            _last_env_error_log = now
       
         if env_retrieved: 
           # This is where we go through <game_obj_cleanup> to clean up all 
@@ -538,15 +580,50 @@ class ReverieServer:
           with ThreadPoolExecutor(max_workers=6) as _ex:
             _futs = {_ex.submit(persona._move_decide,
                                 self.maze, self.personas,
-                                perceive_state[n][0], perceive_state[n][1]): n
+                                perceive_state[n][0], perceive_state[n][1],
+                                True): n
                      for n, persona in self.personas.items()}
-            for _f in _futs: 
+            _focused = {}
+            for _f in _futs:
               persona_name = _futs[_f]
+              try:
+                _focused[persona_name] = _f.result()
+              except Exception:
+                traceback.print_exc()
+                _focused[persona_name] = False
+
+          # Reaction intentions are read-only. A single deterministic
+          # coordinator selects disjoint pairs and performs cross-persona
+          # mutations, so no target can be claimed or overwritten twice.
+          with ThreadPoolExecutor(max_workers=6) as _ex:
+            _intent_futs = {
+              _ex.submit(prepare_reaction, self.personas[name], focused,
+                         self.personas): name
+              for name, focused in _focused.items() if focused
+            }
+            _intents = {}
+            for _f, name in _intent_futs.items():
+              try:
+                _intents[name] = _f.result()
+              except Exception:
+                traceback.print_exc()
+                _intents[name] = False
+
+          for persona_name, reaction_mode in _select_disjoint_reactions(
+              _intents, self.personas):
+            commit_reaction(self.maze, self.personas[persona_name],
+                            _focused[persona_name], reaction_mode,
+                            self.personas)
+
+          with ThreadPoolExecutor(max_workers=6) as _ex:
+            _execute_futs = {
+              _ex.submit(persona._move_execute, self.maze, self.personas): name
+              for name, persona in self.personas.items()
+            }
+            for _f, persona_name in _execute_futs.items():
               try:
                 next_tile, pronunciatio, description = _f.result()
               except Exception:
-                # One persona's failure must never kill the whole town:
-                # fall back to "stay in place, doing what they were doing".
                 traceback.print_exc()
                 _p = self.personas[persona_name]
                 next_tile = self.personas_tile[persona_name]
@@ -629,6 +706,9 @@ class ReverieServer:
                 "maze_name": self.maze.maze_name,
                 "persona_names": list(self.personas.keys()),
                 "step": self.step,
+                "clock_pacing": _current_pacing(),
+                "clock_updated_at": datetime.datetime.utcnow().strftime(
+                  "%Y-%m-%dT%H:%M:%SZ"),
               }
               atomic_json_dump(_meta, f"{sim_folder}/reverie/meta.json")
             except Exception:
@@ -672,14 +752,11 @@ class ReverieServer:
           curr_step = dict()
           curr_step["step"] = self.step
           atomic_json_dump(curr_step, f"{fs_temp_storage}/curr_step.json")
-          # Pace the game clock by REAL wall time so the town lives at a
-          # watchable speed regardless of step rate (game_sec_per_real_sec:
-          # 1.0 = real-time). Absolute mapping -- the clock is a pure
-          # function of elapsed wall time, so fast/slow step bursts can
-          # never skew it.
-          self.curr_time = _clock_anchor + datetime.timedelta(
-            seconds=max(0.0, (time.time() - _boot_real)
-                              * _current_pacing()))
+          # Apply the current pacing only to time elapsed since the previous
+          # sample. Rate changes can therefore neither rewind nor jump time.
+          self.curr_time, _last_clock_real = _advance_clock(
+            self.curr_time, _last_clock_real, time.monotonic(),
+            _current_pacing())
 
           int_counter -= 1
           
@@ -915,14 +992,6 @@ if __name__ == '__main__':
 
   rs = ReverieServer(origin, target)
   rs.open_server(run_steps)
-
-
-
-
-
-
-
-
 
 
 

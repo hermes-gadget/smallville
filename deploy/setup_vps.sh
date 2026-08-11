@@ -18,13 +18,23 @@ else
   git clone "${REPO_URL}" "${REPO_DIR}"
 fi
 
-uv python install 3.9
-uv venv --python 3.9 "${VENV_DIR}"
+uv python install 3.12
+uv venv --python 3.12 "${VENV_DIR}"
 uv pip install -r "${REPO_DIR}/requirements.txt" --python "${VENV_DIR}/bin/python"
 
 if [[ ! -f "${HOME}/.opencode-go.key" ]]; then
   echo "Missing ${HOME}/.opencode-go.key; copy the key before starting Smallville." >&2
   exit 1
+fi
+
+DJANGO_ENV_DIR="${HOME}/.config/smallville"
+DJANGO_ENV_FILE="${DJANGO_ENV_DIR}/django.env"
+mkdir -p "${DJANGO_ENV_DIR}"
+chmod 700 "${DJANGO_ENV_DIR}"
+if [[ ! -f "${DJANGO_ENV_FILE}" ]]; then
+  DJANGO_SECRET="$(${VENV_DIR}/bin/python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+  install -m 0600 /dev/null "${DJANGO_ENV_FILE}"
+  printf 'DJANGO_SECRET_KEY=%s\n' "${DJANGO_SECRET}" > "${DJANGO_ENV_FILE}"
 fi
 
 for settings in \

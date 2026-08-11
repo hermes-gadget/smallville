@@ -7,6 +7,7 @@ library.
 """
 
 import base64
+import copy
 import datetime
 import json
 import lzma
@@ -120,9 +121,67 @@ class BoundedStore:
     return self._call("memory", self._write_memories, snapshots)
 
   def archive_and_evict(self, cutoff, personas, sim_folder, now):
-    return self._call(
-        "maintenance", run_maintenance, cutoff, personas, sim_folder, now,
+    snapshots = {
+        name: copy.deepcopy(getattr(persona, "a_mem", persona))
+        for name, persona in (personas or {}).items()
+    }
+    result = self._call(
+        "maintenance", run_maintenance, cutoff, snapshots, sim_folder, now,
         self.db_path, self.archive_dir)
+    if result is not None:
+      self._apply_maintenance(result, personas, sim_folder)
+    return result
+
+  def poll_maintenance(self, personas, sim_folder):
+    """Apply a completed background selection at a safe step boundary."""
+    future = self._pending.get("maintenance")
+    if future is None or not future.done():
+      return None
+    self._pending.pop("maintenance", None)
+    try:
+      result = future.result()
+      self._apply_maintenance(result, personas, sim_folder)
+      return result
+    except Exception as error:
+      self.warn_once("error-maintenance",
+                     "maintenance failed (%s); continuing" %
+                     type(error).__name__)
+      return None
+
+  def _apply_maintenance(self, result, personas, sim_folder):
+    """Synchronously commit selected evictions without stale live refs."""
+    deletions = []
+    for persona_name, details in result.get("memories", {}).items():
+      persona = (personas or {}).get(persona_name)
+      if persona is None:
+        continue
+      memory = getattr(persona, "a_mem", persona)
+      node_map, _ = _memory_parts(memory)
+      live_ids = {str(node_id) for node_id in node_map}
+      evicted_ids = {
+          str(node_id) for node_id in details.get("evicted_ids", [])
+          if str(node_id) in live_ids
+      }
+      if not evicted_ids:
+        continue
+      kept_ids = live_ids - evicted_ids
+      _prune_memory_object(memory, kept_ids,
+                           considered_ids=evicted_ids, save_dir=None)
+      save_folder = os.path.join(
+          sim_folder, "personas", persona_name, "bootstrap_memory")
+      if hasattr(persona, "save"):
+        persona.save(save_folder, full=True)
+      deletions.extend((str(persona_name), node_id)
+                       for node_id in evicted_ids)
+    if deletions:
+      conn = connect(self.db_path)
+      try:
+        with conn:
+          conn.executemany(
+              "DELETE FROM memories WHERE persona = ? AND node_id = ?",
+              deletions)
+      finally:
+        conn.close()
 
   def close(self, wait=True):
     self._executor.shutdown(wait=wait)
@@ -697,13 +756,14 @@ def _prune_memory_object(memory, kept_ids, considered_ids=None, save_dir=None):
 
 def evict_memories(persona, nodes, archive_dir, max_nodes=DEFAULT_MAX_MEMORIES,
                    conn=None, save_dir=None, now=None,
-                   recency_decay=DEFAULT_RECENCY_DECAY):
+                   recency_decay=DEFAULT_RECENCY_DECAY, delete_rows=True):
   """Archive and prune only old, low-poignancy, reflected memory nodes."""
   items, embeddings = _memory_items(nodes)
   total = len(items)
   max_nodes = max(0, int(max_nodes))
   if total <= max_nodes:
-    return {"kept": total, "pruned": 0, "archived": 0, "path": None}
+    return {"kept": total, "pruned": 0, "archived": 0, "path": None,
+            "evicted_ids": []}
 
   now = _parse_datetime(now) or datetime.datetime.utcnow()
   reflected = set()
@@ -737,7 +797,8 @@ def evict_memories(persona, nodes, archive_dir, max_nodes=DEFAULT_MAX_MEMORIES,
   kept_ids = protected | kept_eligible
   evicted = [(node_id, node) for _, node_id, node in eligible[available_slots:]]
   if not evicted:
-    return {"kept": total, "pruned": 0, "archived": 0, "path": None}
+    return {"kept": total, "pruned": 0, "archived": 0, "path": None,
+            "evicted_ids": []}
 
   date_part = now.strftime("%Y-%m-%d")
   destination = _unique_archive_path(
@@ -760,24 +821,26 @@ def evict_memories(persona, nodes, archive_dir, max_nodes=DEFAULT_MAX_MEMORIES,
       }
 
   archived = _atomic_xz_dump(records(), destination)
-  owns_connection = conn is None
-  if owns_connection:
-    conn = connect()
-  try:
-    with conn:
-      conn.executemany(
-          "DELETE FROM memories WHERE persona = ? AND node_id = ?",
-          [(str(persona), node_id) for node_id, _ in evicted],
-      )
-  finally:
+  if delete_rows:
+    owns_connection = conn is None
     if owns_connection:
-      conn.close()
+      conn = connect()
+    try:
+      with conn:
+        conn.executemany(
+            "DELETE FROM memories WHERE persona = ? AND node_id = ?",
+            [(str(persona), node_id) for node_id, _ in evicted],
+        )
+    finally:
+      if owns_connection:
+        conn.close()
 
   _prune_memory_object(
       nodes, kept_ids, considered_ids={node_id for node_id, _ in items},
       save_dir=save_dir)
   return {"kept": len(_memory_items(nodes)[0]), "pruned": len(evicted),
-          "archived": archived, "path": destination}
+          "archived": archived, "path": destination,
+          "evicted_ids": [node_id for node_id, _ in evicted]}
 
 
 def prune_json_tail(directory, keep=500):
@@ -802,7 +865,7 @@ def prune_json_tail(directory, keep=500):
   return removed
 
 
-def run_maintenance(cutoff, personas, sim_folder, now=None,
+def run_maintenance(cutoff, memory_snapshots, sim_folder, now=None,
                     db_path=None, archive_dir=None,
                     max_nodes=DEFAULT_MAX_MEMORIES, movement_keep=500):
   """Run one archive/eviction/tail-pruning maintenance pass."""
@@ -813,14 +876,10 @@ def run_maintenance(cutoff, personas, sim_folder, now=None,
   conn = connect(db_path)
   try:
     result = {"steps": None, "memories": {}, "movement_files_pruned": 0}
-    for persona_name, persona in (personas or {}).items():
-      memory = getattr(persona, "a_mem", persona)
-      save_dir = os.path.join(
-          sim_folder, "personas", persona_name, "bootstrap_memory",
-          "associative_memory")
+    for persona_name, memory in (memory_snapshots or {}).items():
       result["memories"][persona_name] = evict_memories(
           persona_name, memory, archive_dir, max_nodes=max_nodes, conn=conn,
-          save_dir=save_dir, now=now)
+          save_dir=None, now=now, delete_rows=False)
     result["steps"] = archive_old(conn, cutoff, archive_dir)
     result["movement_files_pruned"] = prune_json_tail(
         os.path.join(sim_folder, "movement"), movement_keep)

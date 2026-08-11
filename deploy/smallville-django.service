@@ -5,9 +5,16 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/home/hermes-agent/smallville/environment/frontend_server
-ExecStart=/home/hermes-agent/smallville/.venv/bin/python manage.py runserver 0.0.0.0:8000 --noreload
+Environment=DJANGO_SETTINGS_MODULE=frontend_server.settings.production
+EnvironmentFile=/home/hermes-agent/.config/smallville/django.env
+ExecStart=/home/hermes-agent/smallville/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 --access-logfile - frontend_server.wsgi:application
 Restart=always
 RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/hermes-agent/smallville/environment/frontend_server
 
 [Install]
 WantedBy=default.target
