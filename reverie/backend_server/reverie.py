@@ -139,6 +139,23 @@ def _prune_movement_history(movement_folder, newest_step, keep=500,
     # History retention is housekeeping and must never stop a town step.
     pass
 
+
+def _prune_environment_history(environment_folder, current_step):
+  """Keep only the next environment input; consumed files are transient."""
+  try:
+    for filename in os.listdir(environment_folder):
+      stem, extension = os.path.splitext(filename)
+      if extension != ".json" or not stem.isdigit():
+        continue
+      if int(stem) != int(current_step):
+        try:
+          os.remove(os.path.join(environment_folder, filename))
+        except FileNotFoundError:
+          pass
+  except Exception:
+    # Retention is housekeeping and must never stop a town step.
+    pass
+
 ##############################################################################
 #                                  REVERIE                                   #
 ##############################################################################
@@ -428,6 +445,8 @@ class ReverieServer:
     # doesn't crash on the movement write.
     os.makedirs(f"{sim_folder}/movement", exist_ok=True)
     os.makedirs(f"{sim_folder}/environment", exist_ok=True)
+    os.makedirs(f"{sim_folder}/reverie", exist_ok=True)
+    _prune_environment_history(f"{sim_folder}/environment", self.step)
     _prune_movement_history(f"{sim_folder}/movement", self.step - 1,
                             full_scan=True)
     # A resumed run may find STALE movement files from a previous run at
@@ -664,6 +683,13 @@ class ReverieServer:
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           atomic_json_dump(movements, curr_move_file)
           _prune_movement_history(f"{sim_folder}/movement", self.step)
+          atomic_json_dump({
+            "step": self.step,
+            "persona": {
+              name: {"movement": list(details.get("movement") or [])}
+              for name, details in movements["persona"].items()
+            },
+          }, f"{sim_folder}/reverie/current_state.json")
 
           # [DATA-STORE] BEGIN: persist the complete step without changing JSON.
           if self._data_store is not None:
@@ -740,6 +766,14 @@ class ReverieServer:
               self._data_store.warn_once(
                 "hook-maintenance", "maintenance hook failed; continuing")
           # [DATA-STORE] END
+
+          # Environment inputs are a one-step handoff, not simulation history.
+          # Remove the consumed file only after the movement/current-state and
+          # persona checkpoint writes above have completed.
+          try:
+            os.remove(curr_env_file)
+          except FileNotFoundError:
+            pass
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
@@ -992,9 +1026,6 @@ if __name__ == '__main__':
 
   rs = ReverieServer(origin, target)
   rs.open_server(run_steps)
-
-
-
 
 
 

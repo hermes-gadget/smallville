@@ -8,6 +8,8 @@ import secrets
 import fcntl
 import uuid
 import sqlite3
+import threading
+import time
 from os import listdir
 from django.conf import settings
 
@@ -19,6 +21,10 @@ from global_methods import *
 
 from django.templatetags.static import static
 from .models import *
+
+_token_usage_cache_lock = threading.Lock()
+_token_usage_cache_at = 0.0
+_token_usage_cache = None
 
 def landing(request):
   """Render the public introduction to the live Smallville simulation."""
@@ -47,38 +53,49 @@ def get_token_usage(request):
     except Exception:
       pass
 
-  # Cumulative totals from the SQLite call log.
-  payload["cumulative"] = {
+  # Cumulative totals are maintained by the backend in one aggregate row.
+  # Cache the small snapshot briefly because this endpoint is public and every
+  # page polls it on a fixed interval.
+  empty_cumulative = {
     "total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0,
     "calls": 0, "embedding_calls": 0, "first_call_at": None,
     "last_call_at": None,
   }
+  payload["cumulative"] = empty_cumulative
   db_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          "temp_storage", "token_usage.db")
-  if os.path.exists(db_file):
-    try:
-      import sqlite3
-      conn = sqlite3.connect(db_file, timeout=5)
+  global _token_usage_cache_at, _token_usage_cache
+  now = time.monotonic()
+  with _token_usage_cache_lock:
+    if _token_usage_cache is not None and now - _token_usage_cache_at < 1.0:
+      payload["cumulative"] = dict(_token_usage_cache)
+    elif os.path.exists(db_file):
       try:
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*), COALESCE(SUM(total_tokens),0),"
-                    " COALESCE(SUM(prompt_tokens),0), COALESCE(SUM(completion_tokens),0),"
-                    " SUM(CASE WHEN kind='embedding' THEN 1 ELSE 0 END),"
-                    " MIN(ts), MAX(ts) FROM calls")
-        row = cur.fetchone()
-        payload["cumulative"] = {
-          "calls": row[0] or 0,
-          "total_tokens": row[1] or 0,
-          "prompt_tokens": row[2] or 0,
-          "completion_tokens": row[3] or 0,
-          "embedding_calls": row[4] or 0,
-          "first_call_at": row[5],
-          "last_call_at": row[6],
-        }
-      finally:
-        conn.close()
-    except Exception:
-      pass
+        conn = sqlite3.connect(db_file, timeout=0.25)
+        try:
+          conn.execute("PRAGMA busy_timeout=250")
+          row = conn.execute(
+            "SELECT calls, total_tokens, prompt_tokens, completion_tokens, "
+            "embedding_calls, first_call_at, last_call_at "
+            "FROM usage_totals WHERE id = 1").fetchone()
+          if row is not None:
+            payload["cumulative"] = {
+              "calls": row[0] or 0,
+              "total_tokens": row[1] or 0,
+              "prompt_tokens": row[2] or 0,
+              "completion_tokens": row[3] or 0,
+              "embedding_calls": row[4] or 0,
+              "first_call_at": row[5],
+              "last_call_at": row[6],
+            }
+        finally:
+          conn.close()
+      except Exception:
+        # The live snapshot remains useful even if the optional ledger is busy
+        # or has not yet been initialized by the backend.
+        pass
+      _token_usage_cache = dict(payload["cumulative"])
+      _token_usage_cache_at = now
   return JsonResponse(payload)
 
 
@@ -511,23 +528,32 @@ def home(request):
   persona_names = [[name, name.replace(" ", "_")]
                    for name in ordered_names]
   persona_init_pos = []
-  file_count = []
-  environment_dir = f"storage/{sim_code}/environment"
-  if os.path.isdir(environment_dir):
-    for i in find_filenames(environment_dir, ".json"):
-      x = i.split("/")[-1].strip()
-      if x and x[0] != ".":
-        try:
-          file_count.append(int(x.split(".")[0]))
-        except ValueError:
-          pass
-  if file_count:
-    curr_json = f'storage/{sim_code}/environment/{str(max(file_count))}.json'
-    with open(curr_json) as json_file:
-      persona_init_pos_dict = json.load(json_file)
+  current_state = _read_json(
+    f"storage/{sim_code}/reverie/current_state.json", {})
+  persona_state = (current_state.get("persona")
+                   if isinstance(current_state, dict) else None)
+  if not isinstance(persona_state, dict):
+    try:
+      movement_step = max(0, int(step) - 1)
+    except (TypeError, ValueError):
+      movement_step = 0
+    movement = _read_json(
+      f"storage/{sim_code}/movement/{movement_step}.json", {})
+    persona_state = (movement.get("persona")
+                     if isinstance(movement, dict) else None)
+  # Old forked simulations may only have their initial environment file. Read
+  # that one bounded fallback rather than scanning an unbounded history.
+  if not isinstance(persona_state, dict):
+    persona_state = _read_json(f"storage/{sim_code}/environment/0.json", {})
+  if isinstance(persona_state, dict):
     for name in ordered_names:
-      val = persona_init_pos_dict.get(name)
-      if isinstance(val, dict) and "x" in val and "y" in val:
+      val = persona_state.get(name)
+      if not isinstance(val, dict):
+        continue
+      movement = val.get("movement")
+      if (isinstance(movement, (list, tuple)) and len(movement) == 2):
+        persona_init_pos.append([name, movement[0], movement[1]])
+      elif "x" in val and "y" in val:
         persona_init_pos.append([name, val["x"], val["y"]])
 
   context = {"sim_code": sim_code,
