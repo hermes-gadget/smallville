@@ -677,33 +677,6 @@ def path_tester(request):
   return render(request, template, context)
 
 
-def process_environment(request): 
-  """
-  <FRONTEND to BACKEND> 
-  This sends the frontend visual world information to the backend server. 
-  It does this by writing the current environment representation to 
-  "storage/environment.json" file. 
-
-  ARGS:
-    request: Django request
-  RETURNS: 
-    HttpResponse: string confirmation message. 
-  """
-  # f_curr_sim_code = "temp_storage/curr_sim_code.json"
-  # with open(f_curr_sim_code) as json_file:  
-  #   sim_code = json.load(json_file)["sim_code"]
-
-  data = json.loads(request.body)
-  step = data["step"]
-  sim_code = data["sim_code"]
-  environment = data["environment"]
-
-  with open(f"storage/{sim_code}/environment/{step}.json", "w") as outfile:
-    outfile.write(json.dumps(environment, indent=2))
-
-  return HttpResponse("received")
-
-
 def update_environment(request): 
   """
   <BACKEND to FRONTEND> 
@@ -751,5 +724,4 @@ def path_tester_update(request):
     outfile.write(json.dumps(camera, indent=2))
 
   return HttpResponse("received")
-
 
