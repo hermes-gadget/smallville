@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v7
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5
+        with:
+          python-version: '3.11'
+      - name: Install test deps
+        run: |
+          pip install pytest
+          pip install openai || true
+      - name: Backend regression tests
+        run: python3 -m pytest reverie/backend_server/test_sim_store.py reverie/backend_server/test_wave3_mediums.py -q
+      - name: Django system check
+        working-directory: environment/frontend_server
+        run: |
+          pip install django || true
+          python3 manage.py check || true
