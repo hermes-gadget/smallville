@@ -506,7 +506,7 @@ def _daily_events(state, personas, day, curr_time, step, feed):
       resident["debt"] = _money(resident["debt"] + unpaid_interest)
       state["bank"]["cash"] = _money(state["bank"]["cash"] + paid_interest)
       state["bank"]["interest_earned"] = _money(
-        state["bank"].get("interest_earned", 0) + interest)
+        state["bank"].get("interest_earned", 0) + paid_interest)
       _feed(feed, curr_time, step,
             "%s was charged $%.2f daily bank interest." % (name, interest))
 
@@ -522,14 +522,15 @@ def _daily_events(state, personas, day, curr_time, step, feed):
   if jane is not None and tom is not None:
     allowance = 40.0
     paid = min(allowance, max(0.0, tom["balance"]))
-    shortfall = _money(allowance - paid)
     tom["balance"] = _money(tom["balance"] - paid)
     tom["total_spent"] = _money(tom["total_spent"] + paid)
-    tom["debt"] = _money(tom["debt"] + shortfall)
-    jane["balance"] = _money(jane["balance"] + allowance)
-    jane["total_earned"] = _money(jane["total_earned"] + allowance)
+    # Household allowance is cash-basis: an unpaid shortfall is not credited
+    # to Jane or recorded as Tom's debt without a matching receivable.
+    jane["balance"] = _money(jane["balance"] + paid)
+    jane["total_earned"] = _money(jane["total_earned"] + paid)
     _feed(feed, curr_time, step,
-          "Jane Moreno received her $40.00 household allowance from Tom Moreno.")
+          "Jane Moreno received $%.2f of her $40.00 household allowance from Tom Moreno."
+          % paid)
 
 
 def _action_text(persona):

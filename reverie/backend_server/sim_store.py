@@ -9,6 +9,7 @@ library.
 import base64
 import copy
 import datetime
+import hashlib
 import json
 import lzma
 import math
@@ -232,6 +233,16 @@ def connect(db_path=None):
           last_accessed TEXT,
           PRIMARY KEY(persona, node_id)
         );
+        CREATE TABLE IF NOT EXISTS archive_manifests(
+          archive_path TEXT PRIMARY KEY,
+          kind TEXT NOT NULL,
+          first_step INTEGER,
+          last_step INTEGER,
+          record_count INTEGER NOT NULL DEFAULT 0,
+          checksum TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
         CREATE INDEX IF NOT EXISTS idx_steps_step ON steps(step);
         CREATE INDEX IF NOT EXISTS idx_steps_persona ON steps(persona);
         CREATE INDEX IF NOT EXISTS idx_memories_persona_poignancy
@@ -241,6 +252,8 @@ def connect(db_path=None):
         """
     )
     conn.commit()
+    _reconcile_archive_manifests(
+        conn, os.path.join(os.path.dirname(db_path), "archive"))
     return conn
   except Exception:
     conn.close()
@@ -421,7 +434,7 @@ def store_memories(persona, nodes, conn=None):
     existing = {
         row["node_id"]: row
         for row in conn.execute(
-            "SELECT node_id, kind, text, poignancy, created_at, last_accessed "
+            "SELECT node_id, kind, text, embedding, poignancy, created_at, last_accessed "
             "FROM memories WHERE persona = ?", (str(persona),))
     }
     inserts = []
@@ -434,19 +447,21 @@ def store_memories(persona, nodes, conn=None):
           metadata["kind"], metadata["text"], metadata["poignancy"],
           metadata["created_at"], metadata["last_accessed"],
       )
+      embedding = _float32_blob(_node_embedding(node, embeddings))
       if old is None:
         inserts.append((
             str(persona), node_id, metadata["kind"], metadata["text"],
-            sqlite3.Binary(_float32_blob(_node_embedding(node, embeddings))),
+            sqlite3.Binary(embedding),
             metadata["poignancy"], metadata["created_at"],
             metadata["last_accessed"],
         ))
       elif comparable != (
           old["kind"], old["text"], old["poignancy"],
           old["created_at"], old["last_accessed"],
-      ):
+      ) or bytes(old["embedding"] or b"") != embedding:
         updates.append((
-            metadata["kind"], metadata["text"], metadata["poignancy"],
+            metadata["kind"], metadata["text"], sqlite3.Binary(embedding),
+            metadata["poignancy"],
             metadata["created_at"], metadata["last_accessed"],
             str(persona), node_id,
         ))
@@ -467,8 +482,8 @@ def store_memories(persona, nodes, conn=None):
           conn.executemany(
               """
               UPDATE memories
-              SET kind = ?, text = ?, poignancy = ?, created_at = ?,
-                  last_accessed = ?
+              SET kind = ?, text = ?, embedding = ?, poignancy = ?,
+                  created_at = ?, last_accessed = ?
               WHERE persona = ? AND node_id = ?
               """,
               updates,
@@ -579,6 +594,12 @@ def _atomic_xz_dump(records, destination):
     with open(temporary, "rb") as archive_file:
       os.fsync(archive_file.fileno())
     os.replace(temporary, destination)
+    directory_fd = os.open(os.path.dirname(os.path.abspath(destination)),
+                           os.O_RDONLY)
+    try:
+      os.fsync(directory_fd)
+    finally:
+      os.close(directory_fd)
     return count
   except Exception:
     try:
@@ -586,6 +607,53 @@ def _atomic_xz_dump(records, destination):
     except OSError:
       pass
     raise
+
+
+def _validate_xz_archive(path, expected_count=None):
+  """Parse a completed archive and return its record count and checksum."""
+  count = 0
+  with lzma.open(path, "rt", encoding="utf-8") as archive:
+    for line in archive:
+      if line.strip():
+        json.loads(line)
+        count += 1
+  if expected_count is not None and count != int(expected_count):
+    raise ValueError("archive record count does not match its manifest")
+  digest = hashlib.sha256()
+  with open(path, "rb") as archive:
+    for chunk in iter(lambda: archive.read(1024 * 1024), b""):
+      digest.update(chunk)
+  return count, digest.hexdigest()
+
+
+def _reconcile_archive_manifests(conn, archive_dir):
+  """Keep source rows when a pending archive is missing or invalid."""
+  try:
+    pending = conn.execute(
+        "SELECT archive_path FROM archive_manifests WHERE status = 'pending'"
+    ).fetchall()
+  except sqlite3.DatabaseError:
+    return
+  for row in pending:
+    path = row["archive_path"]
+    if not os.path.isabs(path):
+      path = os.path.join(archive_dir, path)
+    if not os.path.exists(path):
+      with conn:
+        conn.execute("DELETE FROM archive_manifests WHERE archive_path = ?",
+                     (row["archive_path"],))
+      continue
+    try:
+      count, checksum = _validate_xz_archive(path)
+    except (OSError, EOFError, lzma.LZMAError, ValueError,
+            json.JSONDecodeError):
+      continue
+    with conn:
+      conn.execute(
+          "UPDATE archive_manifests SET status = 'ready', record_count = ?, "
+          "checksum = ? WHERE archive_path = ?",
+          (count, checksum, row["archive_path"]),
+      )
 
 
 def archive_old(conn, cutoff, archive_dir):
@@ -607,25 +675,33 @@ def archive_old(conn, cutoff, archive_dir):
   stem = "steps_archive_%s_%s" % (
       summary["first_step"], summary["last_step"])
   destination = _unique_archive_path(archive_dir, stem)
+  manifest_path = os.path.abspath(destination)
+  conn.execute(
+      "INSERT INTO archive_manifests "
+      "(archive_path, kind, first_step, last_step, status, created_at) "
+      "VALUES (?, 'steps', ?, ?, 'pending', ?)",
+      (manifest_path, summary["first_step"], summary["last_step"],
+       datetime.datetime.utcnow().isoformat(timespec="seconds")),
+  )
+  conn.commit()
   cursor = conn.execute(
       "SELECT persona, step, ts, sector, arena, tile_x, tile_y, action, "
       "description, chat, economy FROM steps WHERE " + where
       + " ORDER BY step, persona", (value,))
   archived = _atomic_xz_dump((_archive_record(row) for row in cursor),
                              destination)
-  deleted = 0
-  while True:
-    with conn:
-      batch_deleted = conn.execute(
-          "DELETE FROM steps WHERE rowid IN ("
-          "SELECT rowid FROM steps WHERE " + where + " LIMIT 5000)",
-          (value,),
-      ).rowcount
-    deleted += batch_deleted
-    if batch_deleted < 5000:
-      break
-    # Let the per-step WAL writer acquire the lock between bounded batches.
-    time.sleep(0.005)
+  validated, checksum = _validate_xz_archive(destination, archived)
+  with conn:
+    conn.execute(
+        "UPDATE archive_manifests SET record_count = ?, checksum = ?, "
+        "status = 'committed' WHERE archive_path = ?",
+        (validated, checksum, manifest_path),
+    )
+    deleted = conn.execute(
+        "DELETE FROM steps WHERE " + where, (value,)
+    ).rowcount
+    if deleted != validated:
+      raise RuntimeError("archive/delete row counts differ")
   try:
     conn.execute("PRAGMA incremental_vacuum(2000)")
   except sqlite3.DatabaseError:
