@@ -282,12 +282,12 @@ def generate_act_obj_event_triple(act_game_object, act_obj_desc, persona):
   return triple if isinstance(triple, (tuple, list)) and len(triple) == 3 else (act_game_object, "is", "idle")
 
 
-def generate_convo(maze, init_persona, target_persona): 
+def generate_convo(maze, init_persona, target_persona, sim_code=None, step=None):
   curr_loc = maze.access_tile(init_persona.scratch.curr_tile)
 
   # convo = run_gpt_prompt_create_conversation(init_persona, target_persona, curr_loc)[0]
   # convo = agent_chat_v1(maze, init_persona, target_persona)
-  convo = agent_chat_v2(maze, init_persona, target_persona)
+  convo = agent_chat_v2(maze, init_persona, target_persona, sim_code, step)
   all_utt = ""
 
   for row in convo: 
@@ -790,7 +790,6 @@ def _should_react(persona, retrieved, personas):
       return f"wait: {wait_until}"
     elif react_mode == "2":
       return False
-      return "do other things"
     else:
       return False #"keep" 
 
@@ -870,7 +869,8 @@ def _create_react(persona, inserted_act, inserted_act_dur,
                            act_start_time)
 
 
-def _chat_react(maze, persona, focused_event, reaction_mode, personas):
+def _chat_react(maze, persona, focused_event, reaction_mode, personas,
+                sim_code=None, step=None):
   # There are two personas -- the persona who is initiating the conversation
   # and the persona who is the target. We get the persona instances here. 
   init_persona = persona
@@ -878,7 +878,8 @@ def _chat_react(maze, persona, focused_event, reaction_mode, personas):
   curr_personas = [init_persona, target_persona]
 
   # Actually creating the conversation here. 
-  convo, duration_min = generate_convo(maze, init_persona, target_persona)
+  convo, duration_min = generate_convo(
+    maze, init_persona, target_persona, sim_code, step)
   convo_summary = generate_convo_summary(init_persona, convo)
   inserted_act = convo_summary
   inserted_act_dur = duration_min
@@ -1026,17 +1027,20 @@ def prepare_reaction(persona, focused_event, personas):
   return _should_react(persona, focused_event, personas)
 
 
-def commit_reaction(maze, persona, focused_event, reaction_mode, personas):
+def commit_reaction(maze, persona, focused_event, reaction_mode, personas,
+                    sim_code=None, step=None):
   """Apply one coordinator-approved reaction."""
   if not reaction_mode:
     return
   if reaction_mode[:9] == "chat with":
-    _chat_react(maze, persona, focused_event, reaction_mode, personas)
+    _chat_react(maze, persona, focused_event, reaction_mode, personas,
+                sim_code, step)
   elif reaction_mode[:4] == "wait":
     _wait_react(persona, reaction_mode)
 
 
-def plan(persona, maze, personas, new_day, retrieved, enable_reactions=True):
+def plan(persona, maze, personas, new_day, retrieved, enable_reactions=True,
+         sim_code=None, step=None):
   """
   Main cognitive function of the chain. It takes the retrieved memory and 
   perception, as well as the maze and the first day state to conduct both 
@@ -1088,7 +1092,8 @@ def plan(persona, maze, personas, new_day, retrieved, enable_reactions=True):
   if enable_reactions and focused_event:
     commit_reaction(
       maze, persona, focused_event,
-      prepare_reaction(persona, focused_event, personas), personas)
+      prepare_reaction(persona, focused_event, personas), personas,
+      sim_code=sim_code, step=step)
 
   # Step 3: Chat-related state clean up. 
   # If the persona is not chatting with anyone, we clean up any of the 

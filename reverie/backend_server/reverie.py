@@ -496,9 +496,6 @@ class ReverieServer:
       if self._data_store is not None:
         self._data_store.poll_maintenance(self.personas, sim_folder)
       if check_if_file_exists(curr_env_file):
-        # Mark the real-time start of this step so the game clock can be
-        # paced from actual elapsed wall time.
-        _step_real_start = time.time()
         env_retrieved = False
         new_env = None
         # If we have an environment file, it means we have a new perception
@@ -600,7 +597,8 @@ class ReverieServer:
             _futs = {_ex.submit(persona._move_decide,
                                 self.maze, self.personas,
                                 perceive_state[n][0], perceive_state[n][1],
-                                True): n
+                                True, sim_code=self.sim_code,
+                                step=self.step): n
                      for n, persona in self.personas.items()}
             _focused = {}
             for _f in _futs:
@@ -632,7 +630,8 @@ class ReverieServer:
               _intents, self.personas):
             commit_reaction(self.maze, self.personas[persona_name],
                             _focused[persona_name], reaction_mode,
-                            self.personas)
+                            self.personas, sim_code=self.sim_code,
+                            step=self.step)
 
           with ThreadPoolExecutor(max_workers=6) as _ex:
             _execute_futs = {
@@ -662,12 +661,6 @@ class ReverieServer:
                   "status": getattr(persona.scratch, "economy_status",
                                     "stable"),
                 })
-
-          # Live chat feed: logged per-exchange inside converse.py (agent_chat_v2
-          # appends the growing thread as each utterance happens), so the feed
-          # updates mid-conversation. No step-level logging here anymore.
-          import utils
-          utils.current_step = self.step
 
           # Include the meta information about the current stage in the 
           # movements dictionary. 
@@ -1026,9 +1019,6 @@ if __name__ == '__main__':
 
   rs = ReverieServer(origin, target)
   rs.open_server(run_steps)
-
-
-
 
 
 

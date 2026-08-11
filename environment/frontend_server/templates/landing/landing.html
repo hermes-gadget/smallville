@@ -1040,7 +1040,7 @@
           </a>
           <a class="button button--secondary" href="#how-it-works">How it works</a>
         </div>
-        <p class="hero__note"><span aria-hidden="true">●</span> No account needed · Time runs at 60×</p>
+        <p class="hero__note"><span aria-hidden="true">●</span> No account needed · Time runs at <span id="live-pacing">the live rate</span></p>
       </div>
 
       <div class="town-card" aria-hidden="true">
@@ -1130,7 +1130,7 @@
         <article class="feature-card">
           <span class="feature-card__icon" aria-hidden="true">⌖</span>
           <span class="feature-card__label">Live view</span>
-          <h3>A map running at 60×</h3>
+          <h3>A map running at <span id="map-pacing">the live rate</span></h3>
           <p>Follow the whole town from above as hours pass in minutes and residents move between familiar places.</p>
         </article>
         <article class="feature-card">
@@ -1190,8 +1190,11 @@
       var tokens = document.getElementById("live-tokens");
       var conversation = document.getElementById("live-conversation");
       var conversationMeta = document.getElementById("live-conversation-meta");
+      var livePacing = document.getElementById("live-pacing");
+      var mapPacing = document.getElementById("map-pacing");
       var tokenUrl = "{% url 'get_token_usage' %}";
       var chatUrl = "{% url 'get_chat_log' %}?sim_code=public_sim";
+      var stateUrl = "{% url 'get_sim_state' %}";
       var pollInFlight = false;
 
       function formatNumber(value) {
@@ -1200,6 +1203,20 @@
           number = 0;
         }
         return number.toLocaleString("en-GB");
+      }
+
+      function formatPacing(value) {
+        var number = Number(value);
+        if (!isFinite(number) || number <= 0) {
+          return "the live rate";
+        }
+        return number.toFixed(2).replace(/\.?(0+)$/, "") + "×";
+      }
+
+      function updatePacing(data) {
+        var label = formatPacing(data && data.pacing);
+        livePacing.textContent = label;
+        mapPacing.textContent = label;
       }
 
       function requestJson(url) {
@@ -1282,13 +1299,17 @@
 
         Promise.all([
           settle(requestJson(tokenUrl)),
-          settle(requestJson(chatUrl))
+          settle(requestJson(chatUrl)),
+          settle(requestJson(stateUrl))
         ]).then(function (results) {
           if (results[0].ok) {
             updateUsage(results[0].value);
           }
           if (results[1].ok) {
             updateConversation(results[1].value);
+          }
+          if (results[2].ok) {
+            updatePacing(results[2].value);
           }
           setConnectionState(results[0].ok && results[1].ok);
         }).then(function () {

@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt pytest
+      - run: python3 -m pytest reverie/backend_server/test_sim_store.py reverie/backend_server/test_wave3_mediums.py -q
+      - run: python manage.py test translator -v 2
+        working-directory: environment/frontend_server
+      - run: python manage.py check
+        working-directory: environment/frontend_server

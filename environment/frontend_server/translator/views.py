@@ -155,6 +155,32 @@ def _read_json(path, default):
     return default
 
 
+def _read_public_pacing(frontend_root=None):
+  """Return the validated current public-simulation pacing, if available."""
+  if frontend_root is None:
+    frontend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  pacing_file = os.path.join(frontend_root, "temp_storage", "pacing.txt")
+  meta_file = os.path.join(frontend_root, "storage", "public_sim",
+                           "reverie", "meta.json")
+  candidates = []
+  try:
+    with open(pacing_file) as infile:
+      candidates.append(infile.read().strip())
+  except (OSError, ValueError):
+    pass
+  meta = _read_json(meta_file, {})
+  if isinstance(meta, dict):
+    candidates.append(meta.get("clock_pacing"))
+  for candidate in candidates:
+    try:
+      value = float(candidate)
+    except (TypeError, ValueError):
+      continue
+    if 0 < value <= 10000:
+      return int(value) if value.is_integer() else value
+  return None
+
+
 def _atomic_json_dump(payload, path):
   tmp = path + ".tmp"
   with open(tmp, "w") as outfile:
@@ -271,12 +297,13 @@ _sim_state_cache = {"at": 0.0, "running": None}
 
 
 def get_sim_state(request):
-  """Return whether the Reverie AI loop is currently running (public).
+  """Return the public simulation's running state and current pacing.
 
   The town website stays up while the simulation is paused; this endpoint
   lets the UI show a visible PAUSED banner. The check runs ``systemctl --user
   is-active smallville-reverie.service`` (cheap, ~30ms) with a 5-second TTL
-  cache so the 2-5s frontend poll never hammers subprocess spawn.
+  cache so the 2-5s frontend poll never hammers subprocess spawn. Pacing is
+  read from the live override or the last persisted simulation metadata.
   """
   import subprocess
   import time as _time
@@ -297,6 +324,7 @@ def get_sim_state(request):
   return JsonResponse({
     "sim_running": running,
     "unit": "smallville-reverie.service",
+    "pacing": _read_public_pacing(),
     "checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
   })
 
