@@ -16,7 +16,7 @@ jobs:
           python-version: '3.11'
       - name: Install test deps
         run: |
-          pip install pytest
+          pip install pytest numpy
           pip install openai || true
       - name: Backend regression tests
         run: python3 -m pytest reverie/backend_server/test_sim_store.py reverie/backend_server/test_wave3_mediums.py -q
