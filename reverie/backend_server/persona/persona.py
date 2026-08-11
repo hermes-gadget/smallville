@@ -189,7 +189,8 @@ class Persona:
     return retrieve(self, perceived)
 
 
-  def plan(self, maze, personas, new_day, retrieved, enable_reactions=True):
+  def plan(self, maze, personas, new_day, retrieved, enable_reactions=True,
+           sim_code=None, step=None):
     """
     Main cognitive function of the chain. It takes the retrieved memory and 
     perception, as well as the maze and the first day state to conduct both 
@@ -211,7 +212,8 @@ class Persona:
     OUTPUT 
       The target action address of the persona (persona.scratch.act_address).
     """
-    return plan(self, maze, personas, new_day, retrieved, enable_reactions)
+    return plan(self, maze, personas, new_day, retrieved, enable_reactions,
+                sim_code=sim_code, step=step)
 
 
   def execute(self, maze, personas, plan):
@@ -248,7 +250,7 @@ class Persona:
     reflect(self)
 
 
-  def move(self, maze, personas, curr_tile, curr_time):
+  def move(self, maze, personas, curr_tile, curr_time, sim_code=None, step=None):
     """
     This is the main cognitive function where our main sequence is called. 
 
@@ -286,7 +288,8 @@ class Persona:
     # sequential in the caller so co-located personas' chats can't race;
     # phase 2 (retrieve/plan/reflect/execute) is safe to parallelize.
     new_day, perceived = self._move_perceive(maze, curr_tile, curr_time)
-    return self._move_decide(maze, personas, new_day, perceived)
+    return self._move_decide(maze, personas, new_day, perceived,
+                             sim_code=sim_code, step=step)
 
   def _move_perceive(self, maze, curr_tile, curr_time):
     """Phase 1 of move(): tile bookkeeping + perception COLLECTION.
@@ -307,14 +310,15 @@ class Persona:
     return new_day, pending
 
   def _move_decide(self, maze, personas, new_day, percept_batch,
-                   defer_reactions=False):
+                   defer_reactions=False, sim_code=None, step=None):
     """Phase 2 of move(): perceive commit (poignancy + memory) + retrieve +
     plan + reflect + execute. All work is persona-private (own memory, LLM,
     embeddings) -- safe to run concurrently for all personas in a step."""
     perceived = perceive_commit(self, percept_batch)
     retrieved = self.retrieve(perceived)
     plan = self.plan(maze, personas, new_day, retrieved,
-                     enable_reactions=not defer_reactions)
+                     enable_reactions=not defer_reactions,
+                     sim_code=sim_code, step=step)
     self.reflect()
     if defer_reactions:
       focused_event = False
@@ -332,7 +336,6 @@ class Persona:
   def open_convo_session(self, convo_mode): 
     open_convo_session(self, convo_mode)
     
-
 
 
 

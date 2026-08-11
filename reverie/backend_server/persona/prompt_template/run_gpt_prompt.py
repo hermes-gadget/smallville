@@ -291,7 +291,6 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
   #   except: return False
   #   return True
 
-  # print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 10") ########
   # gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
   #              "temperature": 0, "top_p": 1, "stream": False,
   #              "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -307,7 +306,6 @@ def run_gpt_prompt_generate_hourly_schedule(persona,
   # special_instruction = "The output should ONLY include the part of the sentence that completes the last line in the schedule above." ########
   # fail_safe = get_fail_safe() ########
   # output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-  #                                         __chat_func_validate, __chat_func_clean_up, True)
   # if output != False: 
   #   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # # ChatGPT Plugin ===========================================================
@@ -434,8 +432,6 @@ def run_gpt_prompt_task_decomp(persona,
     total_expected_min = int(prompt.split("(total duration in minutes")[-1]
                                    .split("):")[0].strip())
 
-    # TODO -- now, you need to make sure that this is the same as the sum of
-    #         the current action sequence.
     curr_min_slot = [["dummy", -1],]  # (task_name, task_index)
     for count, i in enumerate(cr):
       i_task = i[0]
@@ -495,16 +491,6 @@ def run_gpt_prompt_task_decomp(persona,
   output = safe_generate_response(prompt, gpt_param, 5, get_fail_safe(),
                                    __func_validate, __func_clean_up)
 
-  # TODO THERE WAS A BUG HERE... 
-  # This is for preventing overflows...
-  """
-  File "/Users/joonsungpark/Desktop/Stanford/Projects/
-  generative-personas/src_exploration/reverie_simulation/
-  brain/get_next_action_v3.py", line 364, in run_gpt_prompt_task_decomp
-  fin_output[-1][1] += (duration - ftime_sum)
-  IndexError: list index out of range
-  """
-
   # Normalize degenerate/fallback outputs into (task, duration) pairs.
   # safe_generate_response can return the fail-safe (["asleep"]) or other
   # plain-string lists when every retry failed; unpacking those as pairs
@@ -529,7 +515,6 @@ def run_gpt_prompt_task_decomp(persona,
   for fi_task, fi_duration in fin_output: 
     ftime_sum += fi_duration
   
-  # print ("for debugging... line 365", fin_output)
   if fin_output:
     fin_output[-1][1] += (duration - ftime_sum)
   else:
@@ -657,7 +642,6 @@ def run_gpt_prompt_action_sector(action_description,
   #     return False
   #   return True 
 
-  # print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 20") ########
   # gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
   #              "temperature": 0, "top_p": 1, "stream": False,
   #              "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -668,7 +652,6 @@ def run_gpt_prompt_action_sector(action_description,
   # special_instruction = "The value for the output must contain one of the area options above verbatim (including lower/upper case)." ########
   # fail_safe = get_fail_safe() ########
   # output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-  #                                         __chat_func_validate, __chat_func_clean_up, True)
   # if output != False: 
   #   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # # ChatGPT Plugin ===========================================================
@@ -893,10 +876,8 @@ def run_gpt_prompt_pronunciatio(action_description, persona, verbose=False):
       if len(gpt_response) == 0: 
         return False
     except: return False
-    return True 
     return True
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 4") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -907,7 +888,7 @@ def run_gpt_prompt_pronunciatio(action_description, persona, verbose=False):
   special_instruction = "The value for the output must ONLY contain the emojis." ########
   fail_safe = get_fail_safe()
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -988,7 +969,6 @@ def run_gpt_prompt_event_triple(action_description, persona, verbose=False):
   #   except: return False
   #   return True 
 
-  # print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 5") ########
   # gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
   #              "temperature": 0, "top_p": 1, "stream": False,
   #              "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -999,7 +979,6 @@ def run_gpt_prompt_event_triple(action_description, persona, verbose=False):
   # special_instruction = "The value for the output must ONLY contain the triple. If there is an incomplete element, just say 'None' but there needs to be three elements no matter what." ########
   # fail_safe = get_fail_safe(persona) ########
   # output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-  #                                         __chat_func_validate, __chat_func_clean_up, True)
   # if output != False: 
   #   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -1074,7 +1053,6 @@ def run_gpt_prompt_act_obj_desc(act_game_object, act_desp, persona, verbose=Fals
       return False
     return True 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 6") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -1085,7 +1063,7 @@ def run_gpt_prompt_act_obj_desc(act_game_object, act_desp, persona, verbose=Fals
   special_instruction = "The output should ONLY contain the phrase that should go in <fill in>." ########
   fail_safe = get_fail_safe(act_game_object) ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -1297,13 +1275,6 @@ def run_gpt_prompt_new_decomp_schedule(persona,
   output = safe_generate_response(prompt, gpt_param, 5, fail_safe,
                                    __func_validate, __func_clean_up)
   
-  # print ("* * * * output")
-  # print (output)
-  # print ('* * * * fail_safe')
-  # print (fail_safe)
-
-
-
   if debug or verbose: 
     print_run_prompts(prompt_template, persona, gpt_param, 
                       prompt_input, prompt, output)
@@ -1603,10 +1574,6 @@ def run_gpt_prompt_create_conversation(persona, target_persona, curr_loc,
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    # print ("???")
-    # print (gpt_response)
-
-
     gpt_response = (prompt + gpt_response).split("What would they talk about now?")[-1].strip()
     content = re.findall('"([^"]*)"', gpt_response)
 
@@ -1700,7 +1667,6 @@ def run_gpt_prompt_summarize_conversation(persona, conversation, test_input=None
       return False 
 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 11") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -1757,7 +1723,6 @@ def run_gpt_prompt_extract_keywords(persona, description, test_input=None, verbo
         if i[-1] == ".": 
           i = i[:-1]
         ret += [i]
-    print (ret)
     return set(ret)
 
   def __func_validate(gpt_response, prompt=""): 
@@ -1952,7 +1917,6 @@ def run_gpt_prompt_event_poignancy(persona, event_description, test_input=None, 
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 7") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -1963,7 +1927,7 @@ def run_gpt_prompt_event_poignancy(persona, event_description, test_input=None, 
   special_instruction = "The output should ONLY contain ONE integer value on the scale of 1 to 10." ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -2023,7 +1987,6 @@ def run_gpt_prompt_thought_poignancy(persona, event_description, test_input=None
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 8") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2034,7 +1997,7 @@ def run_gpt_prompt_thought_poignancy(persona, event_description, test_input=None
   special_instruction = "The output should ONLY contain ONE integer value on the scale of 1 to 10." ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -2095,7 +2058,6 @@ def run_gpt_prompt_chat_poignancy(persona, event_description, test_input=None, v
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 9") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2106,7 +2068,7 @@ def run_gpt_prompt_chat_poignancy(persona, event_description, test_input=None, v
   special_instruction = "The output should ONLY contain ONE integer value on the scale of 1 to 10." ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+                                          __chat_func_validate, __chat_func_clean_up)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -2297,7 +2259,6 @@ def run_gpt_prompt_agent_chat_summarize_ideas(persona, target_persona, statement
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 17") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2308,7 +2269,7 @@ def run_gpt_prompt_agent_chat_summarize_ideas(persona, target_persona, statement
   special_instruction = 'The output should be a string that responds to the question.' ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True,
+                                          __chat_func_validate, __chat_func_clean_up,
                                           records=prompt_records)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
@@ -2366,7 +2327,6 @@ def run_gpt_prompt_agent_chat_summarize_relationship(persona, target_persona, st
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 18") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2377,7 +2337,7 @@ def run_gpt_prompt_agent_chat_summarize_relationship(persona, target_persona, st
   special_instruction = 'The output should be a string that responds to the question.' ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True,
+                                          __chat_func_validate, __chat_func_clean_up,
                                           records=prompt_records)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
@@ -2422,8 +2382,6 @@ def run_gpt_prompt_agent_chat(maze, persona, target_persona,
     if persona.a_mem.seq_chat: 
       if int((persona.scratch.curr_time - persona.a_mem.seq_chat[-1].created).total_seconds()/60) > 480: 
         prev_convo_insert = ""
-    print (prev_convo_insert)
-
     curr_sector = f"{maze.access_tile(persona.scratch.curr_tile)['sector']}"
     curr_arena= f"{maze.access_tile(persona.scratch.curr_tile)['arena']}"
     curr_location = f"{curr_arena} in {curr_sector}"
@@ -2449,8 +2407,6 @@ def run_gpt_prompt_agent_chat(maze, persona, target_persona,
     return prompt_input
   
   def __func_clean_up(gpt_response, prompt=""):
-    print (gpt_response)
-
     gpt_response = (prompt + gpt_response).split("Here is their conversation.")[-1].strip()
     content = re.findall('"([^"]*)"', gpt_response)
 
@@ -2485,17 +2441,12 @@ def run_gpt_prompt_agent_chat(maze, persona, target_persona,
   def __chat_func_clean_up(gpt_response, prompt=""): ############
     # ret = ast.literal_eval(gpt_response)
 
-    print ("a;dnfdap98fh4p9enf HEREE!!!")
-    for row in gpt_response: 
-      print (row)
-
     return gpt_response
 
   def __chat_func_validate(gpt_response, prompt=""): ############
     return True
 
 
-  # print ("HERE JULY 23 -- ----- ") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2506,9 +2457,8 @@ def run_gpt_prompt_agent_chat(maze, persona, target_persona,
   special_instruction = 'The output should be a list of list where the inner lists are in the form of ["<Name>", "<Utterance>"].' ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True,
+                                          __chat_func_validate, __chat_func_clean_up, verbose,
                                           records=prompt_records)
-  # print ("HERE END JULY 23 -- ----- ") ########
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # ChatGPT Plugin ===========================================================
@@ -2577,7 +2527,6 @@ def run_gpt_prompt_summarize_ideas(persona, statements, question, test_input=Non
     except:
       return False 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 16") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2588,7 +2537,7 @@ def run_gpt_prompt_summarize_ideas(persona, statements, question, test_input=Non
   special_instruction = 'The output should be a string that responds to the question.' ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True,
+                                          __chat_func_validate, __chat_func_clean_up,
                                           records=prompt_records)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
@@ -2652,7 +2601,6 @@ def run_gpt_prompt_generate_next_convo_line(persona, interlocutor_desc, prev_con
   #   except:
   #     return False 
 
-  # print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 15") ########
   # gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
   #              "temperature": 0, "top_p": 1, "stream": False,
   #              "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2663,7 +2611,6 @@ def run_gpt_prompt_generate_next_convo_line(persona, interlocutor_desc, prev_con
   # special_instruction = 'The output should be a string that responds to the question. Again, only use the context included in the "Note" to generate the response' ########
   # fail_safe = get_fail_safe() ########
   # output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-  #                                         __chat_func_validate, __chat_func_clean_up, True)
   # if output != False: 
   #   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
   # # ChatGPT Plugin ===========================================================
@@ -2798,7 +2745,6 @@ def run_gpt_prompt_memo_on_convo(persona, all_utt, test_input=None, verbose=Fals
       return False 
 
 
-  print ("asdhfapsh8p9hfaiafdsi;ldfj as DEBUG 15") ########
   gpt_param = {"engine": "text-davinci-002", "max_tokens": 15, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
@@ -2809,7 +2755,7 @@ def run_gpt_prompt_memo_on_convo(persona, all_utt, test_input=None, verbose=Fals
   special_instruction = 'The output should ONLY contain a string that summarizes anything interesting that the agent may have noticed' ########
   fail_safe = get_fail_safe() ########
   output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True,
+                                          __chat_func_validate, __chat_func_clean_up,
                                           records=prompt_records)
   if output != False: 
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
@@ -2858,16 +2804,12 @@ def run_gpt_generate_safety_score(persona, comment, test_input=None, verbose=Fal
   def get_fail_safe():
     return None
 
-  print ("11")
   prompt_template = "persona/prompt_template/safety/anthromorphosization_v1.txt" 
   prompt_input = create_prompt_input(comment) 
-  print ("22")
   prompt = generate_prompt(prompt_input, prompt_template)
-  print (prompt)
   fail_safe = get_fail_safe() 
   output = ChatGPT_safe_generate_response_OLD(prompt, 3, fail_safe,
                         __chat_func_validate, __chat_func_clean_up, verbose)
-  print (output)
   
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 50, 
                "temperature": 0, "top_p": 1, "stream": False,
@@ -2912,8 +2854,6 @@ def run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retr
     if persona.a_mem.seq_chat: 
       if int((persona.scratch.curr_time - persona.a_mem.seq_chat[-1].created).total_seconds()/60) > 480: 
         prev_convo_insert = ""
-    print (prev_convo_insert)
-
     curr_sector = f"{maze.access_tile(persona.scratch.curr_tile)['sector']}"
     curr_arena= f"{maze.access_tile(persona.scratch.curr_tile)['arena']}"
     curr_location = f"{curr_arena} in {curr_sector}"
@@ -2954,14 +2894,8 @@ def run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retr
     return cleaned_dict
 
   def __chat_func_validate(gpt_response, prompt=""): 
-    print ("ugh...")
-    try: 
-      # print ("debug 1")
-      # print (gpt_response)
-      # print ("debug 2")
-
-      print (extract_first_json_dict(gpt_response))
-      # print ("debug 3")
+    try:
+      extract_first_json_dict(gpt_response)
 
       return True
     except:
@@ -2973,26 +2907,17 @@ def run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retr
     cleaned_dict["end"] = False
     return cleaned_dict
 
-  print ("11")
   prompt_template = "persona/prompt_template/v3_ChatGPT/iterative_convo_v1.txt" 
   prompt_input = create_prompt_input(maze, init_persona, target_persona, retrieved, curr_context, curr_chat) 
-  print ("22")
   prompt = generate_prompt(prompt_input, prompt_template)
-  print (prompt)
   fail_safe = get_fail_safe() 
   output = ChatGPT_safe_generate_response_OLD(prompt, 3, fail_safe,
                         __chat_func_validate, __chat_func_clean_up, verbose)
-  print (output)
   
   gpt_param = {"engine": "text-davinci-003", "max_tokens": 50, 
                "temperature": 0, "top_p": 1, "stream": False,
                "frequency_penalty": 0, "presence_penalty": 0, "stop": None}
   return output, [output, prompt, gpt_param, prompt_input, fail_safe]
-
-
-
-
-
 
 
 

@@ -24,7 +24,7 @@ from utils import fs_storage
 
 _live_chat_log_lock = threading.Lock()
 
-def _live_log_chat(chat_thread):
+def _live_log_chat(chat_thread, sim_code, step):
   """Append the current (possibly mid-conversation) thread to chat_log.json.
 
   Runs inside worker threads, so guarded by a lock. Each exchange that
@@ -32,9 +32,18 @@ def _live_log_chat(chat_thread):
   snapshot grows entry by entry instead of only the final state appearing).
   """
   try:
-    import utils
-    step = utils.current_step
-    chat_log_file = os.path.join(fs_storage, "public_sim", "chat_log.json")
+    if (not isinstance(sim_code, str) or not sim_code
+        or sim_code in (".", "..")
+        or os.path.basename(sim_code) != sim_code
+        or isinstance(step, bool) or not isinstance(step, int)
+        or step < 0):
+      return
+    storage_root = os.path.abspath(fs_storage)
+    chat_log_file = os.path.abspath(
+      os.path.join(storage_root, sim_code, "chat_log.json"))
+    if os.path.commonpath([storage_root, chat_log_file]) != storage_root:
+      return
+    os.makedirs(os.path.dirname(chat_log_file), exist_ok=True)
     with _live_chat_log_lock:
       chat_log = []
       if os.path.exists(chat_log_file):
@@ -157,7 +166,7 @@ def generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_c
 
   return x["utterance"], x["end"]
 
-def agent_chat_v2(maze, init_persona, target_persona): 
+def agent_chat_v2(maze, init_persona, target_persona, sim_code=None, step=None):
   curr_chat = []
 
   for i in range(4): 
@@ -178,7 +187,7 @@ def agent_chat_v2(maze, init_persona, target_persona):
     utt, end = generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_chat)
 
     curr_chat += [[init_persona.scratch.name, utt]]
-    _live_log_chat(curr_chat)
+    _live_log_chat(curr_chat, sim_code, step)
     if end:
       break
 
@@ -200,7 +209,7 @@ def agent_chat_v2(maze, init_persona, target_persona):
     utt, end = generate_one_utterance(maze, target_persona, init_persona, retrieved, curr_chat)
 
     curr_chat += [[target_persona.scratch.name, utt]]
-    _live_log_chat(curr_chat)
+    _live_log_chat(curr_chat, sim_code, step)
     if end:
       break
 
@@ -317,8 +326,6 @@ def open_convo_session(persona, convo_mode):
     persona.a_mem.add_thought(created, expiration, s, p, o, 
                               thought, keywords, thought_poignancy, 
                               thought_embedding_pair, None)
-
-
 
 
 

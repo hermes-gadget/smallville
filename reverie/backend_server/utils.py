@@ -94,8 +94,6 @@ env_visuals = f"{maze_assets_loc}/the_ville/visuals"
 
 fs_storage = "../../environment/frontend_server/storage"
 
-# Set by reverie.py each step; read by converse.py for live chat logging.
-current_step = 0
 fs_temp_storage = "../../environment/frontend_server/temp_storage"
 
 # Live token-usage snapshot, written by the backend on every LLM call and

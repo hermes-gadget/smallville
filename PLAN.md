@@ -44,9 +44,11 @@ hard guard on LLM spend.
 - Economy: 25 residents with balances, salaries streaming to the feed
   ('Yuriko Yamamoto earned $0.41 in salary as town banker'), banker + treasury
   active (bank cash 20,000 → 19,762), 4 shops stocked.
-- All endpoints 200: landing, simulator_home, get_economy, get_economy_feed,
-  get_sim_store_stats, get_chat_log; /set_pacing/ + /admin/command/ still 403
-  without the admin token.
+- Public reads: landing, simulator_home, get_economy, get_economy_feed,
+  get_sim_store_stats, get_chat_log, and get_sim_state. The legacy browser-driven
+  `process_environment` POST is gone; `/update_environment/` remains a read-only
+  movement lookup. `/set_pacing/` + `/admin/command/` still return 403 without
+  the admin token.
 
 ### Perf pass (2026-08-08, commit e094e8b9)
 - **~4x faster steps**: perceive split into `perceive_collect` (sequential, LLM-free)
@@ -110,8 +112,9 @@ hard guard on LLM spend.
   scratch across steps no longer re-logs); `get_chat_log/` endpoint; frontend panel at
   bottom-left, right of the resident drawer — "TOWN CONVERSATIONS" scrolling feed,
   color-coded speakers, timestamps, auto-scroll, collapse button, mobile-aware.
-- **UI improvements (same agent)**: `process_environment` POST removed (backend is
-  autonomous — it was the partial-env crash source); sprite fallback for all 25
+- **UI improvements (same agent)**: legacy `process_environment` POST removed
+  (backend is autonomous — it was the partial-env crash source); the routed
+  `/update_environment/` endpoint is read-only; sprite fallback for all 25
   residents; roster from meta order; awaiting-action empty states.
 - **500M token cap**: every model/embedding request durably reserves its maximum budget
   in `token_usage.db` before dispatch and reconciles authoritative response usage.
@@ -149,5 +152,5 @@ EOF
   narrow screens).
 - First-boot plan phase ≈ 700 LLM calls (~5-8 min) per new day — the parallel batch
   makes it a one-time fixed cost per day.
-- With real-time pacing a game day lasts a real day; set `game_sec_per_real_sec = 60`
-  in `utils.py` for a lively fast-forward day (~24 real min).
+- The landing page reads the validated current pacing from `/get_sim_state/`; use
+  `temp_storage/pacing.txt` or the admin pacing endpoint to change it live.
